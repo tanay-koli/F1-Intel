@@ -1,0 +1,471 @@
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { f1Api } from '../api'
+import { Loader, ErrorMsg, TeamDot, useIsMobile } from '../components/ui'
+
+/* ── helpers ───────────────────────────────────────────────────────────────── */
+
+function hex2rgba(hex, alpha) {
+  try {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r},${g},${b},${alpha})`
+  } catch { return hex }
+}
+
+const STAT_DEFS = [
+  { key: 'totalPoints',      label: 'Total Points',    icon: '🏆' },
+  { key: 'points',           label: 'Race Points',     icon: '🎯' },
+  { key: 'sprintPoints',     label: 'Sprint Points',   icon: '🏃' },
+  { key: 'wins',             label: 'Wins',            icon: '🥇' },
+  { key: 'podiums',          label: 'Podiums',         icon: '🏅' },
+  { key: 'headToHeadWins',   label: 'H2H Record',      icon: '⚔️' },
+  { key: 'qualiWins',        label: 'Quali H2H',       icon: '🚦' },
+  { key: 'fastestLaps',      label: 'Fastest Laps',    icon: '⚡' },
+  { key: 'avgPosition',      label: 'Avg Race Finish', icon: '📊', lowerBetter: true },
+  { key: 'avgQualiPosition', label: 'Avg Quali Pos',   icon: '📡', lowerBetter: true },
+  { key: 'dnf',              label: 'DNFs',            icon: '❌', lowerBetter: true },
+  { key: 'races',            label: 'Races',           icon: '🏁' },
+]
+
+/* ── Driver picker ─────────────────────────────────────────────────────────── */
+
+function DriverPicker({ label, value, onChange, standings }) {
+  return (
+    <div style={{ flex: 1 }}>
+      <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
+        {label}
+      </div>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{
+          width: '100%',
+          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+          borderRadius: 8, color: 'var(--text)',
+          padding: '10px 32px 10px 12px',
+          fontFamily: 'var(--mono)', fontSize: 13,
+          cursor: 'pointer', outline: 'none', appearance: 'none',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b7a'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
+        }}
+      >
+        <option value="">— Select driver —</option>
+        {standings.map(s => (
+          <option key={s.driverId} value={s.driverId}>
+            {s.fullName} ({s.constructorName})
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+/* ── Stat comparison card ──────────────────────────────────────────────────── */
+
+function StatRow({ stat, d1, d2, isMobile }) {
+  const v1 = d1?.[stat.key] ?? 0
+  const v2 = d2?.[stat.key] ?? 0
+  const d1Wins = stat.lowerBetter ? v1 < v2 : v1 > v2
+  const d2Wins = stat.lowerBetter ? v2 < v1 : v2 > v1
+  const c1 = d1?.teamColor || '#e10600'
+  const c2 = d2?.teamColor || '#3671C6'
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr auto 1fr',
+      alignItems: 'center',
+      gap: isMobile ? 8 : 16,
+      padding: '12px 0',
+      borderBottom: '1px solid var(--border)',
+    }}>
+      {/* D1 value */}
+      <div style={{ textAlign: 'right' }}>
+        <span style={{
+          fontFamily: 'var(--display)',
+          fontSize: isMobile ? 22 : 28,
+          color: d1Wins ? c1 : 'var(--text)',
+          lineHeight: 1,
+          textShadow: d1Wins ? `0 0 20px ${c1}60` : 'none',
+        }}>
+          {stat.key === 'avgPosition' ? v1.toFixed(1) : v1}
+        </span>
+      </div>
+
+      {/* Label centre */}
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: isMobile ? 14 : 18, marginBottom: 2 }}>{stat.icon}</div>
+        <div style={{
+          fontFamily: 'var(--mono)', fontSize: isMobile ? 8 : 10,
+          color: 'var(--text-muted)', letterSpacing: '0.08em', whiteSpace: 'nowrap',
+        }}>
+          {stat.label}
+        </div>
+      </div>
+
+      {/* D2 value */}
+      <div style={{ textAlign: 'left' }}>
+        <span style={{
+          fontFamily: 'var(--display)',
+          fontSize: isMobile ? 22 : 28,
+          color: d2Wins ? c2 : 'var(--text)',
+          lineHeight: 1,
+          textShadow: d2Wins ? `0 0 20px ${c2}60` : 'none',
+        }}>
+          {stat.key === 'avgPosition' ? v2.toFixed(1) : v2}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/* ── H2H progress bars ─────────────────────────────────────────────────────── */
+
+function H2HBar({ d1, d2, valueKey, label }) {
+  if (!d1 || !d2) return null
+  const total = (d1[valueKey] ?? 0) + (d2[valueKey] ?? 0)
+  if (total === 0) return null
+  const pct1 = ((d1[valueKey] ?? 0) / total) * 100
+  const c1 = d1.teamColor || '#e10600'
+  const c2 = d2.teamColor || '#3671C6'
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 12 }}>
+        <span style={{ color: c1, fontFamily: 'var(--display)', fontSize: 14 }}>
+          {d1.code} · {d1[valueKey] ?? 0}
+        </span>
+        <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 10 }}>
+          {label}
+        </span>
+        <span style={{ color: c2, fontFamily: 'var(--display)', fontSize: 14 }}>
+          {d2[valueKey] ?? 0} · {d2.code}
+        </span>
+      </div>
+      <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', display: 'flex' }}>
+        <div style={{ width: `${pct1}%`, background: c1, transition: 'width 0.6s ease' }} />
+        <div style={{ flex: 1, background: c2 }} />
+      </div>
+    </div>
+  )
+}
+
+/* ── Race log table ────────────────────────────────────────────────────────── */
+
+function SprintBadge({ pts, color }) {
+  if (!pts || pts <= 0) return null
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 2,
+      fontSize: 9, fontFamily: 'var(--mono)',
+      background: `${color}22`, border: `1px solid ${color}55`,
+      color: color, borderRadius: 4, padding: '1px 5px',
+      marginLeft: 4, verticalAlign: 'middle',
+    }}>
+      🏃+{pts}
+    </span>
+  )
+}
+
+function QualiBadge({ pos, outQualified, color }) {
+  if (!pos || pos >= 99) return null
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      fontSize: 9, fontFamily: 'var(--mono)',
+      background: outQualified ? `${color}25` : 'var(--bg-elevated)',
+      border: `1px solid ${outQualified ? color : 'var(--border)'}`,
+      color: outQualified ? color : 'var(--text-dim)',
+      borderRadius: 4, padding: '1px 5px',
+      marginLeft: 4, verticalAlign: 'middle',
+    }}>
+      Q{pos}
+    </span>
+  )
+}
+
+function RaceLogRow({ race, driver1Id, driver2Id, d1Color, d2Color, isMobile }) {
+  const { d1, d2, winner, sprint, quali } = race
+  const isD1Win = winner === driver1Id
+  const isD2Win = winner === driver2Id
+  const sp1 = sprint?.d1
+  const sp2 = sprint?.d2
+  const q1 = quali?.d1
+  const q2 = quali?.d2
+  // who out-qualified whom this round?
+  const d1OutQuali = q1 && q2 && q1.position < q2.position
+  const d2OutQuali = q1 && q2 && q2.position < q1.position
+
+  function cellStyle(isWinner, color) {
+    return {
+      fontFamily: 'var(--mono)', fontSize: isMobile ? 10 : 12,
+      color: isWinner ? color : 'var(--text-muted)',
+      fontWeight: isWinner ? 700 : 400,
+    }
+  }
+
+  const posLabel = (r) => {
+    if (!r) return '—'
+    if (!String(r.positionText).match(/^\d+$/)) return r.positionText
+    return `P${r.position}`
+  }
+
+  const ptsLabel = (r) => {
+    if (!r || r.points === undefined) return ''
+    return r.points > 0 ? `+${r.points}` : ''
+  }
+
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
+      alignItems: 'center',
+      gap: isMobile ? 6 : 12,
+      padding: isMobile ? '8px 10px' : '10px 16px',
+      borderRadius: 8,
+      background: winner ? (isD1Win ? hex2rgba(d1Color, 0.07) : hex2rgba(d2Color, 0.07)) : 'var(--bg-card)',
+      border: `1px solid ${winner ? (isD1Win ? hex2rgba(d1Color, 0.25) : hex2rgba(d2Color, 0.25)) : 'var(--border)'}`,
+      marginBottom: 4,
+      animation: 'fadeUp 0.3s ease',
+    }}>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
+        R{race.round}
+      </span>
+      <span style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {race.raceName.replace(' Grand Prix', isMobile ? ' GP' : ' Grand Prix')}
+      </span>
+      <div style={cellStyle(isD1Win, d1Color)}>
+        {posLabel(d1)}
+        {ptsLabel(d1) && <span style={{ opacity: 0.6, marginLeft: 4 }}>({ptsLabel(d1)})</span>}
+        <SprintBadge pts={sp1?.points} color={d1Color} />
+        <QualiBadge pos={q1?.position} outQualified={d1OutQuali} color={d1Color} />
+      </div>
+      <div style={cellStyle(isD2Win, d2Color)}>
+        {posLabel(d2)}
+        {ptsLabel(d2) && <span style={{ opacity: 0.6, marginLeft: 4 }}>({ptsLabel(d2)})</span>}
+        <SprintBadge pts={sp2?.points} color={d2Color} />
+        <QualiBadge pos={q2?.position} outQualified={d2OutQuali} color={d2Color} />
+      </div>
+    </div>
+  )
+}
+
+/* ── Driver hero ────────────────────────────────────────────────────────────── */
+
+function DriverHero({ driver, side, isMobile }) {
+  if (!driver?.fullName) return <div style={{ flex: 1 }} />
+  const color = driver.teamColor || '#e10600'
+  const align = side === 'left' ? 'flex-start' : 'flex-end'
+  const textAlign = side === 'left' ? 'left' : 'right'
+
+  return (
+    <div style={{
+      flex: 1,
+      display: 'flex', flexDirection: 'column',
+      alignItems: align,
+      padding: isMobile ? '16px 14px' : '20px 24px',
+      background: `linear-gradient(${side === 'left' ? '135deg' : '225deg'}, ${hex2rgba(color, 0.18)}, #111114 55%)`,
+      border: `1px solid ${color}40`,
+      borderRadius: 12,
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Watermark */}
+      <div style={{
+        position: 'absolute',
+        [side === 'left' ? 'right' : 'left']: -10,
+        top: -10,
+        fontFamily: 'var(--display)', fontSize: isMobile ? 80 : 120,
+        color: hex2rgba(color, 0.08), letterSpacing: '-0.02em',
+        userSelect: 'none', pointerEvents: 'none', lineHeight: 1,
+      }}>
+        {driver.code}
+      </div>
+
+      <div style={{ fontSize: 22, marginBottom: 4 }}>{driver.flag}</div>
+      <div style={{
+        fontFamily: 'var(--display)', fontSize: isMobile ? 18 : 26,
+        letterSpacing: '0.04em', textAlign,
+      }}>
+        {isMobile ? driver.code : driver.fullName.toUpperCase()}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+        <TeamDot color={color} size={7} />
+        <span style={{ fontSize: 11, color: hex2rgba('#fff', 0.5) }}>{driver.constructorName}</span>
+      </div>
+    </div>
+  )
+}
+
+/* ── Page ──────────────────────────────────────────────────────────────────── */
+
+export default function H2HPage({ season }) {
+  const isMobile = useIsMobile()
+  const [driver1, setDriver1] = useState('')
+  const [driver2, setDriver2] = useState('')
+
+  const { data: standingsData } = useQuery({
+    queryKey: ['driver-standings', season],
+    queryFn:  () => f1Api.getDriverStandings(season),
+  })
+  const standings = standingsData?.standings || []
+
+  const canLoad = Boolean(driver1 && driver2 && driver1 !== driver2)
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['h2h', season, driver1, driver2],
+    queryFn:  () => f1Api.getH2H(season, driver1, driver2),
+    enabled:  canLoad,
+  })
+
+  const d1 = data?.driver1
+  const d2 = data?.driver2
+  const races = data?.races || []
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          <div style={{ width: 4, height: 28, background: 'var(--red)', borderRadius: 2 }} />
+          <h2 style={{ fontFamily: 'var(--display)', fontSize: isMobile ? 24 : 32, letterSpacing: '0.06em' }}>
+            HEAD TO HEAD
+          </h2>
+          <span style={{
+            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)',
+            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+            padding: '2px 8px', borderRadius: 4,
+          }}>{season}</span>
+        </div>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', paddingLeft: 14 }}>
+          Compare two drivers across the full season — stats, records, race by race
+        </p>
+      </div>
+
+      {/* Driver pickers */}
+      <div style={{
+        display: 'flex', gap: 12, marginBottom: 24,
+        flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-end',
+      }}>
+        <DriverPicker label="DRIVER 1" value={driver1} onChange={setDriver1} standings={standings} />
+        <div style={{
+          fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text-muted)',
+          paddingBottom: isMobile ? 0 : 10,
+        }}>VS</div>
+        <DriverPicker label="DRIVER 2" value={driver2} onChange={setDriver2} standings={standings} />
+      </div>
+
+      {/* Empty state */}
+      {!canLoad && !isLoading && (
+        <div style={{
+          textAlign: 'center', padding: isMobile ? '40px 20px' : '60px 20px',
+          color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 13,
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
+          <div>Select two different drivers to begin the comparison</div>
+        </div>
+      )}
+
+      {isLoading && <Loader label="Computing head-to-head stats..." />}
+      {error && <ErrorMsg message={error.message} />}
+
+      {data && !isLoading && (
+        <div style={{ animation: 'fadeUp 0.3s ease' }}>
+          {/* Driver heroes */}
+          <div style={{
+            display: 'flex', gap: 12, marginBottom: 20,
+            flexDirection: isMobile ? 'column' : 'row',
+          }}>
+            <DriverHero driver={d1} side="left"  isMobile={isMobile} />
+            <DriverHero driver={d2} side="right" isMobile={isMobile} />
+          </div>
+
+          {/* H2H bars */}
+          <div style={{ marginBottom: 24 }}>
+            <H2HBar d1={d1} d2={d2} valueKey="headToHeadWins" label="RACE H2H" />
+            <H2HBar d1={d1} d2={d2} valueKey="qualiWins"      label="QUALI H2H" />
+          </div>
+
+          {/* Stats comparison */}
+          <div style={{
+            background: 'var(--bg-card)', border: '1px solid var(--border)',
+            borderRadius: 12, padding: isMobile ? '16px 14px' : '20px 24px',
+            marginBottom: 24,
+          }}>
+            {/* Column headers */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr auto 1fr',
+              gap: isMobile ? 8 : 16,
+              marginBottom: 4,
+              paddingBottom: 8,
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontFamily: 'var(--display)', fontSize: 14, color: d1?.teamColor }}>
+                  {d1?.code || '—'}
+                </span>
+              </div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-dim)', textAlign: 'center' }}>
+                STAT
+              </div>
+              <div>
+                <span style={{ fontFamily: 'var(--display)', fontSize: 14, color: d2?.teamColor }}>
+                  {d2?.code || '—'}
+                </span>
+              </div>
+            </div>
+
+            {STAT_DEFS.map(stat => (
+              <StatRow key={stat.key} stat={stat} d1={d1} d2={d2} isMobile={isMobile} />
+            ))}
+          </div>
+
+          {/* Race Log */}
+          {races.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
+                  RACE LOG
+                </span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+
+              {/* Column headers */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
+                gap: isMobile ? 6 : 12,
+                padding: isMobile ? '0 10px 6px' : '0 16px 8px',
+              }}>
+                {['RND', 'RACE', d1?.code || 'D1', d2?.code || 'D2'].map(h => (
+                  <span key={h} style={{
+                    fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-dim)',
+                    letterSpacing: '0.08em',
+                  }}>{h}</span>
+                ))}
+              </div>
+
+              {races.map((race, idx) => {
+                if (!race) return null
+                return (
+                  <RaceLogRow
+                    key={race.round || idx}
+                    race={race}
+                    driver1Id={driver1}
+                    driver2Id={driver2}
+                    d1Color={d1?.teamColor || '#e10600'}
+                    d2Color={d2?.teamColor || '#3671C6'}
+                    isMobile={isMobile}
+                  />
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

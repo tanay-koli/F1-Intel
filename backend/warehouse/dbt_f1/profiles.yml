@@ -1,0 +1,7 @@
+dbt_f1:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../db/f1.duckdb"   # relative to dbt_project dir
+      threads: 4
