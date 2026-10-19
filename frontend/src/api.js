@@ -3,6 +3,20 @@ import axios from 'axios'
 const api = axios.create({ baseURL: '/api', timeout: 20000 })
 const telemetryApi = axios.create({ baseURL: '/api', timeout: 120000 }) // FastF1 first load can be slow
 
+// The API returns {error, message} on failure. Put that message on the error so
+// pages showing `error.message` display the reason instead of axios's
+// "Request failed with status code 503". `error.status` / `error.code` stay usable.
+function surfaceApiMessage(error) {
+  const body = error.response?.data
+  if (body?.message) {
+    error.message = body.message
+    error.apiCode = body.error
+  }
+  return Promise.reject(error)
+}
+api.interceptors.response.use(r => r, surfaceApiMessage)
+telemetryApi.interceptors.response.use(r => r, surfaceApiMessage)
+
 export const f1Api = {
   // Drivers
   getDrivers: (season) => api.get(`/drivers?season=${season}`).then(r => r.data),

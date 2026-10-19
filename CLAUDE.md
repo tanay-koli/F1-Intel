@@ -60,7 +60,26 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 
 `get_next_race()` (`/api/next-race`) reads Jolpica's `/<season>/next.json`, which for a finished season returns the *following* season's round 1. It returns `race: null` when the seasons don't match; the frontend treats that as "season complete". `/api/circuit-outline` serves the `ingest_fastf1.py` exports (404 when none exist; there are none until FastF1 is authenticated).
 
-Endpoints default `season` to `"2026"` and `round` to `"last"`; seasons/rounds are passed as strings straight into Jolpica URLs. Routes in `main.py` follow a uniform `try / except Exception → HTTPException(500)` pattern; some (e.g. `/api/h2h`) compose several `ergast.py` calls in the route itself.
+Endpoints default `season` to `"2026"` and `round` to `"last"`; seasons/rounds are passed as strings straight into Jolpica URLs. Some routes (e.g. `/api/h2h`) compose several `ergast.py` calls in the route itself.
+
+**Errors:** routes have no try/except. Data code raises the exceptions in `errors.py`, and `main.py`'s handlers turn them into `{"error": <code>, "message": <sentence shown to the user>}`:
+
+| Exception | Status | Raised when |
+|---|---|---|
+| `NotFound` | 404 | Jolpica 404s, or an unknown driver/constructor/circuit/round |
+| `InvalidInput` | 422 | Bad parameters; FastAPI validation errors use the same shape |
+| `UpstreamError` | 502 | Jolpica is unreachable or sends malformed data |
+| `DataNotAvailable` | 503 | FastF1 has no lap or telemetry data |
+| `RateLimited` | 503 | Jolpica 429, or FastF1's 500 calls/h limit |
+
+- `ergast._get()` classifies Jolpica failures at the source.
+- `telemetry._fastf1_errors` maps FastF1 exceptions for the public functions.
+- Anything else becomes a 500 with a logged traceback.
+- Only catch `NotFound` when "no data" is a legitimate answer. A broad `except Exception` would silently drop rate-limited rounds.
+- `frontend/src/api.js` copies `message` onto the axios error, so pages that render `error.message` show the API's sentence.
+- Log level comes from the `LOG_LEVEL` env var (default INFO).
+
+**`uvicorn --reload` gets stuck on this machine.** After an edit it logs "Reloading…", but the old worker keeps serving stale code. If a change seems to have no effect, kill all `uvicorn`/`multiprocessing-fork` python processes and restart.
 
 ### Warehouse (separate, offline pipeline)
 `backend/warehouse/` is a batch analytics layer: `ingest_jolpica.py` loads `raw_*` tables (schedule, results, qualifying, pitstops, driver_standings) into DuckDB, then dbt builds `staging` (views) → `intermediate` → `marts` (tables). Staging models select from `raw_*` tables directly (no dbt `source()` definitions). `backend/analytics/*.py` query those marts read-only, but **are not yet wired into `main.py`** — the live API uses only Jolpica + FastF1.

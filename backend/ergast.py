@@ -5,11 +5,16 @@ Base URL: https://ergast.com/api/f1
 """
 
 import json
+import logging
 import sqlite3
 import time
 import requests
 from pathlib import Path
 from typing import Optional
+
+from errors import NotFound, RateLimited, UpstreamError
+
+logger = logging.getLogger(__name__)
 
 BASE_URL = "https://api.jolpi.ca/ergast/f1"
 TIMEOUT = 10
@@ -104,9 +109,30 @@ def _get(url: str) -> dict:
             if time.time() - stored_at < ttl:
                 return json.loads(body)
 
-    resp = requests.get(url, timeout=TIMEOUT)
-    resp.raise_for_status()
-    data = resp.json()
+    try:
+        resp = requests.get(url, timeout=TIMEOUT)
+    except requests.RequestException as e:
+        logger.warning("Jolpica request failed: %s (%s)", url, e)
+        raise UpstreamError() from e
+
+    if resp.status_code == 429:
+        logger.warning("Jolpica rate limit hit: %s", url)
+        raise RateLimited()
+    if resp.status_code == 404:
+        # Jolpica 404s for seasons/rounds/ids it doesn't know
+        raise NotFound("No F1 data exists for that season, round or name.")
+    if resp.status_code >= 400:
+        logger.warning("Jolpica returned %s for %s", resp.status_code, url)
+        raise UpstreamError()
+
+    try:
+        data = resp.json()
+    except ValueError as e:
+        logger.warning("Jolpica sent non-JSON for %s", url)
+        raise UpstreamError() from e
+    if "MRData" not in data:
+        logger.warning("Jolpica response without MRData for %s", url)
+        raise UpstreamError()
 
     with _db() as con:
         con.execute(
@@ -483,8 +509,8 @@ def get_driver_points_progression(season: str = "2026") -> dict:
             slist = data["MRData"]["StandingsTable"]["StandingsLists"]
             if slist:
                 rounds_data.append(slist[0])
-        except Exception:
-            pass
+        except NotFound:
+            pass  # a round with no standings yet; rate limits/outages still raise
 
     if not rounds_data:
         return {"season": season, "rounds": [], "series": []}
@@ -547,8 +573,8 @@ def get_constructor_points_progression(season: str = "2026") -> dict:
             slist = data["MRData"]["StandingsTable"]["StandingsLists"]
             if slist:
                 rounds_data.append(slist[0])
-        except Exception:
-            pass
+        except NotFound:
+            pass  # a round with no standings yet; rate limits/outages still raise
 
     if not rounds_data:
         return {"season": season, "rounds": [], "series": []}
@@ -669,8 +695,8 @@ def get_pit_stops(season: str = "2026", round_num: str = "last") -> dict:
         res = get_race_results(season, actual_round)
         total_laps = max((r["laps"] for r in res["results"]), default=0)
         driver_info = {r["driverId"]: r for r in res["results"]}
-    except Exception:
-        pass
+    except NotFound:
+        pass  # results not published yet; pit stops are still useful alone
 
     pitstops = []
     for ps in race.get("PitStops", []):
@@ -777,8 +803,8 @@ def get_driver_season_sprint_results(season: str = "2026", driver_id: str = "") 
                 "status":   r.get("status", ""),
             })
         return results
-    except Exception:
-        return []
+    except NotFound:
+        return []  # no sprint/qualifying entries for this driver
 
 
 def get_driver_season_qualifying(season: str = "2026", driver_id: str = "") -> list:
@@ -800,5 +826,5 @@ def get_driver_season_qualifying(season: str = "2026", driver_id: str = "") -> l
                 "q3":       r.get("Q3", ""),
             })
         return results
-    except Exception:
-        return []
+    except NotFound:
+        return []  # no sprint/qualifying entries for this driver

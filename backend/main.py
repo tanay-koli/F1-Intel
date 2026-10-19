@@ -1,4 +1,10 @@
-from fastapi import FastAPI, HTTPException, Query
+import logging
+import os
+
+from fastapi import FastAPI, Query, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from ergast import (
     get_drivers, get_driver_standings, get_constructors,
@@ -12,6 +18,7 @@ from ergast import (
 )
 from telemetry import get_speed_trace, get_session_drivers, get_race_lap_data, get_full_race_analysis
 from race_analyst import analyze_race
+from errors import AppError, InvalidInput, NotFound
 
 import json
 import re
@@ -20,6 +27,45 @@ import uvicorn
 from pathlib import Path
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+# ── Error responses ───────────────────────────────────────────────────────────
+# Every error body is {"error": <code>, "message": <sentence for the user>}.
+
+def _error(status: int, code: str, message: str) -> JSONResponse:
+    return JSONResponse(status_code=status, content={"error": code, "message": message})
+
+
+@app.exception_handler(AppError)
+def app_error_handler(request: Request, exc: AppError):
+    return _error(exc.status, exc.code, exc.message)
+
+
+@app.exception_handler(RequestValidationError)
+def validation_error_handler(request: Request, exc: RequestValidationError):
+    first = exc.errors()[0]
+    field = ".".join(str(p) for p in first["loc"] if p not in ("query", "path", "body"))
+    return _error(422, InvalidInput.code, f"Invalid '{field}': {first['msg']}.")
+
+
+@app.exception_handler(StarletteHTTPException)
+def http_error_handler(request: Request, exc: StarletteHTTPException):
+    code = "not_found" if exc.status_code == 404 else "http_error"
+    return _error(exc.status_code, code, str(exc.detail))
+
+
+@app.exception_handler(Exception)
+def unhandled_error_handler(request: Request, exc: Exception):
+    # exc_info=exc: this runs outside the original except block, so
+    # logger.exception() would have no traceback to attach
+    logger.error("Unhandled error on %s %s", request.method, request.url.path, exc_info=exc)
+    return _error(500, AppError.code, AppError.default_message)
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,118 +85,85 @@ def root():
 
 @app.get("/api/drivers")
 def drivers(season: str = "2026"):
-    try:
-        return get_drivers(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_drivers(season)
 
 
 @app.get("/api/driver-standings")
 def driver_standings(season: str = "2026"):
-    try:
-        return get_driver_standings(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_driver_standings(season)
 
 
 @app.get("/api/drivers/{driver_id}")
 def driver_profile(driver_id: str, season: str = "2026"):
-    try:
-        drivers_data = get_drivers(season)
-        standings_data = get_driver_standings(season)
+    drivers_data = get_drivers(season)
+    standings_data = get_driver_standings(season)
 
-        driver = next(
-            (d for d in drivers_data["drivers"] if d["driverId"] == driver_id), None
-        )
-        if not driver:
-            raise HTTPException(status_code=404, detail="Driver not found")
+    driver = next(
+        (d for d in drivers_data["drivers"] if d["driverId"] == driver_id), None
+    )
+    if not driver:
+        raise NotFound(f"No driver '{driver_id}' in the {season} season.")
 
-        standing = next(
-            (s for s in standings_data["standings"] if s["driverId"] == driver_id), None
-        )
+    standing = next(
+        (s for s in standings_data["standings"] if s["driverId"] == driver_id), None
+    )
 
-        return {"driver": driver, "standing": standing}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"driver": driver, "standing": standing}
 
 
 # ── Constructors ──────────────────────────────────────────────────────────────
 
 @app.get("/api/constructors")
 def constructors(season: str = "2026"):
-    try:
-        return get_constructors(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_constructors(season)
 
 
 @app.get("/api/constructor-standings")
 def constructor_standings(season: str = "2026"):
-    try:
-        return get_constructor_standings(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_constructor_standings(season)
 
 
 @app.get("/api/constructors/{constructor_id}")
 def constructor_profile(constructor_id: str, season: str = "2026"):
-    try:
-        constructors_data = get_constructors(season)
-        standings_data = get_constructor_standings(season)
+    constructors_data = get_constructors(season)
+    standings_data = get_constructor_standings(season)
 
-        constructor = next(
-            (c for c in constructors_data["constructors"] if c["constructorId"] == constructor_id), None
-        )
-        if not constructor:
-            raise HTTPException(status_code=404, detail="Constructor not found")
+    constructor = next(
+        (c for c in constructors_data["constructors"] if c["constructorId"] == constructor_id), None
+    )
+    if not constructor:
+        raise NotFound(f"No constructor '{constructor_id}' in the {season} season.")
 
-        standing = next(
-            (s for s in standings_data["standings"] if s["constructorId"] == constructor_id), None
-        )
+    standing = next(
+        (s for s in standings_data["standings"] if s["constructorId"] == constructor_id), None
+    )
 
-        return {"constructor": constructor, "standing": standing}
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"constructor": constructor, "standing": standing}
 
 
 # ── Circuits / Tracks ─────────────────────────────────────────────────────────
 
 @app.get("/api/circuits")
 def circuits(season: str = "2026"):
-    try:
-        return get_circuits(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_circuits(season)
 
 
 @app.get("/api/circuits/{circuit_id}")
 def circuit_detail(circuit_id: str, season: str = "2026"):
-    try:
-        circuits_data = get_circuits(season)
-        circuit = next(
-            (c for c in circuits_data["circuits"] if c["circuitId"] == circuit_id), None
-        )
-        if not circuit:
-            raise HTTPException(status_code=404, detail="Circuit not found")
-        return circuit
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    circuits_data = get_circuits(season)
+    circuit = next(
+        (c for c in circuits_data["circuits"] if c["circuitId"] == circuit_id), None
+    )
+    if not circuit:
+        raise NotFound(f"No circuit '{circuit_id}' on the {season} calendar.")
+    return circuit
 
 
 # ── Seasons ───────────────────────────────────────────────────────────────────
 
 @app.get("/api/seasons")
 def seasons():
-    try:
-        return get_seasons()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_seasons()
 
 
 
@@ -159,68 +172,47 @@ def seasons():
 
 @app.get("/api/schedule")
 def schedule(season: str = "2026"):
-    try:
-        return get_schedule(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_schedule(season)
 
 
 # ── Race Results ──────────────────────────────────────────────────────────────
 
 @app.get("/api/results")
 def race_results(season: str = "2026", round: str = "last"):
-    try:
-        return get_race_results(season, round)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_race_results(season, round)
 
 
 # ── Qualifying ────────────────────────────────────────────────────────────────
 
 @app.get("/api/qualifying")
 def qualifying(season: str = "2026", round: str = "last"):
-    try:
-        return get_qualifying(season, round)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_qualifying(season, round)
 
 
 # ── Points Progressions ───────────────────────────────────────────────────────
 
 @app.get("/api/driver-progression")
 def driver_progression(season: str = "2026"):
-    try:
-        return get_driver_points_progression(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_driver_points_progression(season)
 
 
 @app.get("/api/constructor-progression")
 def constructor_progression(season: str = "2026"):
-    try:
-        return get_constructor_points_progression(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_constructor_points_progression(season)
 
 
 # ── Sprint Results ────────────────────────────────────────────────────────────
 
 @app.get("/api/sprint")
 def sprint_results(season: str = "2026", round: str = "last"):
-    try:
-        return get_sprint_results(season, round)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_sprint_results(season, round)
 
 
 # ── Pit Stops ─────────────────────────────────────────────────────────────────
 
 @app.get("/api/pitstops")
 def pit_stops(season: str = "2026", round: str = "last"):
-    try:
-        return get_pit_stops(season, round)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_pit_stops(season, round)
 
 
 # ── Head-to-Head ──────────────────────────────────────────────────────────────
@@ -231,111 +223,106 @@ def head_to_head(
     driver1: str = Query(..., description="First driver ID"),
     driver2: str = Query(..., description="Second driver ID"),
 ):
-    try:
-        r1_data = get_driver_season_results(season, driver1)
-        r2_data = get_driver_season_results(season, driver2)
+    r1_data = get_driver_season_results(season, driver1)
+    r2_data = get_driver_season_results(season, driver2)
 
-        # Fetch sprint results for both drivers
-        s1_list = get_driver_season_sprint_results(season, driver1)
-        s2_list = get_driver_season_sprint_results(season, driver2)
-        s1_map = {s["round"]: s for s in s1_list}
-        s2_map = {s["round"]: s for s in s2_list}
+    # Fetch sprint results for both drivers
+    s1_list = get_driver_season_sprint_results(season, driver1)
+    s2_list = get_driver_season_sprint_results(season, driver2)
+    s1_map = {s["round"]: s for s in s1_list}
+    s2_map = {s["round"]: s for s in s2_list}
 
-        # Fetch qualifying results for both drivers
-        q1_list = get_driver_season_qualifying(season, driver1)
-        q2_list = get_driver_season_qualifying(season, driver2)
-        q1_map = {q["round"]: q for q in q1_list}
-        q2_map = {q["round"]: q for q in q2_list}
+    # Fetch qualifying results for both drivers
+    q1_list = get_driver_season_qualifying(season, driver1)
+    q2_list = get_driver_season_qualifying(season, driver2)
+    q1_map = {q["round"]: q for q in q1_list}
+    q2_map = {q["round"]: q for q in q2_list}
 
-        r1_map = {r["round"]: r for r in r1_data["results"]}
-        r2_map = {r["round"]: r for r in r2_data["results"]}
-        all_rounds = sorted(set(list(r1_map.keys()) + list(r2_map.keys())))
+    r1_map = {r["round"]: r for r in r1_data["results"]}
+    r2_map = {r["round"]: r for r in r2_data["results"]}
+    all_rounds = sorted(set(list(r1_map.keys()) + list(r2_map.keys())))
 
-        d1_beats = 0
-        d2_beats = 0
-        races = []
-        for rnd in all_rounds:
-            rd1 = r1_map.get(rnd)
-            rd2 = r2_map.get(rnd)
-            winner = None
-            if rd1 and rd2:
-                if rd1["position"] < rd2["position"]:
-                    winner = driver1
-                    d1_beats += 1
-                elif rd2["position"] < rd1["position"]:
-                    winner = driver2
-                    d2_beats += 1
-            races.append({
-                "round":    rnd,
-                "raceName": (rd1 or rd2 or {}).get("raceName", f"Round {rnd}"),
-                "d1":       rd1,
-                "d2":       rd2,
-                "winner":   winner,
-                "sprint":   {
-                    "d1": s1_map.get(rnd),
-                    "d2": s2_map.get(rnd),
-                },
-                "quali": {
-                    "d1": q1_map.get(rnd),
-                    "d2": q2_map.get(rnd),
-                },
-            })
+    d1_beats = 0
+    d2_beats = 0
+    races = []
+    for rnd in all_rounds:
+        rd1 = r1_map.get(rnd)
+        rd2 = r2_map.get(rnd)
+        winner = None
+        if rd1 and rd2:
+            if rd1["position"] < rd2["position"]:
+                winner = driver1
+                d1_beats += 1
+            elif rd2["position"] < rd1["position"]:
+                winner = driver2
+                d2_beats += 1
+        races.append({
+            "round":    rnd,
+            "raceName": (rd1 or rd2 or {}).get("raceName", f"Round {rnd}"),
+            "d1":       rd1,
+            "d2":       rd2,
+            "winner":   winner,
+            "sprint":   {
+                "d1": s1_map.get(rnd),
+                "d2": s2_map.get(rnd),
+            },
+            "quali": {
+                "d1": q1_map.get(rnd),
+                "d2": q2_map.get(rnd),
+            },
+        })
 
-        def _agg(results: list, sprint_map: dict, quali_map: dict, beats: int) -> dict:
-            if not results:
-                return {"points": 0, "sprintPoints": 0, "totalPoints": 0,
-                        "wins": 0, "podiums": 0, "fastestLaps": 0,
-                        "dnf": 0, "avgPosition": 0.0, "races": 0,
-                        "qualiWins": 0, "avgQualiPosition": 0.0,
-                        "headToHeadWins": beats}
-            pts          = sum(r["points"] for r in results)
-            sprint_pts   = sum(s["points"] for s in sprint_map.values())
-            wins         = sum(1 for r in results if r["position"] == 1)
-            podiums      = sum(1 for r in results if r["position"] <= 3)
-            fl           = sum(1 for r in results if r.get("fastestLapRank") == 1)
-            dnf          = sum(1 for r in results if not str(r.get("positionText", "")).isdigit())
-            finished     = [r["position"] for r in results if r["position"] < 99]
-            avg          = round(sum(finished) / len(finished), 2) if finished else 0.0
-            quali_pos    = [q["position"] for q in quali_map.values() if q["position"] < 99]
-            avg_quali    = round(sum(quali_pos) / len(quali_pos), 2) if quali_pos else 0.0
-            return {
-                "points":           pts,
-                "sprintPoints":     sprint_pts,
-                "totalPoints":      pts + sprint_pts,
-                "wins":             wins,
-                "podiums":          podiums,
-                "fastestLaps":      fl,
-                "dnf":              dnf,
-                "avgPosition":      avg,
-                "races":            len(results),
-                "qualiWins":        0,   # filled below after comparing both drivers
-                "avgQualiPosition": avg_quali,
-                "headToHeadWins":   beats,
-            }
-
-        agg1 = _agg(r1_data["results"], s1_map, q1_map, d1_beats)
-        agg2 = _agg(r2_data["results"], s2_map, q2_map, d2_beats)
-
-        # Count qualifying head-to-head wins
-        common_quali_rounds = set(q1_map.keys()) & set(q2_map.keys())
-        q1_wins = sum(
-            1 for rnd in common_quali_rounds
-            if q1_map[rnd]["position"] < q2_map[rnd]["position"]
-        )
-        q2_wins = len(common_quali_rounds) - q1_wins
-        agg1["qualiWins"] = q1_wins
-        agg2["qualiWins"] = q2_wins
-
+    def _agg(results: list, sprint_map: dict, quali_map: dict, beats: int) -> dict:
+        if not results:
+            return {"points": 0, "sprintPoints": 0, "totalPoints": 0,
+                    "wins": 0, "podiums": 0, "fastestLaps": 0,
+                    "dnf": 0, "avgPosition": 0.0, "races": 0,
+                    "qualiWins": 0, "avgQualiPosition": 0.0,
+                    "headToHeadWins": beats}
+        pts          = sum(r["points"] for r in results)
+        sprint_pts   = sum(s["points"] for s in sprint_map.values())
+        wins         = sum(1 for r in results if r["position"] == 1)
+        podiums      = sum(1 for r in results if r["position"] <= 3)
+        fl           = sum(1 for r in results if r.get("fastestLapRank") == 1)
+        dnf          = sum(1 for r in results if not str(r.get("positionText", "")).isdigit())
+        finished     = [r["position"] for r in results if r["position"] < 99]
+        avg          = round(sum(finished) / len(finished), 2) if finished else 0.0
+        quali_pos    = [q["position"] for q in quali_map.values() if q["position"] < 99]
+        avg_quali    = round(sum(quali_pos) / len(quali_pos), 2) if quali_pos else 0.0
         return {
-            "season":  season,
-            "driver1": {**r1_data.get("driver", {}), **agg1},
-            "driver2": {**r2_data.get("driver", {}), **agg2},
-            "races":   races,
+            "points":           pts,
+            "sprintPoints":     sprint_pts,
+            "totalPoints":      pts + sprint_pts,
+            "wins":             wins,
+            "podiums":          podiums,
+            "fastestLaps":      fl,
+            "dnf":              dnf,
+            "avgPosition":      avg,
+            "races":            len(results),
+            "qualiWins":        0,   # filled below after comparing both drivers
+            "avgQualiPosition": avg_quali,
+            "headToHeadWins":   beats,
         }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+
+    agg1 = _agg(r1_data["results"], s1_map, q1_map, d1_beats)
+    agg2 = _agg(r2_data["results"], s2_map, q2_map, d2_beats)
+
+    # Count qualifying head-to-head wins
+    common_quali_rounds = set(q1_map.keys()) & set(q2_map.keys())
+    q1_wins = sum(
+        1 for rnd in common_quali_rounds
+        if q1_map[rnd]["position"] < q2_map[rnd]["position"]
+    )
+    q2_wins = len(common_quali_rounds) - q1_wins
+    agg1["qualiWins"] = q1_wins
+    agg2["qualiWins"] = q2_wins
+
+    return {
+        "season":  season,
+        "driver1": {**r1_data.get("driver", {}), **agg1},
+        "driver2": {**r2_data.get("driver", {}), **agg2},
+        "races":   races,
+    }
 
 
 
@@ -351,10 +338,7 @@ def telemetry_drivers(
     List drivers that recorded lap data in the specified session.
     Use this to populate driver-picker dropdowns before requesting a trace.
     """
-    try:
-        return get_session_drivers(year, round, session)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_session_drivers(year, round, session)
 
 
 @app.get("/api/telemetry")
@@ -370,10 +354,7 @@ def telemetry(
     on their respective fastest laps in the given session.
     Data is aligned on a unified distance axis.
     """
-    try:
-        return get_speed_trace(year, round, session, driver1, driver2)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_speed_trace(year, round, session, driver1, driver2)
 
 
 @app.get("/api/telemetry/race")
@@ -387,10 +368,7 @@ def telemetry_race(
     Returns full-race lap-by-lap data for two drivers:
     lap times, positions, gap to leader, tyre compounds, pit stops.
     """
-    try:
-        return get_race_lap_data(year, round, driver1, driver2)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_race_lap_data(year, round, driver1, driver2)
 
 
 @app.get("/api/telemetry/race-analysis")
@@ -403,10 +381,7 @@ def telemetry_race_analysis(
     grid/finish positions, fastest laps, pit stops, tyre strategies,
     lap-by-lap data, safety car events.
     """
-    try:
-        return get_full_race_analysis(year, round)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_full_race_analysis(year, round)
 
 
 @app.get("/api/race-analyst")
@@ -418,18 +393,15 @@ def race_analyst_endpoint(
     Returns per-lap analyst insights for the entire race.
     Reuses the cached race analysis data and runs rule-based analysis.
     """
-    try:
-        analysis = get_full_race_analysis(year, round)
-        insights = analyze_race(analysis)
-        return {
-            "year":      year,
-            "round":     round,
-            "raceName":  analysis.get("raceName", ""),
-            "totalLaps": analysis.get("totalLaps", 0),
-            "insights":  insights,
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    analysis = get_full_race_analysis(year, round)
+    insights = analyze_race(analysis)
+    return {
+        "year":      year,
+        "round":     round,
+        "raceName":  analysis.get("raceName", ""),
+        "totalLaps": analysis.get("totalLaps", 0),
+        "insights":  insights,
+    }
 
 
 
@@ -439,10 +411,7 @@ def race_analyst_endpoint(
 
 @app.get("/api/next-race")
 def next_race(season: str = "2026"):
-    try:
-        return get_next_race(season)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return get_next_race(season)
 
 
 # ── Circuit outline ───────────────────────────────────────────────────────────
@@ -462,13 +431,13 @@ def circuit_outline(circuit_id: str, alt: str = ""):
     names = [n.strip().lower().replace(" ", "_") for n in (circuit_id, alt) if n.strip()]
     for name in names:
         if not re.fullmatch(r"[a-z0-9_]+", name):
-            raise HTTPException(status_code=400, detail="Invalid circuit id")
+            raise InvalidInput("Circuit ids contain only lowercase letters, digits and underscores.")
         path = _CIRCUITS_DIR / f"{name}.json"
         if path.exists():
             points = json.loads(path.read_text())
             step = max(1, len(points) // _OUTLINE_POINTS)
             return {"circuitId": circuit_id, "points": points[::step]}
-    raise HTTPException(status_code=404, detail="No outline for this circuit")
+    raise NotFound("No track outline has been exported for this circuit.")
 
 
 # ── Cache management ──────────────────────────────────────────────────────────

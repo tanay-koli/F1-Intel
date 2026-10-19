@@ -5,6 +5,8 @@ plus full-race lap-by-lap data (lap times, positions, tyre strategy).
 Cache is stored in ./f1_cache relative to this file (auto-created).
 """
 
+import functools
+import logging
 import os
 import threading
 from collections import OrderedDict
@@ -13,8 +15,18 @@ import fastf1
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from fastf1._api import SessionNotAvailableError
+from fastf1.exceptions import (
+    DataNotLoadedError,
+    InvalidSessionError,
+    NoLapDataError,
+    RateLimitExceededError,
+)
 
 from ergast import TEAM_COLORS
+from errors import AppError, DataNotAvailable, InvalidInput, NotFound, RateLimited
+
+logger = logging.getLogger(__name__)
 
 # ── Cache setup ────────────────────────────────────────────────────────────────
 
@@ -34,6 +46,40 @@ _key_locks_guard = threading.Lock()
 def _lock_for(key: tuple) -> threading.Lock:
     with _key_locks_guard:
         return _key_locks.setdefault(key, threading.Lock())
+
+
+def _fastf1_errors(fn):
+    """
+    Translate FastF1 exceptions from a public function (first two args:
+    year, round_num) into app errors with messages a user can act on.
+    """
+    @functools.wraps(fn)
+    def wrapper(year, round_num, *args, **kwargs):
+        try:
+            return fn(year, round_num, *args, **kwargs)
+        except AppError:
+            raise
+        except RateLimitExceededError as e:
+            raise RateLimited(
+                "Too many requests to F1's timing service this hour. Try again later."
+            ) from e
+        except (DataNotLoadedError, NoLapDataError, SessionNotAvailableError) as e:
+            raise DataNotAvailable(
+                f"Lap and telemetry data for {year} round {round_num} isn't available "
+                "from F1's timing service."
+            ) from e
+        except InvalidSessionError as e:
+            raise NotFound(f"That session doesn't exist for {year} round {round_num}.") from e
+        except ValueError as e:
+            # FastF1's schedule lookup: "Invalid round: 30", "Invalid session type 'XX'"
+            if "Invalid round" in str(e):
+                raise NotFound(f"There's no round {round_num} in {year}.") from e
+            if "Invalid session type" in str(e):
+                raise InvalidInput(
+                    "Unknown session. Use R, Q, S, SQ, FP1, FP2 or FP3."
+                ) from e
+            raise
+    return wrapper
 
 
 def _load_session(year: int, round_num: int, session_type: str = "R"):
@@ -93,6 +139,7 @@ def _format_lap_time(lt) -> str:
 
 # ── Driver list for a session ─────────────────────────────────────────────────
 
+@_fastf1_errors
 def get_session_drivers(year: int, round_num: int, session_type: str = "R") -> dict:
     """Return list of drivers that have laps in the given session."""
     session = _load_session(year, round_num, session_type)
@@ -113,6 +160,7 @@ def get_session_drivers(year: int, round_num: int, session_type: str = "R") -> d
 
 # ── Full-race lap-by-lap data ─────────────────────────────────────────────────
 
+@_fastf1_errors
 def get_race_lap_data(
     year: int,
     round_num: int,
@@ -252,6 +300,7 @@ _analysis_cache: OrderedDict[tuple[int, int], dict] = OrderedDict()
 _analysis_cache_lock = threading.Lock()
 
 
+@_fastf1_errors
 def get_full_race_analysis(year: int, round_num: int) -> dict:
     """Memoised _compute_full_race_analysis(); failures are not cached."""
     key = (year, round_num)
@@ -474,6 +523,7 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
 
 # ── Speed trace comparison ────────────────────────────────────────────────────
 
+@_fastf1_errors
 def get_speed_trace(
     year: int,
     round_num: int,
@@ -491,6 +541,8 @@ def get_speed_trace(
 
     def _fastest_tel(drv_code: str):
         lap = session.laps.pick_drivers(drv_code).pick_fastest()
+        if lap is None or lap.empty:
+            raise NotFound(f"No timed laps for driver {drv_code} in this session.")
         tel = lap.get_telemetry()
         # Normalise distance to metres from 0
         tel["Distance"] = tel["Distance"] - tel["Distance"].iloc[0]
