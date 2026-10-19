@@ -6,6 +6,9 @@ Cache is stored in ./f1_cache relative to this file (auto-created).
 """
 
 import os
+import threading
+from collections import OrderedDict
+
 import fastf1
 import numpy as np
 import pandas as pd
@@ -22,10 +25,23 @@ fastf1.Cache.enable_cache(str(CACHE_DIR))
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+# One lock per key, so concurrent requests for the same session (or analysis)
+# wait for the first one instead of all downloading it at once.
+_key_locks: dict[tuple, threading.Lock] = {}
+_key_locks_guard = threading.Lock()
+
+
+def _lock_for(key: tuple) -> threading.Lock:
+    with _key_locks_guard:
+        return _key_locks.setdefault(key, threading.Lock())
+
+
 def _load_session(year: int, round_num: int, session_type: str = "R"):
     """Load & cache a FastF1 session. session_type: R=Race, Q=Qualifying, FP1/FP2/FP3."""
-    session = fastf1.get_session(year, round_num, session_type)
-    session.load(telemetry=True, laps=True, weather=False, messages=False)
+    # Later callers for the same session wait, then hit FastF1's disk cache.
+    with _lock_for(("session", year, round_num, session_type)):
+        session = fastf1.get_session(year, round_num, session_type)
+        session.load(telemetry=True, laps=True, weather=False, messages=False)
     return session
 
 
@@ -229,7 +245,30 @@ def get_race_lap_data(
 
 # ── Full Race Analysis (all drivers) ──────────────────────────────────────────
 
+# Recent analyses kept in memory; /api/race-analyst and /api/telemetry/race-analysis
+# both use them, and each one costs a full session load to build.
+_ANALYSIS_CACHE_SIZE = 8
+_analysis_cache: OrderedDict[tuple[int, int], dict] = OrderedDict()
+_analysis_cache_lock = threading.Lock()
+
+
 def get_full_race_analysis(year: int, round_num: int) -> dict:
+    """Memoised _compute_full_race_analysis(); failures are not cached."""
+    key = (year, round_num)
+    with _lock_for(("analysis", *key)):
+        with _analysis_cache_lock:
+            if key in _analysis_cache:
+                _analysis_cache.move_to_end(key)
+                return _analysis_cache[key]
+        result = _compute_full_race_analysis(year, round_num)
+        with _analysis_cache_lock:
+            _analysis_cache[key] = result
+            if len(_analysis_cache) > _ANALYSIS_CACHE_SIZE:
+                _analysis_cache.popitem(last=False)
+        return result
+
+
+def _compute_full_race_analysis(year: int, round_num: int) -> dict:
     """
     Returns comprehensive race analysis for ALL drivers:
     - Per-driver: grid pos, finish pos, fastest lap, avg lap, pit stops,
