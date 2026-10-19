@@ -4,27 +4,29 @@ Place constructor / team logo images here.
 
 ## Naming Convention
 
-File names must match the `constructorId` from the Ergast/Jolpica API (lowercase, hyphen-separated).
+File names must be the team's `constructorId` from the Jolpica API, exactly (lowercase with
+underscores, e.g. `red_bull`). Look one up with `GET /api/constructors?season=2026`.
 
 ## Format
 
 - Preferred: `.webp` or `.png` (logos need transparency)
 - Also supported: `.jpg`, `.jpeg`
 
-## 2025/2026 Constructor IDs (reference)
+## 2026 Constructor IDs
 
-| Team                  | File name               |
-|-----------------------|-------------------------|
-| Red Bull Racing       | red_bull.webp           |
-| McLaren               | mclaren.webp            |
-| Ferrari               | ferrari.webp            |
-| Mercedes              | mercedes.webp           |
-| Aston Martin          | aston_martin.webp       |
-| Alpine F1             | alpine.webp             |
-| Williams              | williams.webp           |
-| RB (Visa Cash App)    | rb.webp                 |
-| Kick Sauber           | sauber.webp             |
-| Haas F1               | haas.webp               |
+| Team             | constructorId  | File in this folder |
+|------------------|----------------|---------------------|
+| Alpine F1 Team   | `alpine`       | `alpine.png`        |
+| Aston Martin     | `aston_martin` | `aston_martin.jpg`  |
+| Audi             | `audi`         | `audi.webp`         |
+| Cadillac F1 Team | `cadillac`     | `cadillac.jpg`      |
+| Ferrari          | `ferrari`      | `ferrari.png`       |
+| Haas F1 Team     | `haas`         | `haas.png`          |
+| McLaren          | `mclaren`      | `mclaren.png`       |
+| Mercedes         | `mercedes`     | `mercedes.webp`     |
+| RB F1 Team       | `rb`           | `rb.png`            |
+| Red Bull         | `red_bull`     | `red_bull.webp`     |
+| Williams         | `williams`     | `williams.png`      |
 
 ## Recommended Image Specs
 

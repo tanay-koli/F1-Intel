@@ -29,14 +29,34 @@ export function Loader({ label = 'Loading...' }) {
   )
 }
 
-export function ErrorMsg({ message }) {
+/**
+ * Error box. Pass `error` (an axios error; api.js puts the API's message on
+ * error.message) or a plain `message`. `context` prefixes real errors, e.g.
+ * "Race analysis error: …". A 503 means the data doesn't exist yet (no timing
+ * data, rate limit), so it reads as "not available yet", not as a crash.
+ */
+export function ErrorMsg({ message, error, context }) {
+  const text = (error ? error.message : message) || 'Something went wrong'
+
+  if (error?.response?.status === 503) {
+    return (
+      <div role="status" style={{
+        padding: '12px 16px', background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)', borderRadius: 8,
+        color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12
+      }}>
+        Not available yet: {text}
+      </div>
+    )
+  }
+
   return (
-    <div style={{
+    <div role="alert" style={{
       padding: '12px 16px', background: '#1a0505',
       border: '1px solid var(--red-dim)', borderRadius: 8,
       color: '#ff6b6b', fontFamily: 'var(--mono)', fontSize: 12
     }}>
-      ⚠ {message || 'Something went wrong'}
+      ⚠ {context ? `${context} error: ` : ''}{text}
     </div>
   )
 }

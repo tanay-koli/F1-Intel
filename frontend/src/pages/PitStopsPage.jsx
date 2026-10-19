@@ -359,7 +359,7 @@ export default function PitStopsPage({ season }) {
       </div>
 
       {isLoading && <Loader label="Loading pit stop data..." />}
-      {error && <ErrorMsg message={error.message} />}
+      {error && <ErrorMsg error={error} />}
 
       {!isLoading && !error && data && (
         <>

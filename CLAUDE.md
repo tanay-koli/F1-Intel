@@ -4,6 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
+**CI** (`.github/workflows/ci.yml`, every push and PR): backend `ruff check`, `ruff format --check`, `pytest` (Python 3.13); frontend `npm ci && npm run build`.
+
 **Backend tests and lint** (from `backend/`, after `venv/Scripts/python -m pip install -r requirements-dev.txt`):
 ```bash
 venv/Scripts/python -m pytest                       # all tests (~1 s, no network)
@@ -129,7 +131,7 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 - `telemetry._fastf1_errors` maps FastF1 exceptions for the public functions.
 - Anything else becomes a 500 with a logged traceback.
 - Only catch `NotFound` when "no data" is a legitimate answer. A broad `except Exception` would silently drop rate-limited rounds.
-- `frontend/src/api.js` copies `message` onto the axios error, so pages that render `error.message` show the API's sentence.
+- `frontend/src/api.js` copies `message` onto the axios error, so pages that render `error.message` show the API's sentence. Prefer `<ErrorMsg error={error} context="…" />` (in `components/ui.jsx`): it shows a 503 as a neutral "Not available yet" notice rather than the red error box.
 - Log level comes from `settings.log_level` (env `LOG_LEVEL`, default INFO).
 
 **`uvicorn --reload` gets stuck on this machine.** After an edit it logs "Reloading…", but the old worker keeps serving stale code. If a change seems to have no effect, kill all `uvicorn`/`multiprocessing-fork` python processes and restart.
@@ -166,5 +168,5 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 - **Styling:** new components use CSS Modules (`*.module.css`) and media queries. Older pages still use inline `style={{...}}` + `useIsMobile` from `components/ui.jsx`; leave them unless restyling them is the task. Charts use Recharts.
 - **Design tokens** (`index.css :root`, used by old and new code alike): `--bg`, `--bg-card`, `--bg-elevated` (raised card), `--border`, `--border-strong`, `--pill-active`, `--text`, `--text-muted` (≥4.5:1 on every card colour, so dim things with colour rather than `opacity`). `--accent` (#FFC940) is only for "next" states and the focus ring; `--red` only for heading bars and the logo badge. Fonts: `--display` (Bebas Neue) for headings, names, numbers; `--body` is Archivo (variable `wdth` axis; the hero name and countdown use `font-stretch: 70–75%`, weight 800). `tabular-nums` is global. Team colours always come from the API (`teamColor` / `color` from backend `TEAM_COLORS`), never hardcoded in React.
 - `components/SectionHeading.jsx` reproduces the display-font heading with the red bar and the outlined "Round N" badge. Reuse it for new sections.
-- `components/F1Image.jsx` loads `/images/drivers/<driverId>.{webp,png,jpg,jpeg}` and `/images/constructors/<constructorId>.*`, trying extensions in order before falling back to a placeholder. Pass `alt` (the person or team name); it defaults to the id. The image `src` is state seeded from the id, so give each instance a `key` of the id when lists can reorder. Filenames must equal the Jolpica `driverId`/`constructorId` (e.g. `norris`, `max_verstappen`, `red_bull`) — the example table in `public/images/drivers/README.md` is out of date.
+- `components/F1Image.jsx` loads `/images/drivers/<driverId>.{webp,png,jpg,jpeg}` and `/images/constructors/<constructorId>.*`, trying extensions in order before falling back to a placeholder. Pass `alt` (the person or team name); it defaults to the id. The image `src` is state seeded from the id, so give each instance a `key` of the id when lists can reorder. Filenames must equal the Jolpica `driverId`/`constructorId`, using underscores. Driver IDs are often the bare surname (`norris`) but not always (`max_verstappen`, `arvid_lindblad`); the READMEs in `public/images/` list the 2026 IDs.
 - CORS origins come from `settings.cors_origins`. In dev, the browser calls the API through Vite's same-origin proxy, so CORS only matters for direct calls.

@@ -1,7 +1,9 @@
 """
-Ergast F1 API wrapper
-Docs: https://ergast.com/mrd/
-Base URL: https://ergast.com/api/f1
+Jolpica F1 API wrapper (https://github.com/jolpica/jolpica-f1).
+
+Jolpica is the maintained, Ergast-compatible successor to the retired Ergast
+API: same URL layout and MRData response format, served from
+https://api.jolpi.ca/ergast/f1. The module keeps its historical name.
 """
 
 import json

@@ -1,5 +1,5 @@
 """
-Bulk historical ingest from Jolpica/Ergast API into DuckDB.
+Bulk historical ingest from the Jolpica F1 API (Ergast-compatible) into DuckDB.
 Run once, then incrementally after each race weekend.
 
 Usage:
@@ -17,7 +17,7 @@ from tqdm import tqdm
 
 DB_PATH = Path(__file__).parent.parent / "db" / "f1.duckdb"
 RAW_PATH = Path(__file__).parent.parent / "raw" / "jolpica"
-BASE_URL = "https://api.jolpi.ca/ergast/f1"  # Jolpica mirror
+BASE_URL = "https://api.jolpi.ca/ergast/f1"  # Jolpica (Ergast-compatible)
 SLEEP = 0.2  # be polite — Jolpica rate limit is 200 req/hour
 
 

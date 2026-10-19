@@ -329,7 +329,7 @@ export default function ResultsPage({ season }) {
 
       {/* Content */}
       {isLoading && <Loader label={`Loading ${activeTab} data...`} />}
-      {error     && <ErrorMsg message={error.message} />}
+      {error     && <ErrorMsg error={error} />}
 
       {!isLoading && !error && results.length === 0 && (
         <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>

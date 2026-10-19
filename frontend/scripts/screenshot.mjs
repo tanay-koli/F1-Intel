@@ -14,7 +14,7 @@ const edge = spawn(EDGE, ['--headless=new', '--disable-gpu', '--hide-scrollbars'
   `--remote-debugging-port=${PORT}`, `--user-data-dir=${profile}`, 'about:blank'])
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms))
-setTimeout(() => { console.error("timed out"); edge.kill(); process.exit(1) }, 60_000).unref()
+setTimeout(() => { console.error("timed out"); edge.kill(); process.exit(1) }, 120_000).unref()  // first visit to a page can include Vite compiling it
 let target
 for (let i = 0; i < 50 && !target; i++) {
   try { target = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).find(t => t.type === 'page') }

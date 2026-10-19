@@ -368,7 +368,7 @@ export default function H2HPage({ season }) {
       )}
 
       {isLoading && <Loader label="Computing head-to-head stats..." />}
-      {error && <ErrorMsg message={error.message} />}
+      {error && <ErrorMsg error={error} />}
 
       {data && !isLoading && (
         <div style={{ animation: 'fadeUp 0.3s ease' }}>

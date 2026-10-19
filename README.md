@@ -1,6 +1,6 @@
 # 🏎 F1 Dashboard — MVP
 
-A full-stack F1 data dashboard built with **React + FastAPI**, powered by the **Ergast API** and **FastF1**.
+A full-stack F1 data dashboard built with **React + FastAPI**, powered by the **[Jolpica F1 API](https://github.com/jolpica/jolpica-f1)** (the Ergast-compatible successor to the retired Ergast API) and **FastF1**.
 
 ---
 
@@ -10,7 +10,7 @@ A full-stack F1 data dashboard built with **React + FastAPI**, powered by the **
 f1-dashboard/
 ├── backend/
 │   ├── main.py           # FastAPI app & routes
-│   ├── ergast.py         # Ergast API wrapper
+│   ├── ergast.py         # Jolpica API wrapper (historical module name)
 │   └── requirements.txt
 └── frontend/
     ├── src/
@@ -117,6 +117,6 @@ GET /api/seasons
 
 ## Notes
 
-- Ergast API has no auth required but rate-limit kindly (cache responses)
+- Jolpica needs no auth but is rate-limited (about 4 requests/s, 500/hour); the backend caches responses in SQLite
 - FastF1 requires a local cache dir; set with `fastf1.Cache.enable_cache('./f1_cache')`
-- For live 2025 data, Ergast updates ~1h after each session
+- Jolpica usually publishes results within a few hours of each session

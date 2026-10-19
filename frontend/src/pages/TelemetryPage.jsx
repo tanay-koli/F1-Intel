@@ -1829,7 +1829,7 @@ export default function TelemetryPage({ season }) {
         <Loader label="Loading session drivers via FastF1 (may take 20–40s on first load)…" />
       )}
       {viewTab === 'fastlap' && driversError && (
-        <ErrorMsg message={`Driver list error: ${driversError.message}`} />
+        <ErrorMsg error={driversError} context="Driver list" />
       )}
 
       {/* Loading / Error */}
@@ -1837,10 +1837,10 @@ export default function TelemetryPage({ season }) {
         <Loader label={`Fetching ${viewTab === 'analysis' ? 'full race analysis for all drivers' : 'fastest lap telemetry'} — downloading session data (20–60s first time)…`} />
       )}
       {viewTab === 'analysis' && analysisError && (
-        <ErrorMsg message={`Race analysis error: ${analysisError.message}`} />
+        <ErrorMsg error={analysisError} context="Race analysis" />
       )}
       {viewTab === 'fastlap' && telError && (
-        <ErrorMsg message={`Telemetry error: ${telError.message}`} />
+        <ErrorMsg error={telError} context="Telemetry" />
       )}
 
       {/* ── Race Analysis View ── */}
