@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from datetime import date
 
 import uvicorn
@@ -25,22 +26,36 @@ from ergast import (
     get_seasons,
     get_sprint_results,
 )
-from errors import AppError, InvalidInput
+from errors import AppError, Forbidden, InvalidInput
+from jobs.precompute import precompute_race
+from jobs.scheduler import start_scheduler
 from params import Round, Season, SessionType, TelemetryRound, TelemetryYear
+from precomputed import store
 from services.cache import cache_stats, clear_cache
 from services.circuits import circuit_outline
 from services.h2h import head_to_head
 from services.profiles import circuit_detail, constructor_profile, driver_profile
-from services.race import race_analyst
+from services.race import race_analysis, race_analyst
 from settings import settings
 from telemetry import (
-    get_full_race_analysis,
     get_race_lap_data,
     get_session_drivers,
     get_speed_trace,
 )
 
-app = FastAPI(title="F1 Dashboard API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Precompute scheduler lives in this process because it owns the
+    # precomputed store (see precomputed.py)
+    scheduler = start_scheduler() if settings.precompute_enabled else None
+    yield
+    if scheduler:
+        scheduler.shutdown(wait=False)
+    store.close()
+
+
+app = FastAPI(title="F1 Dashboard API", version="1.0.0", lifespan=lifespan)
 
 DEFAULT_SEASON = settings.default_season
 # Telemetry takes a numeric year; "current" means this calendar year
@@ -266,13 +281,26 @@ def telemetry_race(
 @route("/api/telemetry/race-analysis", s.RaceAnalysisResponse)
 def telemetry_race_analysis(year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound = 1):
     """Whole-race analysis for every driver: positions, laps, stints, fastest laps."""
-    return get_full_race_analysis(year, round)
+    return race_analysis(year, round)
 
 
 @route("/api/race-analyst", s.RaceAnalystResponse)
 def race_analyst_route(year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound = 1):
     """Per-lap rule-based commentary for a race."""
     return race_analyst(year, round)
+
+
+# ── Admin ─────────────────────────────────────────────────────────────────────
+
+_LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+
+
+@route("/api/admin/precompute", s.PrecomputeResponse, method="post")
+def precompute(request: Request, year: TelemetryYear, round: TelemetryRound):
+    """Precompute a race's analysis now (used by `python -m jobs.precompute`). Localhost only."""
+    if request.client is None or request.client.host not in _LOOPBACK:
+        raise Forbidden("Precompute can only be triggered from the server itself.")
+    return precompute_race(year, round, store)
 
 
 # ── Cache management ──────────────────────────────────────────────────────────

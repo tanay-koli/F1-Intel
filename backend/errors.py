@@ -51,3 +51,9 @@ class RateLimited(AppError):
     status = 503
     code = "rate_limited"
     default_message = "Too many requests to the F1 data service. Try again in a few minutes."
+
+
+class Forbidden(AppError):
+    status = 403
+    code = "forbidden"
+    default_message = "You can't do that from here."

@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     # Holds the Jolpica response cache (api_cache.sqlite) and FastF1's cache
     cache_dir: Path = BACKEND_DIR / "f1_cache"
     log_level: str = "INFO"
+    # Precomputed race analysis (jobs/): run the scheduler inside the API, and
+    # how long after a race's scheduled start to run the job (race ~2 h, then
+    # time for timing data to be published)
+    precompute_enabled: bool = True
+    precompute_delay_hours: float = 5.0
+    # Where `python -m jobs.precompute` finds the running API when the
+    # precomputed database is locked by it
+    api_url: str = "http://127.0.0.1:8000"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

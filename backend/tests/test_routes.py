@@ -50,7 +50,6 @@ def test_driver_profile(client, jolpica, mocker):
 
 
 def test_race_analysis_and_analyst(client, mocker, race_analysis):
-    mocker.patch("main.get_full_race_analysis", return_value=race_analysis)
     mocker.patch("services.race.get_full_race_analysis", return_value=race_analysis)
 
     r = client.get("/api/telemetry/race-analysis?year=2022&round=16")
@@ -117,7 +116,7 @@ def test_valid_keywords_accepted(client, mocker):
     ],
 )
 def test_app_errors(client, mocker, exc, status, code):
-    mocker.patch("main.get_full_race_analysis", side_effect=exc)
+    mocker.patch("services.race.get_full_race_analysis", side_effect=exc)
     r = client.get("/api/telemetry/race-analysis?year=2025&round=16")
     assert r.status_code == status
     assert r.json() == {"error": code, "message": exc.message}

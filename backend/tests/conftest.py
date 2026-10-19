@@ -5,6 +5,9 @@ from pathlib import Path
 import pytest
 
 import ergast
+import jobs.scheduler
+import main
+import precomputed
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -36,6 +39,17 @@ def tmp_api_cache(monkeypatch, tmp_path):
     path = tmp_path / "api_cache.sqlite"
     monkeypatch.setattr(ergast, "_CACHE_DB", path)
     return path
+
+
+@pytest.fixture(autouse=True)
+def tmp_store(monkeypatch, tmp_path):
+    """A throwaway precomputed store, used wherever the app's store is referenced."""
+    store = precomputed.Store(tmp_path / "precomputed.duckdb")
+    monkeypatch.setattr(precomputed, "store", store)
+    monkeypatch.setattr(main, "store", store)
+    monkeypatch.setattr(jobs.scheduler, "store", store)
+    yield store
+    store.close()
 
 
 @pytest.fixture

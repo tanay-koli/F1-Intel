@@ -51,6 +51,9 @@ npm run build
 | `DEFAULT_SEASON` | Season used when a request names none. Default: the current year. Validated at startup like the `season` param |
 | `CACHE_DIR` | Holds `api_cache.sqlite` and FastF1's cache. Default: `backend/f1_cache` |
 | `LOG_LEVEL` | Default: INFO |
+| `PRECOMPUTE_ENABLED` | Run the precompute scheduler in this API process. Default: true |
+| `PRECOMPUTE_DELAY_HOURS` | Hours after a race's start to precompute it. Default: 5 |
+| `API_URL` | Where the precompute CLI finds the running API. Default: `http://127.0.0.1:8000` |
 
 Import `from settings import settings`; don't read `os.environ` directly.
 
@@ -131,8 +134,29 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 
 **`uvicorn --reload` gets stuck on this machine.** After an edit it logs "Reloading…", but the old worker keeps serving stale code. If a change seems to have no effect, kill all `uvicorn`/`multiprocessing-fork` python processes and restart.
 
+### Precomputed race analysis (`precomputed.py`, `jobs/`)
+`/api/telemetry/race-analysis` and `/api/race-analyst` go through `services/race.py`:
+- They read the precomputed store first, which takes milliseconds.
+- If a race isn't stored, they compute it live through FastF1 (about 2 s warm, 20 s+ cold), returning identical JSON.
+- The race analyst can also be built from a stored analysis alone.
+
+**Storage:** the store is `$CACHE_DIR/precomputed.duckdb`, table `race_payloads(season, round, kind, payload JSON, computed_at, fastf1_version)`. `kind` is `race_analysis` or `race_analyst`, and each row holds a route's full response.
+- It's a plain table rather than a dbt model, because these are finished API payloads, not transforms.
+- It's a separate file from `warehouse/db/f1.duckdb`, so dbt never contends for the lock.
+
+**Single writer (verified):** while one process has a DuckDB file open read-write, no other process can open it at all, not even read-only.
+- The API process owns the file through one lazily opened connection behind a lock (`precomputed.Store`).
+- `read_or_none` returns None on lock errors, so the route falls back to the live path.
+- **Scheduler (`jobs/scheduler.py`):** APScheduler runs inside the API, started from `main.py`'s lifespan when `PRECOMPUTE_ENABLED` is set. It plans one job per race of the default season at race start + `PRECOMPUTE_DELAY_HOURS` (default 5), re-plans daily, and catches up a run missed within the last day. There is deliberately **no full-season backfill**: most seasons have no reachable timing data, and every failed load spends FastF1's 500 calls/h. With several uvicorn workers, enable it in only one.
+- **CLI (from `backend/`):**
+  ```bash
+  venv/Scripts/python -m jobs.precompute --season 2022 --round 16
+  ```
+  It computes first, then opens the store only to write. If the running API holds the file, it POSTs to `/api/admin/precompute` (accepted only from loopback; `--api` / `API_URL` sets the URL), and the API recomputes from FastF1's now-warm disk cache. In Docker, run it with `docker compose exec backend python -m jobs.precompute …`.
+- The store is not invalidated automatically. To rebuild a race (e.g. after changing the analyst), re-run the CLI for it.
+
 ### Warehouse (separate, offline pipeline)
-`backend/warehouse/` is a batch analytics layer: `ingest_jolpica.py` loads `raw_*` tables (schedule, results, qualifying, pitstops, driver_standings) into DuckDB, then dbt builds `staging` (views) → `intermediate` → `marts` (tables). Staging models select from `raw_*` tables directly (no dbt `source()` definitions). `backend/analytics/*.py` query those marts read-only, but **are not yet wired into `main.py`** — the live API uses only Jolpica + FastF1.
+`backend/warehouse/` is a batch analytics layer: `ingest_jolpica.py` loads `raw_*` tables (schedule, results, qualifying, pitstops, driver_standings) into DuckDB, then dbt builds `staging` (views) → `intermediate` → `marts` (tables). Staging models select from `raw_*` tables directly (no dbt `source()` definitions). `backend/analytics/*.py` query those marts read-only, but **are not wired into `main.py`**. They build all-time career profiles, which no route serves (the existing profiles are single-season, from Jolpica), and the warehouse DB only exists after the ingest and dbt steps have been run. The live API uses only Jolpica and FastF1.
 
 ### Frontend
 - **Routing:** React Router (`BrowserRouter` in `main.jsx`, routes in `App.jsx`): `/` Home, `/results`, `/pit-stops`, `/h2h`, `/telemetry`, `/standings/drivers`, `/standings/constructors`, `/calendar`. Only Home + the four analysis pages are in the nav (`components/SiteHeader.jsx`); standings and calendar are reached from Home. `StandingsChartPage.jsx` and `TracksPage.jsx` exist but aren't routed.

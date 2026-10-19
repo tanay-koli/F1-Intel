@@ -594,3 +594,12 @@ class RaceAnalystResponse(Model):
     raceName: str
     totalLaps: int
     insights: list[LapInsight]
+
+
+# ── Admin ─────────────────────────────────────────────────────────────────────
+
+
+class PrecomputeResponse(Model):
+    season: int
+    round: int
+    stored: list[str]
