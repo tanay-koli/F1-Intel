@@ -24,6 +24,7 @@ class Model(BaseModel):
 
 # ── Misc ──────────────────────────────────────────────────────────────────────
 
+
 class RootResponse(Model):
     message: str
     version: str
@@ -46,6 +47,7 @@ class CacheClearResponse(Model):
 
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
+
 
 class Driver(Model):
     driverId: str
@@ -96,6 +98,7 @@ class DriverProfileResponse(Model):
 
 # ── Constructors ──────────────────────────────────────────────────────────────
 
+
 class Constructor(Model):
     constructorId: str
     name: str
@@ -136,6 +139,7 @@ class ConstructorProfileResponse(Model):
 
 # ── Circuits ──────────────────────────────────────────────────────────────────
 
+
 class Circuit(Model):
     circuitId: str
     name: str
@@ -160,6 +164,7 @@ class CircuitOutlineResponse(Model):
 
 
 # ── Schedule / next race ──────────────────────────────────────────────────────
+
 
 class ScheduleRace(Model):
     round: int
@@ -211,6 +216,7 @@ class NextRaceResponse(Model):
 # ── Race weekend results ──────────────────────────────────────────────────────
 # For a round with no data yet these return only {season, round, results: []}
 # (round echoes the request, e.g. "next"), hence the defaults.
+
 
 class RaceResult(Model):
     position: int  # 99 when not classified
@@ -333,6 +339,7 @@ class PitStopsResponse(Model):
 
 # ── Points progression ────────────────────────────────────────────────────────
 
+
 class DriverSeries(Model):
     driverId: str
     code: str
@@ -361,6 +368,7 @@ class ConstructorProgressionResponse(Model):
 
 
 # ── Head-to-head ──────────────────────────────────────────────────────────────
+
 
 class H2HDriverSummary(Model):
     # Driver details, absent when the driver has no results that season
@@ -446,6 +454,7 @@ class H2HResponse(Model):
 
 
 # ── Telemetry (FastF1) ────────────────────────────────────────────────────────
+
 
 class SessionDriver(Model):
     driverId: str  # FastF1 uses the car number, e.g. "1"

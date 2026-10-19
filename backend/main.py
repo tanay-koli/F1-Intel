@@ -32,7 +32,12 @@ from services.circuits import circuit_outline
 from services.h2h import head_to_head
 from services.profiles import circuit_detail, constructor_profile, driver_profile
 from services.race import race_analyst
-from telemetry import get_full_race_analysis, get_race_lap_data, get_session_drivers, get_speed_trace
+from telemetry import (
+    get_full_race_analysis,
+    get_race_lap_data,
+    get_session_drivers,
+    get_speed_trace,
+)
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
 
@@ -45,6 +50,7 @@ logger = logging.getLogger(__name__)
 
 # ── Error responses ───────────────────────────────────────────────────────────
 # Every error body is {"error": <code>, "message": <sentence for the user>}.
+
 
 def _error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=status, content={"error": code, "message": message})
@@ -99,6 +105,7 @@ def root():
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
 
+
 @route("/api/drivers", s.DriversResponse)
 def drivers(season: Season = "2026"):
     return get_drivers(season)
@@ -115,6 +122,7 @@ def driver_profile_route(driver_id: str, season: Season = "2026"):
 
 
 # ── Constructors ──────────────────────────────────────────────────────────────
+
 
 @route("/api/constructors", s.ConstructorsResponse)
 def constructors(season: Season = "2026"):
@@ -133,6 +141,7 @@ def constructor_profile_route(constructor_id: str, season: Season = "2026"):
 
 # ── Circuits ──────────────────────────────────────────────────────────────────
 
+
 @route("/api/circuits", s.CircuitsResponse)
 def circuits(season: Season = "2026"):
     return get_circuits(season)
@@ -150,6 +159,7 @@ def circuit_outline_route(circuit_id: str, alt: str = ""):
 
 # ── Seasons, schedule, next race ──────────────────────────────────────────────
 
+
 @route("/api/seasons", s.SeasonsResponse)
 def seasons():
     return get_seasons()
@@ -166,6 +176,7 @@ def next_race(season: Season = "2026"):
 
 
 # ── Race weekend results ──────────────────────────────────────────────────────
+
 
 @route("/api/results", s.RaceResultsResponse)
 def race_results(season: Season = "2026", round: Round = "last"):
@@ -189,6 +200,7 @@ def pit_stops(season: Season = "2026", round: Round = "last"):
 
 # ── Points progressions ───────────────────────────────────────────────────────
 
+
 @route("/api/driver-progression", s.DriverProgressionResponse)
 def driver_progression(season: Season = "2026"):
     return get_driver_points_progression(season)
@@ -200,6 +212,7 @@ def constructor_progression(season: Season = "2026"):
 
 
 # ── Head-to-head ──────────────────────────────────────────────────────────────
+
 
 @route("/api/h2h", s.H2HResponse)
 def h2h(
@@ -213,8 +226,11 @@ def h2h(
 # ── Telemetry (FastF1) ────────────────────────────────────────────────────────
 # Timing data is only reachable for some seasons; see CLAUDE.md.
 
+
 @route("/api/telemetry/drivers", s.SessionDriversResponse)
-def telemetry_drivers(year: TelemetryYear = 2024, round: TelemetryRound = 1, session: SessionType = "R"):
+def telemetry_drivers(
+    year: TelemetryYear = 2024, round: TelemetryRound = 1, session: SessionType = "R"
+):
     """Drivers in a session, for driver-picker dropdowns."""
     return get_session_drivers(year, round, session)
 
@@ -227,7 +243,7 @@ def telemetry(
     driver1: str = "VER",
     driver2: str = "NOR",
 ):
-    """Speed, throttle, brake and gear traces for two drivers' fastest laps, on one distance axis."""
+    """Speed/throttle/brake/gear traces of two drivers' fastest laps on one distance axis."""
     return get_speed_trace(year, round, session, driver1, driver2)
 
 
@@ -255,6 +271,7 @@ def race_analyst_route(year: TelemetryYear = 2024, round: TelemetryRound = 1):
 
 
 # ── Cache management ──────────────────────────────────────────────────────────
+
 
 @route("/api/cache/stats", s.CacheStatsResponse)
 def cache_stats_route():

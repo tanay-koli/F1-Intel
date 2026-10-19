@@ -23,21 +23,30 @@ def driver_profile(driver_id: str, season: str) -> dict:
 
 def constructor_profile(constructor_id: str, season: str) -> dict:
     constructor = next(
-        (c for c in get_constructors(season)["constructors"] if c["constructorId"] == constructor_id),
+        (
+            c
+            for c in get_constructors(season)["constructors"]
+            if c["constructorId"] == constructor_id
+        ),
         None,
     )
     if not constructor:
         raise NotFound(f"No constructor '{constructor_id}' in the {season} season.")
     standing = next(
-        (s for s in get_constructor_standings(season)["standings"]
-         if s["constructorId"] == constructor_id),
+        (
+            s
+            for s in get_constructor_standings(season)["standings"]
+            if s["constructorId"] == constructor_id
+        ),
         None,
     )
     return {"constructor": constructor, "standing": standing}
 
 
 def circuit_detail(circuit_id: str, season: str) -> dict:
-    circuit = next((c for c in get_circuits(season)["circuits"] if c["circuitId"] == circuit_id), None)
+    circuit = next(
+        (c for c in get_circuits(season)["circuits"] if c["circuitId"] == circuit_id), None
+    )
     if not circuit:
         raise NotFound(f"No circuit '{circuit_id}' on the {season} calendar.")
     return circuit

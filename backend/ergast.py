@@ -8,9 +8,9 @@ import json
 import logging
 import sqlite3
 import time
-import requests
 from pathlib import Path
-from typing import Optional
+
+import requests
 
 from errors import NotFound, RateLimited, UpstreamError
 
@@ -25,18 +25,22 @@ _CACHE_DB = Path(__file__).parent / "f1_cache" / "api_cache.sqlite"
 _CACHE_DB.parent.mkdir(exist_ok=True)
 
 # TTL in seconds: 1 h for live data, 24 h for static data
-_TTL_LIVE   = 3_600       # standings, results, qualifying
-_TTL_STATIC = 86_400      # circuits, seasons, schedule
+_TTL_LIVE = 3_600  # standings, results, qualifying
+_TTL_STATIC = 86_400  # circuits, seasons, schedule
 
-_LIVE_KEYWORDS = ("/driverStandings", "/constructorStandings",
-                  "/results", "/qualifying", "/next.json")
+_LIVE_KEYWORDS = (
+    "/driverStandings",
+    "/constructorStandings",
+    "/results",
+    "/qualifying",
+    "/next.json",
+)
 
 
 def _db() -> sqlite3.Connection:
     con = sqlite3.connect(_CACHE_DB)
     con.execute(
-        "CREATE TABLE IF NOT EXISTS api_cache "
-        "(url TEXT PRIMARY KEY, body TEXT, stored_at REAL)"
+        "CREATE TABLE IF NOT EXISTS api_cache (url TEXT PRIMARY KEY, body TEXT, stored_at REAL)"
     )
     con.commit()
     return con
@@ -45,55 +49,74 @@ def _db() -> sqlite3.Connection:
 def _ttl_for(url: str) -> int:
     return _TTL_LIVE if any(k in url for k in _LIVE_KEYWORDS) else _TTL_STATIC
 
+
 # Constructor brand colors (curated for 2024/2026)
 TEAM_COLORS = {
-    "red_bull":       "#3671C6",
-    "ferrari":        "#E8002D",
-    "mercedes":       "#27F4D2",
-    "mclaren":        "#FF8000",
-    "aston_martin":   "#229971",
-    "alpine":         "#0093CC",
-    "williams":       "#64C4FF",
-    "haas":           "#B6BABD",
-    "rb":             "#6692FF",
-    "kick_sauber":    "#52E252",
-    "sauber":         "#52E252",
-    "alphatauri":     "#5E8FAA",
-    "alfa":           "#C92D4B",
-    "racing_point":   "#F596C8",
-    "renault":        "#FFF500",
-    "force_india":    "#FF80C7",
-    "manor":          "#AE1E22",
-    "lotus_f1":       "#FFB800",
-    "caterham":       "#005030",
-    "marussia":       "#6E0000",
-    "hrt":            "#B2945A",
+    "red_bull": "#3671C6",
+    "ferrari": "#E8002D",
+    "mercedes": "#27F4D2",
+    "mclaren": "#FF8000",
+    "aston_martin": "#229971",
+    "alpine": "#0093CC",
+    "williams": "#64C4FF",
+    "haas": "#B6BABD",
+    "rb": "#6692FF",
+    "kick_sauber": "#52E252",
+    "sauber": "#52E252",
+    "alphatauri": "#5E8FAA",
+    "alfa": "#C92D4B",
+    "racing_point": "#F596C8",
+    "renault": "#FFF500",
+    "force_india": "#FF80C7",
+    "manor": "#AE1E22",
+    "lotus_f1": "#FFB800",
+    "caterham": "#005030",
+    "marussia": "#6E0000",
+    "hrt": "#B2945A",
 }
 
 TEAM_LOGOS = {
-    "red_bull":     "🐂",
-    "ferrari":      "🐴",
-    "mercedes":     "⭐",
-    "mclaren":      "🟠",
+    "red_bull": "🐂",
+    "ferrari": "🐴",
+    "mercedes": "⭐",
+    "mclaren": "🟠",
     "aston_martin": "🍀",
-    "alpine":       "🔵",
-    "williams":     "🔷",
-    "haas":         "🇺🇸",
-    "rb":           "🔵",
-    "kick_sauber":  "🟢",
-    "sauber":       "🟢",
+    "alpine": "🔵",
+    "williams": "🔷",
+    "haas": "🇺🇸",
+    "rb": "🔵",
+    "kick_sauber": "🟢",
+    "sauber": "🟢",
 }
 
 FLAG_MAP = {
-    "British":    "🇬🇧", "German":    "🇩🇪", "Dutch":     "🇳🇱",
-    "Spanish":    "🇪🇸", "Mexican":   "🇲🇽", "French":    "🇫🇷",
-    "Finnish":    "🇫🇮", "Australian":"🇦🇺", "Canadian":  "🇨🇦",
-    "Japanese":   "🇯🇵", "Thai":      "🇹🇭", "Chinese":   "🇨🇳",
-    "Danish":     "🇩🇰", "American":  "🇺🇸", "Italian":   "🇮🇹",
-    "Brazilian":  "🇧🇷", "Austrian":  "🇦🇹", "Swiss":     "🇨🇭",
-    "Belgian":    "🇧🇪", "New Zealander": "🇳🇿", "Polish": "🇵🇱",
-    "Russian":    "🇷🇺", "Swedish":   "🇸🇪", "Czech":     "🇨🇿",
-    "Argentine":  "🇦🇷", "Hungarian": "🇭🇺", "Monegasque":"🇲🇨",
+    "British": "🇬🇧",
+    "German": "🇩🇪",
+    "Dutch": "🇳🇱",
+    "Spanish": "🇪🇸",
+    "Mexican": "🇲🇽",
+    "French": "🇫🇷",
+    "Finnish": "🇫🇮",
+    "Australian": "🇦🇺",
+    "Canadian": "🇨🇦",
+    "Japanese": "🇯🇵",
+    "Thai": "🇹🇭",
+    "Chinese": "🇨🇳",
+    "Danish": "🇩🇰",
+    "American": "🇺🇸",
+    "Italian": "🇮🇹",
+    "Brazilian": "🇧🇷",
+    "Austrian": "🇦🇹",
+    "Swiss": "🇨🇭",
+    "Belgian": "🇧🇪",
+    "New Zealander": "🇳🇿",
+    "Polish": "🇵🇱",
+    "Russian": "🇷🇺",
+    "Swedish": "🇸🇪",
+    "Czech": "🇨🇿",
+    "Argentine": "🇦🇷",
+    "Hungarian": "🇭🇺",
+    "Monegasque": "🇲🇨",
 }
 
 
@@ -101,9 +124,7 @@ def _get(url: str) -> dict:
     """Fetch URL, returning cached response if still fresh."""
     ttl = _ttl_for(url)
     with _db() as con:
-        row = con.execute(
-            "SELECT body, stored_at FROM api_cache WHERE url = ?", (url,)
-        ).fetchone()
+        row = con.execute("SELECT body, stored_at FROM api_cache WHERE url = ?", (url,)).fetchone()
         if row:
             body, stored_at = row
             if time.time() - stored_at < ttl:
@@ -150,6 +171,7 @@ def _team_color(constructor_id: str) -> str:
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
 
+
 def get_drivers(season: str = "2026") -> dict:
     data = _get(f"{BASE_URL}/{season}/drivers.json?limit=100")
     raw = data["MRData"]["DriverTable"]["Drivers"]
@@ -157,19 +179,21 @@ def get_drivers(season: str = "2026") -> dict:
     drivers = []
     for d in raw:
         nationality = d.get("nationality", "")
-        drivers.append({
-            "driverId":        d["driverId"],
-            "code":            d.get("code", ""),
-            "number":          d.get("permanentNumber", ""),
-            "firstName":       d["givenName"],
-            "lastName":        d["familyName"],
-            "fullName":        f"{d['givenName']} {d['familyName']}",
-            "dateOfBirth":     d.get("dateOfBirth", ""),
-            "nationality":     nationality,
-            "flag":            FLAG_MAP.get(nationality, "🏁"),
-            "url":             d.get("url", ""),
-            "season":          season,
-        })
+        drivers.append(
+            {
+                "driverId": d["driverId"],
+                "code": d.get("code", ""),
+                "number": d.get("permanentNumber", ""),
+                "firstName": d["givenName"],
+                "lastName": d["familyName"],
+                "fullName": f"{d['givenName']} {d['familyName']}",
+                "dateOfBirth": d.get("dateOfBirth", ""),
+                "nationality": nationality,
+                "flag": FLAG_MAP.get(nationality, "🏁"),
+                "url": d.get("url", ""),
+                "season": season,
+            }
+        )
 
     return {"season": season, "drivers": drivers, "total": len(drivers)}
 
@@ -188,23 +212,25 @@ def get_driver_standings(season: str = "2026") -> dict:
         constructors = s.get("Constructors", [{}])
         team = constructors[0] if constructors else {}
         constructor_id = team.get("constructorId", "")
-        standings.append({
-            # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
-            # 99 = not classified, as in race results
-            "position":       int(s.get("position", 99)),
-            "points":         float(s["points"]),
-            "wins":           int(s["wins"]),
-            "driverId":       d["driverId"],
-            "code":           d.get("code", ""),
-            "number":         d.get("permanentNumber", ""),
-            "fullName":       f"{d['givenName']} {d['familyName']}",
-            "familyName":     d["familyName"],
-            "nationality":    d.get("nationality", ""),
-            "flag":           FLAG_MAP.get(d.get("nationality", ""), "🏁"),
-            "constructorId":  constructor_id,
-            "constructorName":team.get("name", ""),
-            "teamColor":      _team_color(constructor_id),
-        })
+        standings.append(
+            {
+                # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
+                # 99 = not classified, as in race results
+                "position": int(s.get("position", 99)),
+                "points": float(s["points"]),
+                "wins": int(s["wins"]),
+                "driverId": d["driverId"],
+                "code": d.get("code", ""),
+                "number": d.get("permanentNumber", ""),
+                "fullName": f"{d['givenName']} {d['familyName']}",
+                "familyName": d["familyName"],
+                "nationality": d.get("nationality", ""),
+                "flag": FLAG_MAP.get(d.get("nationality", ""), "🏁"),
+                "constructorId": constructor_id,
+                "constructorName": team.get("name", ""),
+                "teamColor": _team_color(constructor_id),
+            }
+        )
 
     return {
         "season": season,
@@ -215,6 +241,7 @@ def get_driver_standings(season: str = "2026") -> dict:
 
 # ── Constructors ──────────────────────────────────────────────────────────────
 
+
 def get_constructors(season: str = "2026") -> dict:
     data = _get(f"{BASE_URL}/{season}/constructors.json?limit=50")
     raw = data["MRData"]["ConstructorTable"]["Constructors"]
@@ -223,15 +250,17 @@ def get_constructors(season: str = "2026") -> dict:
     for c in raw:
         cid = c["constructorId"]
         nat = c.get("nationality", "")
-        constructors.append({
-            "constructorId": cid,
-            "name":          c["name"],
-            "nationality":   nat,
-            "flag":          FLAG_MAP.get(nat, "🏁"),
-            "url":           c.get("url", ""),
-            "color":         _team_color(cid),
-            "season":        season,
-        })
+        constructors.append(
+            {
+                "constructorId": cid,
+                "name": c["name"],
+                "nationality": nat,
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "url": c.get("url", ""),
+                "color": _team_color(cid),
+                "season": season,
+            }
+        )
 
     return {"season": season, "constructors": constructors, "total": len(constructors)}
 
@@ -249,18 +278,20 @@ def get_constructor_standings(season: str = "2026") -> dict:
         c = s["Constructor"]
         cid = c["constructorId"]
         nat = c.get("nationality", "")
-        standings.append({
-            # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
-            # 99 = not classified, as in race results
-            "position":       int(s.get("position", 99)),
-            "points":         float(s["points"]),
-            "wins":           int(s["wins"]),
-            "constructorId":  cid,
-            "name":           c["name"],
-            "nationality":    nat,
-            "flag":           FLAG_MAP.get(nat, "🏁"),
-            "color":          _team_color(cid),
-        })
+        standings.append(
+            {
+                # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
+                # 99 = not classified, as in race results
+                "position": int(s.get("position", 99)),
+                "points": float(s["points"]),
+                "wins": int(s["wins"]),
+                "constructorId": cid,
+                "name": c["name"],
+                "nationality": nat,
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "color": _team_color(cid),
+            }
+        )
 
     return {
         "season": season,
@@ -271,6 +302,7 @@ def get_constructor_standings(season: str = "2026") -> dict:
 
 # ── Circuits ──────────────────────────────────────────────────────────────────
 
+
 def get_circuits(season: str = "2026") -> dict:
     data = _get(f"{BASE_URL}/{season}/circuits.json?limit=30")
     raw = data["MRData"]["CircuitTable"]["Circuits"]
@@ -279,22 +311,25 @@ def get_circuits(season: str = "2026") -> dict:
     for c in raw:
         loc = c.get("Location", {})
         country = loc.get("country", "")
-        circuits.append({
-            "circuitId":   c["circuitId"],
-            "name":        c["circuitName"],
-            "locality":    loc.get("locality", ""),
-            "country":     country,
-            "flag":        FLAG_MAP.get(country, "🏁"),
-            "lat":         float(loc.get("lat", 0)),
-            "lng":         float(loc.get("long", 0)),
-            "url":         c.get("url", ""),
-            "season":      season,
-        })
+        circuits.append(
+            {
+                "circuitId": c["circuitId"],
+                "name": c["circuitName"],
+                "locality": loc.get("locality", ""),
+                "country": country,
+                "flag": FLAG_MAP.get(country, "🏁"),
+                "lat": float(loc.get("lat", 0)),
+                "lng": float(loc.get("long", 0)),
+                "url": c.get("url", ""),
+                "season": season,
+            }
+        )
 
     return {"season": season, "circuits": circuits, "total": len(circuits)}
 
 
 # ── Seasons ───────────────────────────────────────────────────────────────────
+
 
 def get_seasons() -> dict:
     data = _get(f"{BASE_URL}/seasons.json?limit=100&offset=65")
@@ -305,6 +340,7 @@ def get_seasons() -> dict:
 
 # ── Race Schedule ─────────────────────────────────────────────────────────────
 
+
 def get_schedule(season: str = "2026") -> dict:
     data = _get(f"{BASE_URL}/{season}.json?limit=30")
     raw = data["MRData"]["RaceTable"]["Races"]
@@ -314,26 +350,28 @@ def get_schedule(season: str = "2026") -> dict:
         circuit = r.get("Circuit", {})
         loc = circuit.get("Location", {})
         country = loc.get("country", "")
-        races.append({
-            "round":       int(r["round"]),
-            "raceName":    r["raceName"],
-            "season":      r["season"],
-            "date":        r.get("date", ""),
-            "time":        r.get("time", ""),
-            "circuitId":   circuit.get("circuitId", ""),
-            "circuitName": circuit.get("circuitName", ""),
-            "locality":    loc.get("locality", ""),
-            "country":     country,
-            "flag":        FLAG_MAP.get(country, "🏁"),
-            "lat":         float(loc.get("lat", 0)),
-            "lng":         float(loc.get("long", 0)),
-            # nested session times if present
-            "fp1":         r.get("FirstPractice", {}).get("date", ""),
-            "fp2":         r.get("SecondPractice", {}).get("date", ""),
-            "fp3":         r.get("ThirdPractice", {}).get("date", ""),
-            "qualifying":  r.get("Qualifying", {}).get("date", ""),
-            "sprint":      r.get("Sprint", {}).get("date", ""),
-        })
+        races.append(
+            {
+                "round": int(r["round"]),
+                "raceName": r["raceName"],
+                "season": r["season"],
+                "date": r.get("date", ""),
+                "time": r.get("time", ""),
+                "circuitId": circuit.get("circuitId", ""),
+                "circuitName": circuit.get("circuitName", ""),
+                "locality": loc.get("locality", ""),
+                "country": country,
+                "flag": FLAG_MAP.get(country, "🏁"),
+                "lat": float(loc.get("lat", 0)),
+                "lng": float(loc.get("long", 0)),
+                # nested session times if present
+                "fp1": r.get("FirstPractice", {}).get("date", ""),
+                "fp2": r.get("SecondPractice", {}).get("date", ""),
+                "fp3": r.get("ThirdPractice", {}).get("date", ""),
+                "qualifying": r.get("Qualifying", {}).get("date", ""),
+                "sprint": r.get("Sprint", {}).get("date", ""),
+            }
+        )
 
     return {"season": season, "total": len(races), "races": races}
 
@@ -342,12 +380,12 @@ def get_schedule(season: str = "2026") -> dict:
 
 # Jolpica session keys in weekend order, with display names
 _SESSION_KEYS = [
-    ("FirstPractice",    "fp1",               "Practice 1"),
-    ("SecondPractice",   "fp2",               "Practice 2"),
-    ("ThirdPractice",    "fp3",               "Practice 3"),
+    ("FirstPractice", "fp1", "Practice 1"),
+    ("SecondPractice", "fp2", "Practice 2"),
+    ("ThirdPractice", "fp3", "Practice 3"),
     ("SprintQualifying", "sprint_qualifying", "Sprint Qualifying"),
-    ("Sprint",           "sprint",            "Sprint"),
-    ("Qualifying",       "qualifying",        "Qualifying"),
+    ("Sprint", "sprint", "Sprint"),
+    ("Qualifying", "qualifying", "Qualifying"),
 ]
 
 
@@ -370,26 +408,30 @@ def get_next_race(season: str = "2026") -> dict:
     loc = circuit.get("Location", {})
     sessions = [
         {"key": key, "name": name, "start": _utc_iso(r[field]["date"], r[field].get("time", ""))}
-        for field, key, name in _SESSION_KEYS if field in r
+        for field, key, name in _SESSION_KEYS
+        if field in r
     ]
-    sessions.append({"key": "race", "name": "Race", "start": _utc_iso(r.get("date", ""), r.get("time", ""))})
+    sessions.append(
+        {"key": "race", "name": "Race", "start": _utc_iso(r.get("date", ""), r.get("time", ""))}
+    )
     sessions.sort(key=lambda s: s["start"])
 
     return {
         "season": season,
         "race": {
-            "round":       int(r["round"]),
-            "raceName":    r["raceName"],
-            "circuitId":   circuit.get("circuitId", ""),
+            "round": int(r["round"]),
+            "raceName": r["raceName"],
+            "circuitId": circuit.get("circuitId", ""),
             "circuitName": circuit.get("circuitName", ""),
-            "locality":    loc.get("locality", ""),
-            "country":     loc.get("country", ""),
-            "sessions":    sessions,
+            "locality": loc.get("locality", ""),
+            "country": loc.get("country", ""),
+            "sessions": sessions,
         },
     }
 
 
 # ── Race Results ──────────────────────────────────────────────────────────────
+
 
 def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/results.json?limit=30")
@@ -405,45 +447,48 @@ def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
         cid = constructor.get("constructorId", "")
         nat = driver.get("nationality", "")
         fastest = r.get("FastestLap", {})
-        results.append({
-            "position":       int(r["position"]) if r["position"].isdigit() else 99,
-            "positionText":   r.get("positionText", r["position"]),
-            "points":         float(r.get("points", 0)),
-            "grid":           int(r.get("grid", 0)),
-            "laps":           int(r.get("laps", 0)),
-            "status":         r.get("status", ""),
-            "driverId":       driver["driverId"],
-            "code":           driver.get("code", ""),
-            "number":         driver.get("permanentNumber", ""),
-            "fullName":       f"{driver['givenName']} {driver['familyName']}",
-            "familyName":     driver["familyName"],
-            "nationality":    nat,
-            "flag":           FLAG_MAP.get(nat, "🏁"),
-            "constructorId":  cid,
-            "constructorName":constructor.get("name", ""),
-            "teamColor":      _team_color(cid),
-            "time":           r.get("Time", {}).get("time", ""),
-            "fastestLapTime": fastest.get("Time", {}).get("time", ""),
-            "fastestLapRank": int(fastest.get("rank", 99)) if fastest else 99,
-            "fastestLapSpeed":fastest.get("AverageSpeed", {}).get("speed", ""),
-        })
+        results.append(
+            {
+                "position": int(r["position"]) if r["position"].isdigit() else 99,
+                "positionText": r.get("positionText", r["position"]),
+                "points": float(r.get("points", 0)),
+                "grid": int(r.get("grid", 0)),
+                "laps": int(r.get("laps", 0)),
+                "status": r.get("status", ""),
+                "driverId": driver["driverId"],
+                "code": driver.get("code", ""),
+                "number": driver.get("permanentNumber", ""),
+                "fullName": f"{driver['givenName']} {driver['familyName']}",
+                "familyName": driver["familyName"],
+                "nationality": nat,
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "constructorId": cid,
+                "constructorName": constructor.get("name", ""),
+                "teamColor": _team_color(cid),
+                "time": r.get("Time", {}).get("time", ""),
+                "fastestLapTime": fastest.get("Time", {}).get("time", ""),
+                "fastestLapRank": int(fastest.get("rank", 99)) if fastest else 99,
+                "fastestLapSpeed": fastest.get("AverageSpeed", {}).get("speed", ""),
+            }
+        )
 
     circuit = race.get("Circuit", {})
     loc = circuit.get("Location", {})
     return {
-        "season":      race["season"],
-        "round":       int(race["round"]),
-        "raceName":    race["raceName"],
-        "date":        race.get("date", ""),
-        "circuitId":   circuit.get("circuitId", ""),
+        "season": race["season"],
+        "round": int(race["round"]),
+        "raceName": race["raceName"],
+        "date": race.get("date", ""),
+        "circuitId": circuit.get("circuitId", ""),
         "circuitName": circuit.get("circuitName", ""),
-        "country":     loc.get("country", ""),
-        "flag":        FLAG_MAP.get(loc.get("country", ""), "🏁"),
-        "results":     results,
+        "country": loc.get("country", ""),
+        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
+        "results": results,
     }
 
 
 # ── Qualifying Results ────────────────────────────────────────────────────────
+
 
 def get_qualifying(season: str = "2026", round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/qualifying.json?limit=30")
@@ -458,37 +503,40 @@ def get_qualifying(season: str = "2026", round_num: str = "last") -> dict:
         constructor = r.get("Constructor", {})
         cid = constructor.get("constructorId", "")
         nat = driver.get("nationality", "")
-        results.append({
-            "position":       int(r["position"]),
-            "driverId":       driver["driverId"],
-            "code":           driver.get("code", ""),
-            "number":         driver.get("permanentNumber", ""),
-            "fullName":       f"{driver['givenName']} {driver['familyName']}",
-            "nationality":    nat,
-            "flag":           FLAG_MAP.get(nat, "🏁"),
-            "constructorId":  cid,
-            "constructorName":constructor.get("name", ""),
-            "teamColor":      _team_color(cid),
-            "q1":             r.get("Q1", "—"),
-            "q2":             r.get("Q2", "—"),
-            "q3":             r.get("Q3", "—"),
-        })
+        results.append(
+            {
+                "position": int(r["position"]),
+                "driverId": driver["driverId"],
+                "code": driver.get("code", ""),
+                "number": driver.get("permanentNumber", ""),
+                "fullName": f"{driver['givenName']} {driver['familyName']}",
+                "nationality": nat,
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "constructorId": cid,
+                "constructorName": constructor.get("name", ""),
+                "teamColor": _team_color(cid),
+                "q1": r.get("Q1", "—"),
+                "q2": r.get("Q2", "—"),
+                "q3": r.get("Q3", "—"),
+            }
+        )
 
     circuit = race.get("Circuit", {})
     loc = circuit.get("Location", {})
     return {
-        "season":      race["season"],
-        "round":       int(race["round"]),
-        "raceName":    race["raceName"],
-        "date":        race.get("date", ""),
+        "season": race["season"],
+        "round": int(race["round"]),
+        "raceName": race["raceName"],
+        "date": race.get("date", ""),
         "circuitName": circuit.get("circuitName", ""),
-        "country":     loc.get("country", ""),
-        "flag":        FLAG_MAP.get(loc.get("country", ""), "🏁"),
-        "results":     results,
+        "country": loc.get("country", ""),
+        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
+        "results": results,
     }
 
 
 # ── Points Progression ────────────────────────────────────────────────────────
+
 
 def get_driver_points_progression(season: str = "2026") -> dict:
     """
@@ -498,6 +546,7 @@ def get_driver_points_progression(season: str = "2026") -> dict:
     # first get total rounds completed
     sched = get_schedule(season)
     from datetime import date
+
     today = date.today().isoformat()
     completed = [r for r in sched["races"] if r["date"] <= today]
     total_rounds = len(completed)
@@ -538,15 +587,19 @@ def get_driver_points_progression(season: str = "2026") -> dict:
                     cid = teams[0].get("constructorId", "") if teams else ""
                     series_map[did] = {
                         "driverId": did,
-                        "code":     d.get("code", did[:3].upper()),
+                        "code": d.get("code", did[:3].upper()),
                         "fullName": f"{d['givenName']} {d['familyName']}",
-                        "teamColor":_team_color(cid),
-                        "points":   [],
+                        "teamColor": _team_color(cid),
+                        "points": [],
                     }
             entry = standings.get(did)
             if did not in series_map:
                 continue  # driver not yet seen in any round
-            pts = float(entry["points"]) if entry else (series_map[did]["points"][-1] if series_map[did]["points"] else 0)
+            pts = (
+                float(entry["points"])
+                if entry
+                else (series_map[did]["points"][-1] if series_map[did]["points"] else 0)
+            )
             series_map[did]["points"].append(pts)
 
     round_labels = [f"R{r['round']}" for r in rounds_data]
@@ -560,9 +613,11 @@ def get_driver_points_progression(season: str = "2026") -> dict:
 
 # ── Constructor Points Progression ────────────────────────────────────────────
 
+
 def get_constructor_points_progression(season: str = "2026") -> dict:
     sched = get_schedule(season)
     from datetime import date
+
     today = date.today().isoformat()
     completed = [r for r in sched["races"] if r["date"] <= today]
     total_rounds = len(completed)
@@ -598,14 +653,18 @@ def get_constructor_points_progression(season: str = "2026") -> dict:
                     c = s["Constructor"]
                     series_map[cid] = {
                         "constructorId": cid,
-                        "name":     c["name"],
-                        "color":    _team_color(cid),
-                        "points":   [],
+                        "name": c["name"],
+                        "color": _team_color(cid),
+                        "points": [],
                     }
             entry = standings.get(cid)
             if cid not in series_map:
                 continue  # constructor not yet seen
-            pts = float(entry["points"]) if entry else (series_map[cid]["points"][-1] if series_map[cid]["points"] else 0)
+            pts = (
+                float(entry["points"])
+                if entry
+                else (series_map[cid]["points"][-1] if series_map[cid]["points"] else 0)
+            )
             series_map[cid]["points"].append(pts)
 
     round_labels = [f"R{r['round']}" for r in rounds_data]
@@ -617,6 +676,7 @@ def get_constructor_points_progression(season: str = "2026") -> dict:
 
 
 # ── Sprint Results ─────────────────────────────────────────────────────────────
+
 
 def get_sprint_results(season: str = "2026", round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/sprint.json?limit=30")
@@ -633,43 +693,46 @@ def get_sprint_results(season: str = "2026", round_num: str = "last") -> dict:
         nat = driver.get("nationality", "")
         fastest = r.get("FastestLap", {})
         pos_str = str(r["position"])
-        results.append({
-            "position":        int(pos_str) if pos_str.isdigit() else 99,
-            "positionText":    r.get("positionText", pos_str),
-            "points":          float(r.get("points", 0)),
-            "grid":            int(r.get("grid", 0)),
-            "laps":            int(r.get("laps", 0)),
-            "status":          r.get("status", ""),
-            "driverId":        driver["driverId"],
-            "code":            driver.get("code", ""),
-            "number":          driver.get("permanentNumber", ""),
-            "fullName":        f"{driver['givenName']} {driver['familyName']}",
-            "nationality":     nat,
-            "flag":            FLAG_MAP.get(nat, "🏁"),
-            "constructorId":   cid,
-            "constructorName": constructor.get("name", ""),
-            "teamColor":       _team_color(cid),
-            "time":            r.get("Time", {}).get("time", ""),
-            "fastestLapTime":  fastest.get("Time", {}).get("time", "") if fastest else "",
-            "fastestLapRank":  int(fastest.get("rank", 99)) if fastest else 99,
-        })
+        results.append(
+            {
+                "position": int(pos_str) if pos_str.isdigit() else 99,
+                "positionText": r.get("positionText", pos_str),
+                "points": float(r.get("points", 0)),
+                "grid": int(r.get("grid", 0)),
+                "laps": int(r.get("laps", 0)),
+                "status": r.get("status", ""),
+                "driverId": driver["driverId"],
+                "code": driver.get("code", ""),
+                "number": driver.get("permanentNumber", ""),
+                "fullName": f"{driver['givenName']} {driver['familyName']}",
+                "nationality": nat,
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "constructorId": cid,
+                "constructorName": constructor.get("name", ""),
+                "teamColor": _team_color(cid),
+                "time": r.get("Time", {}).get("time", ""),
+                "fastestLapTime": fastest.get("Time", {}).get("time", "") if fastest else "",
+                "fastestLapRank": int(fastest.get("rank", 99)) if fastest else 99,
+            }
+        )
 
     circuit = race.get("Circuit", {})
     loc = circuit.get("Location", {})
     return {
-        "season":      race["season"],
-        "round":       int(race["round"]),
-        "raceName":    race["raceName"],
-        "date":        race.get("date", ""),
-        "circuitId":   circuit.get("circuitId", ""),
+        "season": race["season"],
+        "round": int(race["round"]),
+        "raceName": race["raceName"],
+        "date": race.get("date", ""),
+        "circuitId": circuit.get("circuitId", ""),
         "circuitName": circuit.get("circuitName", ""),
-        "country":     loc.get("country", ""),
-        "flag":        FLAG_MAP.get(loc.get("country", ""), "🏁"),
-        "results":     results,
+        "country": loc.get("country", ""),
+        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
+        "results": results,
     }
 
 
 # ── Pit Stops ─────────────────────────────────────────────────────────────────
+
 
 def _parse_duration(raw: str) -> float:
     """Parse pit stop duration string '23.456' or '1:03.456' to seconds."""
@@ -706,18 +769,20 @@ def get_pit_stops(season: str = "2026", round_num: str = "last") -> dict:
     for ps in race.get("PitStops", []):
         did = ps["driverId"]
         info = driver_info.get(did, {})
-        pitstops.append({
-            "driverId":        did,
-            "code":            info.get("code", did[:3].upper()),
-            "fullName":        info.get("fullName", did),
-            "teamColor":       info.get("teamColor", "#888888"),
-            "constructorName": info.get("constructorName", ""),
-            "finishPosition":  info.get("position", 99),
-            "stop":            int(ps["stop"]),
-            "lap":             int(ps["lap"]),
-            "time":            ps.get("time", ""),
-            "duration":        _parse_duration(ps.get("duration", "0")),
-        })
+        pitstops.append(
+            {
+                "driverId": did,
+                "code": info.get("code", did[:3].upper()),
+                "fullName": info.get("fullName", did),
+                "teamColor": info.get("teamColor", "#888888"),
+                "constructorName": info.get("constructorName", ""),
+                "finishPosition": info.get("position", 99),
+                "stop": int(ps["stop"]),
+                "lap": int(ps["lap"]),
+                "time": ps.get("time", ""),
+                "duration": _parse_duration(ps.get("duration", "0")),
+            }
+        )
 
     # Fallback total laps from pit stop data if race results unavailable
     if not total_laps and pitstops:
@@ -726,18 +791,19 @@ def get_pit_stops(season: str = "2026", round_num: str = "last") -> dict:
     circuit = race.get("Circuit", {})
     loc = circuit.get("Location", {})
     return {
-        "season":    race["season"],
-        "round":     int(race["round"]),
-        "raceName":  race["raceName"],
-        "date":      race.get("date", ""),
-        "country":   loc.get("country", ""),
-        "flag":      FLAG_MAP.get(loc.get("country", ""), "🏁"),
+        "season": race["season"],
+        "round": int(race["round"]),
+        "raceName": race["raceName"],
+        "date": race.get("date", ""),
+        "country": loc.get("country", ""),
+        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
         "totalLaps": total_laps,
-        "pitstops":  pitstops,
+        "pitstops": pitstops,
     }
 
 
 # ── Driver Season Results (for H2H) ──────────────────────────────────────────
+
 
 def get_driver_season_results(season: str = "2026", driver_id: str = "") -> dict:
     data = _get(f"{BASE_URL}/{season}/drivers/{driver_id}/results.json?limit=30")
@@ -756,34 +822,36 @@ def get_driver_season_results(season: str = "2026", driver_id: str = "") -> dict
 
         if not driver_meta:
             driver_meta = {
-                "driverId":        d["driverId"],
-                "fullName":        f"{d['givenName']} {d['familyName']}",
-                "code":            d.get("code", ""),
-                "flag":            FLAG_MAP.get(nat, "🏁"),
-                "constructorId":   cid,
+                "driverId": d["driverId"],
+                "fullName": f"{d['givenName']} {d['familyName']}",
+                "code": d.get("code", ""),
+                "flag": FLAG_MAP.get(nat, "🏁"),
+                "constructorId": cid,
                 "constructorName": constructor.get("name", ""),
-                "teamColor":       _team_color(cid),
+                "teamColor": _team_color(cid),
             }
 
         pos_str = str(r["position"])
         pos_int = int(pos_str) if pos_str.isdigit() else 99
         fastest = r.get("FastestLap", {})
-        results.append({
-            "round":           int(race["round"]),
-            "raceName":        race["raceName"],
-            "date":            race.get("date", ""),
-            "position":        pos_int,
-            "positionText":    r.get("positionText", pos_str),
-            "points":          float(r.get("points", 0)),
-            "grid":            int(r.get("grid", 0)),
-            "laps":            int(r.get("laps", 0)),
-            "status":          r.get("status", ""),
-            "constructorId":   cid,
-            "constructorName": constructor.get("name", ""),
-            "teamColor":       _team_color(cid),
-            "fastestLapRank":  int(fastest.get("rank", 99)) if fastest else 99,
-            "time":            r.get("Time", {}).get("time", ""),
-        })
+        results.append(
+            {
+                "round": int(race["round"]),
+                "raceName": race["raceName"],
+                "date": race.get("date", ""),
+                "position": pos_int,
+                "positionText": r.get("positionText", pos_str),
+                "points": float(r.get("points", 0)),
+                "grid": int(r.get("grid", 0)),
+                "laps": int(r.get("laps", 0)),
+                "status": r.get("status", ""),
+                "constructorId": cid,
+                "constructorName": constructor.get("name", ""),
+                "teamColor": _team_color(cid),
+                "fastestLapRank": int(fastest.get("rank", 99)) if fastest else 99,
+                "time": r.get("Time", {}).get("time", ""),
+            }
+        )
 
     return {"season": season, "driver": driver_meta, "results": results}
 
@@ -800,12 +868,14 @@ def get_driver_season_sprint_results(season: str = "2026", driver_id: str = "") 
             r = race["SprintResults"][0]
             pos_str = str(r["position"])
             pos_int = int(pos_str) if pos_str.isdigit() else 99
-            results.append({
-                "round":    int(race["round"]),
-                "points":   float(r.get("points", 0)),
-                "position": pos_int,
-                "status":   r.get("status", ""),
-            })
+            results.append(
+                {
+                    "round": int(race["round"]),
+                    "points": float(r.get("points", 0)),
+                    "position": pos_int,
+                    "status": r.get("status", ""),
+                }
+            )
         return results
     except NotFound:
         return []  # no sprint/qualifying entries for this driver
@@ -822,13 +892,15 @@ def get_driver_season_qualifying(season: str = "2026", driver_id: str = "") -> l
                 continue
             r = race["QualifyingResults"][0]
             pos_str = str(r["position"])
-            results.append({
-                "round":    int(race["round"]),
-                "position": int(pos_str) if pos_str.isdigit() else 99,
-                "q1":       r.get("Q1", ""),
-                "q2":       r.get("Q2", ""),
-                "q3":       r.get("Q3", ""),
-            })
+            results.append(
+                {
+                    "round": int(race["round"]),
+                    "position": int(pos_str) if pos_str.isdigit() else 99,
+                    "q1": r.get("Q1", ""),
+                    "q2": r.get("Q2", ""),
+                    "q3": r.get("Q3", ""),
+                }
+            )
         return results
     except NotFound:
         return []  # no sprint/qualifying entries for this driver

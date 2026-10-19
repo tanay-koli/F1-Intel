@@ -44,52 +44,63 @@ def head_to_head(season: str, driver1: str, driver2: str) -> dict:
             elif rd2["position"] < rd1["position"]:
                 winner = driver2
                 d2_beats += 1
-        races.append({
-            "round":    rnd,
-            "raceName": (rd1 or rd2 or {}).get("raceName", f"Round {rnd}"),
-            "d1":       rd1,
-            "d2":       rd2,
-            "winner":   winner,
-            "sprint":   {
-                "d1": s1_map.get(rnd),
-                "d2": s2_map.get(rnd),
-            },
-            "quali": {
-                "d1": q1_map.get(rnd),
-                "d2": q2_map.get(rnd),
-            },
-        })
+        races.append(
+            {
+                "round": rnd,
+                "raceName": (rd1 or rd2 or {}).get("raceName", f"Round {rnd}"),
+                "d1": rd1,
+                "d2": rd2,
+                "winner": winner,
+                "sprint": {
+                    "d1": s1_map.get(rnd),
+                    "d2": s2_map.get(rnd),
+                },
+                "quali": {
+                    "d1": q1_map.get(rnd),
+                    "d2": q2_map.get(rnd),
+                },
+            }
+        )
 
     def _agg(results: list, sprint_map: dict, quali_map: dict, beats: int) -> dict:
         if not results:
-            return {"points": 0, "sprintPoints": 0, "totalPoints": 0,
-                    "wins": 0, "podiums": 0, "fastestLaps": 0,
-                    "dnf": 0, "avgPosition": 0.0, "races": 0,
-                    "qualiWins": 0, "avgQualiPosition": 0.0,
-                    "headToHeadWins": beats}
-        pts          = sum(r["points"] for r in results)
-        sprint_pts   = sum(s["points"] for s in sprint_map.values())
-        wins         = sum(1 for r in results if r["position"] == 1)
-        podiums      = sum(1 for r in results if r["position"] <= 3)
-        fl           = sum(1 for r in results if r.get("fastestLapRank") == 1)
-        dnf          = sum(1 for r in results if not str(r.get("positionText", "")).isdigit())
-        finished     = [r["position"] for r in results if r["position"] < 99]
-        avg          = round(sum(finished) / len(finished), 2) if finished else 0.0
-        quali_pos    = [q["position"] for q in quali_map.values() if q["position"] < 99]
-        avg_quali    = round(sum(quali_pos) / len(quali_pos), 2) if quali_pos else 0.0
+            return {
+                "points": 0,
+                "sprintPoints": 0,
+                "totalPoints": 0,
+                "wins": 0,
+                "podiums": 0,
+                "fastestLaps": 0,
+                "dnf": 0,
+                "avgPosition": 0.0,
+                "races": 0,
+                "qualiWins": 0,
+                "avgQualiPosition": 0.0,
+                "headToHeadWins": beats,
+            }
+        pts = sum(r["points"] for r in results)
+        sprint_pts = sum(s["points"] for s in sprint_map.values())
+        wins = sum(1 for r in results if r["position"] == 1)
+        podiums = sum(1 for r in results if r["position"] <= 3)
+        fl = sum(1 for r in results if r.get("fastestLapRank") == 1)
+        dnf = sum(1 for r in results if not str(r.get("positionText", "")).isdigit())
+        finished = [r["position"] for r in results if r["position"] < 99]
+        avg = round(sum(finished) / len(finished), 2) if finished else 0.0
+        quali_pos = [q["position"] for q in quali_map.values() if q["position"] < 99]
+        avg_quali = round(sum(quali_pos) / len(quali_pos), 2) if quali_pos else 0.0
         return {
-            "points":           pts,
-            "sprintPoints":     sprint_pts,
-            "totalPoints":      pts + sprint_pts,
-            "wins":             wins,
-            "podiums":          podiums,
-            "fastestLaps":      fl,
-            "dnf":              dnf,
-            "avgPosition":      avg,
-            "races":            len(results),
-            "qualiWins":        0,   # filled below after comparing both drivers
+            "points": pts,
+            "sprintPoints": sprint_pts,
+            "totalPoints": pts + sprint_pts,
+            "wins": wins,
+            "podiums": podiums,
+            "fastestLaps": fl,
+            "dnf": dnf,
+            "avgPosition": avg,
+            "races": len(results),
+            "qualiWins": 0,  # filled below after comparing both drivers
             "avgQualiPosition": avg_quali,
-            "headToHeadWins":   beats,
+            "headToHeadWins": beats,
         }
 
     agg1 = _agg(r1_data["results"], s1_map, q1_map, d1_beats)
@@ -98,16 +109,15 @@ def head_to_head(season: str, driver1: str, driver2: str) -> dict:
     # Count qualifying head-to-head wins
     common_quali_rounds = set(q1_map.keys()) & set(q2_map.keys())
     q1_wins = sum(
-        1 for rnd in common_quali_rounds
-        if q1_map[rnd]["position"] < q2_map[rnd]["position"]
+        1 for rnd in common_quali_rounds if q1_map[rnd]["position"] < q2_map[rnd]["position"]
     )
     q2_wins = len(common_quali_rounds) - q1_wins
     agg1["qualiWins"] = q1_wins
     agg2["qualiWins"] = q2_wins
 
     return {
-        "season":  season,
+        "season": season,
         "driver1": {**r1_data.get("driver", {}), **agg1},
         "driver2": {**r2_data.get("driver", {}), **agg2},
-        "races":   races,
+        "races": races,
     }

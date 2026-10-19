@@ -21,7 +21,9 @@ def circuit_outline(circuit_id: str, alt: str = "") -> dict:
     for name in names:
         # Validates before touching the filesystem (no path traversal)
         if not re.fullmatch(r"[a-z0-9_]+", name):
-            raise InvalidInput("Circuit ids contain only lowercase letters, digits and underscores.")
+            raise InvalidInput(
+                "Circuit ids contain only lowercase letters, digits and underscores."
+            )
         path = CIRCUITS_DIR / f"{name}.json"
         if path.exists():
             points = json.loads(path.read_text())

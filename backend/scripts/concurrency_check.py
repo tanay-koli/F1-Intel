@@ -32,11 +32,15 @@ def timed_get(url, timeout=600):
 
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--base", default="http://127.0.0.1:8000")
     ap.add_argument("--year", type=int, default=2022)
     ap.add_argument("--round", type=int, default=1)
-    ap.add_argument("--parallel", type=int, default=1, help="identical slow requests to fire at once")
+    ap.add_argument(
+        "--parallel", type=int, default=1, help="identical slow requests to fire at once"
+    )
     ap.add_argument("--fast", default="/api/driver-standings?season=2026")
     args = ap.parse_args()
 

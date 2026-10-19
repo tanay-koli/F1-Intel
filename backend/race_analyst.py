@@ -9,19 +9,18 @@ No LLM, no network calls — pure deterministic logic.
 """
 
 from __future__ import annotations
-from typing import Optional
-
 
 # ── Thresholds ────────────────────────────────────────────────────────────────
 
-BATTLE_GAP   = 0.5   # seconds — "a battle"
-CLOSE_GAP    = 1.5   # seconds — "close"
-COMFORT_GAP  = 3.0   # seconds — "comfortable"
+BATTLE_GAP = 0.5  # seconds — "a battle"
+CLOSE_GAP = 1.5  # seconds — "close"
+COMFORT_GAP = 3.0  # seconds — "comfortable"
 UNDERCUT_WINDOW = 2.5  # gap (s) within which an undercut is plausible
-OVERDUE_EXTRA  = 4    # laps beyond avg stint → "overdue"
+OVERDUE_EXTRA = 4  # laps beyond avg stint → "overdue"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def _last_name(full_name: str) -> str:
     """Extract surname from 'First Last'."""
@@ -54,18 +53,17 @@ def _stint_avg(all_drivers_data: list[dict]) -> dict[str, float]:
                 compound_lengths.setdefault(compound, []).append(length)
 
     return {
-        comp: round(sum(lens) / len(lens), 1)
-        for comp, lens in compound_lengths.items()
-        if lens
+        comp: round(sum(lens) / len(lens), 1) for comp, lens in compound_lengths.items() if lens
     }
 
 
 # ── Snapshot builder ──────────────────────────────────────────────────────────
 
+
 def _build_snapshot(
     analysis: dict,
     lap_num: int,
-    prev_snapshot: Optional[dict],
+    prev_snapshot: dict | None,
 ) -> dict:
     """
     Build a race-state snapshot for a given lap from the full analysis data.
@@ -93,22 +91,24 @@ def _build_snapshot(
         pits_done = sum(1 for pl in drv.get("pitLaps", []) if pl <= lap_num)
         is_pit_this_lap = lap_num in drv.get("pitLaps", [])
 
-        entries.append({
-            "code":       drv["code"],
-            "fullName":   drv["fullName"],
-            "lastName":   _last_name(drv["fullName"]),
-            "team":       drv.get("team", ""),
-            "teamColor":  drv.get("teamColor", "#CCC"),
-            "position":   lap_data["position"],
-            "prevPos":    prev_pos,
-            "gapToLeader": lap_data.get("gapToLeader"),
-            "lapTime":    lap_data.get("lapTime"),
-            "lapTimeStr": lap_data.get("lapTimeStr", "N/A"),
-            "compound":   lap_data.get("compound", "UNKNOWN"),
-            "tyreLife":   lap_data.get("tyreLife"),
-            "isPitLap":   lap_data.get("isPitLap", False) or is_pit_this_lap,
-            "pitsDone":   pits_done,
-        })
+        entries.append(
+            {
+                "code": drv["code"],
+                "fullName": drv["fullName"],
+                "lastName": _last_name(drv["fullName"]),
+                "team": drv.get("team", ""),
+                "teamColor": drv.get("teamColor", "#CCC"),
+                "position": lap_data["position"],
+                "prevPos": prev_pos,
+                "gapToLeader": lap_data.get("gapToLeader"),
+                "lapTime": lap_data.get("lapTime"),
+                "lapTimeStr": lap_data.get("lapTimeStr", "N/A"),
+                "compound": lap_data.get("compound", "UNKNOWN"),
+                "tyreLife": lap_data.get("tyreLife"),
+                "isPitLap": lap_data.get("isPitLap", False) or is_pit_this_lap,
+                "pitsDone": pits_done,
+            }
+        )
 
     # Sort by position
     entries.sort(key=lambda e: e["position"])
@@ -133,10 +133,7 @@ def _build_snapshot(
             e["posChange"] = 0
 
     # Race events this lap
-    events_this_lap = [
-        ev for ev in analysis.get("raceEvents", [])
-        if ev.get("lap") == lap_num
-    ]
+    events_this_lap = [ev for ev in analysis.get("raceEvents", []) if ev.get("lap") == lap_num]
 
     # Fastest lap this lap
     fastest_this_lap = None
@@ -148,19 +145,20 @@ def _build_snapshot(
                 fastest_this_lap = e
 
     return {
-        "lap":              lap_num,
-        "entries":          entries,
-        "events":           events_this_lap,
-        "fastestThisLap":   fastest_this_lap,
-        "fastestTime":      fastest_time,
+        "lap": lap_num,
+        "entries": entries,
+        "events": events_this_lap,
+        "fastestThisLap": fastest_this_lap,
+        "fastestTime": fastest_time,
     }
 
 
 # ── Field generators ──────────────────────────────────────────────────────────
 
-def _gen_headline(snap: dict, prev_snap: Optional[dict], overall_fl: dict, is_lap1: bool) -> str:
+
+def _gen_headline(snap: dict, prev_snap: dict | None, overall_fl: dict, is_lap1: bool) -> str:
     entries = snap["entries"]
-    events  = snap["events"]
+    events = snap["events"]
 
     if not entries:
         return "No position data available for this lap."
@@ -171,7 +169,8 @@ def _gen_headline(snap: dict, prev_snap: Optional[dict], overall_fl: dict, is_la
     if prev_snap and prev_snap["entries"]:
         prev_leader_code = prev_snap["entries"][0]["code"]
         if leader["code"] != prev_leader_code:
-            return f"{leader['lastName']} takes the lead from {_last_name_by_code(prev_snap['entries'], prev_leader_code)}."
+            prev_leader = _last_name_by_code(prev_snap["entries"], prev_leader_code)
+            return f"{leader['lastName']} takes the lead from {prev_leader}."
 
     # Priority 2: Safety car / VSC / Red flag this lap
     for ev in events:
@@ -255,14 +254,16 @@ def _gen_key_battles(snap: dict, is_lap1: bool) -> str:
 
             intensity = "battling" if gap < BATTLE_GAP else "close to"
             drs = " DRS range." if gap < 1.0 else ""
-            battles.append({
-                "gap": gap,
-                "text": (
-                    f"{attacker['lastName']} {_fmt_gap(gap)} behind "
-                    f"{defender['lastName']} for P{defender['position']}, "
-                    f"{intensity}.{drs}{tyre_delta}"
-                ),
-            })
+            battles.append(
+                {
+                    "gap": gap,
+                    "text": (
+                        f"{attacker['lastName']} {_fmt_gap(gap)} behind "
+                        f"{defender['lastName']} for P{defender['position']}, "
+                        f"{intensity}.{drs}{tyre_delta}"
+                    ),
+                }
+            )
 
     if not battles:
         return "No gaps under 1.5s — the field is spread out this lap."
@@ -319,10 +320,14 @@ def _gen_strategy_watch(
         e = entries[i]
         ahead = entries[i - 1]
         gap = e.get("gapAhead")
-        if (gap is not None and gap < UNDERCUT_WINDOW
-                and e["tyreLife"] is not None and ahead["tyreLife"] is not None
-                and e["tyreLife"] > ahead["tyreLife"] + 5
-                and e["pitsDone"] < 2):
+        if (
+            gap is not None
+            and gap < UNDERCUT_WINDOW
+            and e["tyreLife"] is not None
+            and ahead["tyreLife"] is not None
+            and e["tyreLife"] > ahead["tyreLife"] + 5
+            and e["pitsDone"] < 2
+        ):
             parts.append(
                 f"Undercut window open for {e['lastName']} "
                 f"({_fmt_gap(gap)} behind {ahead['lastName']})."
@@ -357,7 +362,7 @@ def _gen_strategy_watch(
     return " ".join(parts[:3])
 
 
-def _gen_lap_mover(snap: dict, prev_snap: Optional[dict], is_lap1: bool) -> str:
+def _gen_lap_mover(snap: dict, prev_snap: dict | None, is_lap1: bool) -> str:
     entries = snap["entries"]
 
     if not entries:
@@ -366,7 +371,7 @@ def _gen_lap_mover(snap: dict, prev_snap: Optional[dict], is_lap1: bool) -> str:
     # Biggest gainer
     gainer = max(entries, key=lambda e: e["posChange"])
     # Biggest loser
-    loser  = min(entries, key=lambda e: e["posChange"])
+    loser = min(entries, key=lambda e: e["posChange"])
 
     # Fastest lap this lap
     fl = snap.get("fastestThisLap")
@@ -387,21 +392,17 @@ def _gen_lap_mover(snap: dict, prev_snap: Optional[dict], is_lap1: bool) -> str:
             f"{gainer['lastName']} gained {gainer['posChange']} places to P{gainer['position']}"
         )
     elif gainer["posChange"] == 1:
-        parts.append(
-            f"{gainer['lastName']} moved up to P{gainer['position']}"
-        )
+        parts.append(f"{gainer['lastName']} moved up to P{gainer['position']}")
 
     if loser["posChange"] <= -2 and loser["code"] != gainer["code"]:
         verb = "dropped" if loser["posChange"] <= -3 else "lost a place"
-        parts.append(
-            f"{loser['lastName']} {verb} to P{loser['position']}"
-        )
+        parts.append(f"{loser['lastName']} {verb} to P{loser['position']}")
 
     if fl and fl.get("lapTime") and fl["lapTime"] > 10:
-        tyre_ctx = f" on {fl['tyreLife']}-lap {fl['compound'].lower()}s" if fl.get("tyreLife") else ""
-        parts.append(
-            f"{fl['lastName']} set the fastest lap ({fl['lapTimeStr']}){tyre_ctx}"
+        tyre_ctx = (
+            f" on {fl['tyreLife']}-lap {fl['compound'].lower()}s" if fl.get("tyreLife") else ""
         )
+        parts.append(f"{fl['lastName']} set the fastest lap ({fl['lapTimeStr']}){tyre_ctx}")
 
     if not parts:
         return "A quiet lap with no significant position changes."
@@ -412,6 +413,7 @@ def _gen_lap_mover(snap: dict, prev_snap: Optional[dict], is_lap1: bool) -> str:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+
 def _last_name_by_code(entries: list[dict], code: str) -> str:
     for e in entries:
         if e["code"] == code:
@@ -420,6 +422,7 @@ def _last_name_by_code(entries: list[dict], code: str) -> str:
 
 
 # ── Main entry point ──────────────────────────────────────────────────────────
+
 
 def analyze_race(analysis: dict) -> list[dict]:
     """
@@ -447,20 +450,22 @@ def analyze_race(analysis: dict) -> list[dict]:
 
     for lap_num in range(1, total_laps + 1):
         snap = _build_snapshot(analysis, lap_num, prev_snap)
-        is_lap1 = (lap_num == 1)
+        is_lap1 = lap_num == 1
 
-        headline       = _gen_headline(snap, prev_snap, overall_fl, is_lap1)
-        key_battles    = _gen_key_battles(snap, is_lap1)
+        headline = _gen_headline(snap, prev_snap, overall_fl, is_lap1)
+        key_battles = _gen_key_battles(snap, is_lap1)
         strategy_watch = _gen_strategy_watch(snap, stint_avgs, total_laps, is_lap1)
-        lap_mover      = _gen_lap_mover(snap, prev_snap, is_lap1)
+        lap_mover = _gen_lap_mover(snap, prev_snap, is_lap1)
 
-        insights.append({
-            "lap":            lap_num,
-            "headline":       headline,
-            "key_battles":    key_battles,
-            "strategy_watch": strategy_watch,
-            "lap_mover":      lap_mover,
-        })
+        insights.append(
+            {
+                "lap": lap_num,
+                "headline": headline,
+                "key_battles": key_battles,
+                "strategy_watch": strategy_watch,
+                "lap_mover": lap_mover,
+            }
+        )
 
         prev_snap = snap
 

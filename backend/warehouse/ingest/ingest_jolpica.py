@@ -7,14 +7,19 @@ Usage:
     python ingest_jolpica.py --seasons 2025        # single season top-up
 """
 
-import requests, json, time, argparse, duckdb
+import argparse
+import time
 from pathlib import Path
+
+import duckdb
+import requests
 from tqdm import tqdm
 
-DB_PATH  = Path(__file__).parent.parent / "db" / "f1.duckdb"
+DB_PATH = Path(__file__).parent.parent / "db" / "f1.duckdb"
 RAW_PATH = Path(__file__).parent.parent / "raw" / "jolpica"
-BASE_URL = "https://api.jolpi.ca/ergast/f1"   # Jolpica mirror
-SLEEP    = 0.2   # be polite — Jolpica rate limit is 200 req/hour
+BASE_URL = "https://api.jolpi.ca/ergast/f1"  # Jolpica mirror
+SLEEP = 0.2  # be polite — Jolpica rate limit is 200 req/hour
+
 
 def fetch(url: str) -> dict:
     for attempt in range(3):
@@ -22,15 +27,17 @@ def fetch(url: str) -> dict:
             r = requests.get(url, timeout=15)
             r.raise_for_status()
             return r.json()
-        except Exception as e:
-            if attempt == 2: raise
-            time.sleep(2 ** attempt)
+        except Exception:
+            if attempt == 2:
+                raise
+            time.sleep(2**attempt)
+
 
 def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
     print(f"\n── Season {season} ──────────────────────────────")
 
     # ── 1. Race schedule ──────────────────────────────────────────
-    data  = fetch(f"{BASE_URL}/{season}.json?limit=30")
+    data = fetch(f"{BASE_URL}/{season}.json?limit=30")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
         print(f"  No races found for {season}, skipping.")
@@ -47,13 +54,22 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
     con.execute("DELETE FROM raw_schedule WHERE season = ?", [season])
     for r in races:
         loc = r["Circuit"].get("Location", {})
-        con.execute("INSERT INTO raw_schedule VALUES (?,?,?,?,?,?,?,?,?,?,?)", [
-            int(r["season"]), int(r["round"]), r["raceName"],
-            r["Circuit"]["circuitId"], r["Circuit"]["circuitName"],
-            loc.get("locality",""), loc.get("country",""),
-            float(loc.get("lat", 0) or 0), float(loc.get("long", 0) or 0),
-            r.get("date",""), r.get("time","")
-        ])
+        con.execute(
+            "INSERT INTO raw_schedule VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            [
+                int(r["season"]),
+                int(r["round"]),
+                r["raceName"],
+                r["Circuit"]["circuitId"],
+                r["Circuit"]["circuitName"],
+                loc.get("locality", ""),
+                loc.get("country", ""),
+                float(loc.get("lat", 0) or 0),
+                float(loc.get("long", 0) or 0),
+                r.get("date", ""),
+                r.get("time", ""),
+            ],
+        )
     print(f"  ✓ schedule  ({len(races)} races)")
     time.sleep(SLEEP)
 
@@ -82,27 +98,35 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
         if not race_data:
             continue
         for r in race_data[0].get("Results", []):
-            d   = r["Driver"]
-            c   = r.get("Constructor", {})
-            fl  = r.get("FastestLap", {})
+            d = r["Driver"]
+            c = r.get("Constructor", {})
+            fl = r.get("FastestLap", {})
             pos = str(r.get("position", "99"))
-            con.execute("INSERT INTO raw_results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [
-                season, int(rnd), race["raceName"],
-                race["Circuit"]["circuitId"],
-                int(pos) if pos.isdigit() else 99,
-                r.get("positionText", pos),
-                d["driverId"], d.get("code",""),
-                f"{d['givenName']} {d['familyName']}",
-                d.get("nationality",""),
-                c.get("constructorId",""), c.get("name",""),
-                int(r.get("grid",0)), int(r.get("laps",0)),
-                r.get("status",""),
-                float(r.get("points",0)),
-                r.get("Time",{}).get("time",""),
-                int(fl.get("rank",99)) if fl else 99,
-                fl.get("Time",{}).get("time","") if fl else "",
-                fl.get("AverageSpeed",{}).get("speed","") if fl else "",
-            ])
+            con.execute(
+                "INSERT INTO raw_results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                [
+                    season,
+                    int(rnd),
+                    race["raceName"],
+                    race["Circuit"]["circuitId"],
+                    int(pos) if pos.isdigit() else 99,
+                    r.get("positionText", pos),
+                    d["driverId"],
+                    d.get("code", ""),
+                    f"{d['givenName']} {d['familyName']}",
+                    d.get("nationality", ""),
+                    c.get("constructorId", ""),
+                    c.get("name", ""),
+                    int(r.get("grid", 0)),
+                    int(r.get("laps", 0)),
+                    r.get("status", ""),
+                    float(r.get("points", 0)),
+                    r.get("Time", {}).get("time", ""),
+                    int(fl.get("rank", 99)) if fl else 99,
+                    fl.get("Time", {}).get("time", "") if fl else "",
+                    fl.get("AverageSpeed", {}).get("speed", "") if fl else "",
+                ],
+            )
             total_results += 1
         time.sleep(SLEEP)
     print(f"  ✓ results   ({total_results} rows)")
@@ -129,15 +153,23 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
         for r in race_data[0].get("QualifyingResults", []):
             d = r["Driver"]
             c = r.get("Constructor", {})
-            con.execute("INSERT INTO raw_qualifying VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", [
-                season, int(rnd), race["raceName"],
-                race["Circuit"]["circuitId"],
-                int(r.get("position", 99)),
-                d["driverId"], d.get("code",""),
-                f"{d['givenName']} {d['familyName']}",
-                c.get("constructorId",""),
-                r.get("Q1",""), r.get("Q2",""), r.get("Q3",""),
-            ])
+            con.execute(
+                "INSERT INTO raw_qualifying VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                [
+                    season,
+                    int(rnd),
+                    race["raceName"],
+                    race["Circuit"]["circuitId"],
+                    int(r.get("position", 99)),
+                    d["driverId"],
+                    d.get("code", ""),
+                    f"{d['givenName']} {d['familyName']}",
+                    c.get("constructorId", ""),
+                    r.get("Q1", ""),
+                    r.get("Q2", ""),
+                    r.get("Q3", ""),
+                ],
+            )
             total_qual += 1
         time.sleep(SLEEP)
     print(f"  ✓ qualifying ({total_qual} rows)")
@@ -163,11 +195,18 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
         if not race_data:
             continue
         for p in race_data[0].get("PitStops", []):
-            con.execute("INSERT INTO raw_pitstops VALUES (?,?,?,?,?,?,?)", [
-                season, int(rnd), p.get("driverId", ""),
-                int(p.get("stop", 0)), int(p.get("lap", 0)),
-                p.get("time",""), p.get("duration",""),
-            ])
+            con.execute(
+                "INSERT INTO raw_pitstops VALUES (?,?,?,?,?,?,?)",
+                [
+                    season,
+                    int(rnd),
+                    p.get("driverId", ""),
+                    int(p.get("stop", 0)),
+                    int(p.get("lap", 0)),
+                    p.get("time", ""),
+                    p.get("duration", ""),
+                ],
+            )
             total_pits += 1
         time.sleep(SLEEP)
     print(f"  ✓ pit stops ({total_pits} rows)")
@@ -190,24 +229,28 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
         if not slist:
             continue
         for s in slist[0].get("DriverStandings", []):
-            d  = s.get("Driver", {})
-            cs = s.get("Constructors",[{}])
-            con.execute("INSERT INTO raw_driver_standings VALUES (?,?,?,?,?,?,?,?)", [
-                season, int(rnd),
-                int(s.get("position", 99)),
-                d.get("driverId", ""),
-                f"{d.get('givenName', '')} {d.get('familyName', '')}".strip(),
-                cs[0].get("constructorId","") if cs else "",
-                float(s.get("points", 0)), int(s.get("wins", 0)),
-            ])
+            d = s.get("Driver", {})
+            cs = s.get("Constructors", [{}])
+            con.execute(
+                "INSERT INTO raw_driver_standings VALUES (?,?,?,?,?,?,?,?)",
+                [
+                    season,
+                    int(rnd),
+                    int(s.get("position", 99)),
+                    d.get("driverId", ""),
+                    f"{d.get('givenName', '')} {d.get('familyName', '')}".strip(),
+                    cs[0].get("constructorId", "") if cs else "",
+                    float(s.get("points", 0)),
+                    int(s.get("wins", 0)),
+                ],
+            )
         time.sleep(SLEEP)
-    print(f"  ✓ standings (driver)")
+    print("  ✓ standings (driver)")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seasons", default="2024-2025",
-        help="e.g. '1950-2025' or single '2025'")
+    parser.add_argument("--seasons", default="2024-2025", help="e.g. '1950-2025' or single '2025'")
     args = parser.parse_args()
 
     if "-" in args.seasons:
@@ -228,12 +271,18 @@ if __name__ == "__main__":
 
     # Quick summary
     print("\n── Summary ──────────────────────────────────────")
-    for tbl in ["raw_schedule","raw_results","raw_qualifying","raw_pitstops","raw_driver_standings"]:
+    for tbl in [
+        "raw_schedule",
+        "raw_results",
+        "raw_qualifying",
+        "raw_pitstops",
+        "raw_driver_standings",
+    ]:
         try:
             n = con.execute(f"SELECT COUNT(*) FROM {tbl}").fetchone()[0]
             print(f"  {tbl:<30} {n:>8} rows")
-        except:
-            pass
+        except duckdb.Error:
+            pass  # table not created (no data for that kind)
 
     con.close()
     print("\n✅ Ingest complete")

@@ -12,8 +12,8 @@ def cache_stats() -> dict:
         ).fetchone()
     return {
         "total_entries": count,
-        "oldest_entry":  oldest,
-        "newest_entry":  newest,
+        "oldest_entry": oldest,
+        "newest_entry": newest,
         "db_size_bytes": _CACHE_DB.stat().st_size if _CACHE_DB.exists() else 0,
     }
 

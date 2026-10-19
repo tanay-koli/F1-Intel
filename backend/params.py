@@ -28,9 +28,7 @@ def _check_season(value: str) -> str:
     if value == "current":
         return value
     if not value.isdigit() or not FIRST_SEASON <= int(value) <= _latest_season():
-        raise ValueError(
-            f"use a year from {FIRST_SEASON} to {_latest_season()}, or 'current'"
-        )
+        raise ValueError(f"use a year from {FIRST_SEASON} to {_latest_season()}, or 'current'")
     return str(int(value))
 
 
