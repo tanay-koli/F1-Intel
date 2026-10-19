@@ -61,7 +61,19 @@ cd backend && python check_db.py                                               #
 ### Data flow
 React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy → FastAPI `backend/main.py` → one of two data sources:
 
-1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `backend/f1_cache/api_cache.sqlite` with a TTL chosen by URL keyword (`_LIVE_KEYWORDS` → 1h, everything else → 24h). Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` manage this cache.
+1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `backend/f1_cache/api_cache.sqlite`. Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` (`?expired_only=true` uses the same rules) manage this cache.
+   - **Cache freshness is decided from the data** (`cache_policy.ttl_for`, called by `ergast.is_fresh` when a cached entry is read):
+
+     | Data | Lifetime |
+     |---|---|
+     | Past seasons | Never expire |
+     | A current-season round whose race started more than 6 h ago (`RESULTS_SETTLE`) and whose response has data | Never expires |
+     | That round while the response is still empty | Retried hourly |
+     | That round, and all season-level data (standings, schedule, `last`/`next`, driver season results), from the first session until race start + 6 h | 5 min |
+     | Everything else | 1 h |
+
+   - The policy reads the season's schedule from the cache itself, not through `_get`, to avoid recursion. With no cached schedule it falls back to 1 h.
+   - Because lifetime is evaluated at read time, a stored `last`/`next` response re-expires as the season moves on.
 2. **`telemetry.py`** — FastF1 session loading (cache in `backend/f1_cache/`, enabled at import time). First load of a session can take a minute+, which is why `api.js` uses a separate `telemetryApi` client with a 120s timeout. Data is downsampled (`_resample`) before returning.
    - **Timing data is only reachable for 2021 and 2022.** FastF1 fetches post-session data from `livetiming.formula1.com/static/...`, which now returns **401 for every season** (checked 2018 to 2025, from CloudFront, regardless of user agent). On any error ≥400, FastF1 3.8 retries `livetiming-mirror.fastf1.dev`, which only hosts 2021–2022. For other seasons FastF1 loads no laps or telemetry and builds the driver list from Jolpica, so the lap/telemetry routes fail with "data … has not been loaded yet". **An F1 TV login does not help:** FastF1 never sends the token on these requests; only its live-timing client (`fastf1.livetiming`) uses it. Use **2022 round 16 (Monza)** when you need telemetry that actually loads (the smoke check does).
    - FastF1 leaves `TeamColor` empty when it falls back to Jolpica; `telemetry._driver_team_color()` then uses `ergast.TEAM_COLORS` by `TeamId` (equal to the Jolpica constructorId).

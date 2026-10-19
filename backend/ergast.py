@@ -8,10 +8,12 @@ import json
 import logging
 import sqlite3
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import requests
 
+import cache_policy
 from errors import NotFound, RateLimited, UpstreamError
 
 logger = logging.getLogger(__name__)
@@ -21,20 +23,11 @@ TIMEOUT = 10
 
 # ── SQLite API cache ──────────────────────────────────────────────────────────
 
+# Raw Jolpica responses keyed by URL. How long each stays fresh is decided
+# from the data itself (past season, finished round, live weekend), see
+# cache_policy.py and is_fresh() below.
 _CACHE_DB = Path(__file__).parent / "f1_cache" / "api_cache.sqlite"
 _CACHE_DB.parent.mkdir(exist_ok=True)
-
-# TTL in seconds: 1 h for live data, 24 h for static data
-_TTL_LIVE = 3_600  # standings, results, qualifying
-_TTL_STATIC = 86_400  # circuits, seasons, schedule
-
-_LIVE_KEYWORDS = (
-    "/driverStandings",
-    "/constructorStandings",
-    "/results",
-    "/qualifying",
-    "/next.json",
-)
 
 
 def _db() -> sqlite3.Connection:
@@ -44,10 +37,6 @@ def _db() -> sqlite3.Connection:
     )
     con.commit()
     return con
-
-
-def _ttl_for(url: str) -> int:
-    return _TTL_LIVE if any(k in url for k in _LIVE_KEYWORDS) else _TTL_STATIC
 
 
 # Constructor brand colors (curated for 2024/2026)
@@ -120,15 +109,35 @@ FLAG_MAP = {
 }
 
 
+def _cached_races(con: sqlite3.Connection, season: str, now: datetime) -> list | None:
+    """A season's raw schedule from the cache (any age), for the TTL policy."""
+    seasons = {season, str(now.year)} if season == "current" else {season}
+    for s in seasons:
+        row = con.execute(
+            "SELECT body FROM api_cache WHERE url = ?", (f"{BASE_URL}/{s}.json?limit=30",)
+        ).fetchone()
+        if row:
+            return json.loads(row[0])["MRData"]["RaceTable"]["Races"]
+    return None
+
+
+def is_fresh(con: sqlite3.Connection, url: str, body: dict, stored_at: float) -> bool:
+    """Whether a cached response is still usable; see cache_policy for the rules."""
+    now = datetime.now(UTC)
+    season, _ = cache_policy.parse(url, BASE_URL)
+    races = _cached_races(con, season, now) if season else None
+    ttl = cache_policy.ttl_for(url, now, races, body, BASE_URL)
+    return ttl is None or now.timestamp() - stored_at < ttl
+
+
 def _get(url: str) -> dict:
-    """Fetch URL, returning cached response if still fresh."""
-    ttl = _ttl_for(url)
+    """Fetch URL, returning the cached response if still fresh."""
     with _db() as con:
         row = con.execute("SELECT body, stored_at FROM api_cache WHERE url = ?", (url,)).fetchone()
         if row:
-            body, stored_at = row
-            if time.time() - stored_at < ttl:
-                return json.loads(body)
+            body = json.loads(row[0])
+            if is_fresh(con, url, body, row[1]):
+                return body
 
     try:
         resp = requests.get(url, timeout=TIMEOUT)
