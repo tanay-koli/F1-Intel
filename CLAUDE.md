@@ -60,7 +60,20 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 
 `get_next_race()` (`/api/next-race`) reads Jolpica's `/<season>/next.json`, which for a finished season returns the *following* season's round 1. It returns `race: null` when the seasons don't match; the frontend treats that as "season complete". `/api/circuit-outline` serves the `ingest_fastf1.py` exports (404 when none exist; there are none until FastF1 is authenticated).
 
-Endpoints default `season` to `"2026"` and `round` to `"last"`; seasons/rounds are passed as strings straight into Jolpica URLs. Some routes (e.g. `/api/h2h`) compose several `ergast.py` calls in the route itself.
+**Route layout (`main.py`):** each route parses typed params, makes one call (to `ergast.py`, `telemetry.py` or `services/`) and returns. Logic that needs several data calls lives in `services/` (`h2h.py`, `profiles.py`, `race.py`, `circuits.py`, `cache.py`). Register routes with the `route(path, Model)` helper, so every route has a response model.
+- **Params (`params.py`):**
+  - `Season`: 1950 to next year, or `"current"`.
+  - `Round`: a positive int, `"last"` or `"next"`.
+  - Both stay strings, because they're spliced into Jolpica URLs.
+  - Telemetry routes take `year` (2018 to next year), not `season`, plus `TelemetryRound` and the `SessionType` literal. Driver params are free-form: the Telemetry page sends FastF1 car numbers like `"1"`.
+  - Invalid values return a 422 in the error shape below.
+- **Response models (`schemas.py`)** describe the JSON exactly as the builders produce it, and routes use `response_model_exclude_unset=True`:
+  - `field: X = None` means some code paths omit the key. For example, results for a round with no data return only `{season, round, results: []}`.
+  - `X | None` with no default means the key is always present but can be null.
+  - `Number` (`int | float`) stops a computed `0` from becoming `0.0`.
+  - When you change a builder's output, change its model in the same commit. Keys missing from the model are silently dropped, and the smoke check flags it as a shape change.
+- Unclassified entries use position `99` everywhere: race results, and standings entries excluded from a championship, which have no position in Jolpica (e.g. Tyrrell 1985, McLaren 2007).
+- Defaults are still `season="2026"` and `round="last"`.
 
 **Errors:** routes have no try/except. Data code raises the exceptions in `errors.py`, and `main.py`'s handlers turn them into `{"error": <code>, "message": <sentence shown to the user>}`:
 

@@ -189,7 +189,9 @@ def get_driver_standings(season: str = "2026") -> dict:
         team = constructors[0] if constructors else {}
         constructor_id = team.get("constructorId", "")
         standings.append({
-            "position":       int(s["position"]),
+            # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
+            # 99 = not classified, as in race results
+            "position":       int(s.get("position", 99)),
             "points":         float(s["points"]),
             "wins":           int(s["wins"]),
             "driverId":       d["driverId"],
@@ -248,7 +250,9 @@ def get_constructor_standings(season: str = "2026") -> dict:
         cid = c["constructorId"]
         nat = c.get("nationality", "")
         standings.append({
-            "position":       int(s["position"]),
+            # Excluded entries (e.g. Tyrrell 1985, McLaren 2007) have no position;
+            # 99 = not classified, as in race results
+            "position":       int(s.get("position", 99)),
             "points":         float(s["points"]),
             "wins":           int(s["wins"]),
             "constructorId":  cid,

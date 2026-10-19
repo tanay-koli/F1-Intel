@@ -25,6 +25,9 @@ ROUTES = [
     ("drivers",                 "GET",    "/api/drivers?season=2026"),
     ("driver-standings",        "GET",    "/api/driver-standings?season=2026"),
     ("driver-standings 2024",   "GET",    "/api/driver-standings?season=2024"),
+    # entries excluded from the championship have no position in Jolpica
+    ("driver-standings 1985",   "GET",    "/api/driver-standings?season=1985"),
+    ("constructor-standings 2007", "GET", "/api/constructor-standings?season=2007"),
     ("driver profile",          "GET",    "/api/drivers/norris?season=2026"),
     ("driver profile 404",      "GET",    "/api/drivers/nobody?season=2026"),
     ("constructors",            "GET",    "/api/constructors?season=2026"),

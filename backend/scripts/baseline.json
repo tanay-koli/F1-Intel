@@ -945,5 +945,52 @@
    "$:object"
   ],
   "path": "GET /api/race-analyst?year=2022&round=16"
+ },
+ "driver-standings 1985": {
+  "status": 200,
+  "ms": 24,
+  "error": "",
+  "shape": [
+   "$.round:str",
+   "$.season:str",
+   "$.standings:array",
+   "$.standings[].code:str",
+   "$.standings[].constructorId:str",
+   "$.standings[].constructorName:str",
+   "$.standings[].driverId:str",
+   "$.standings[].familyName:str",
+   "$.standings[].flag:str",
+   "$.standings[].fullName:str",
+   "$.standings[].nationality:str",
+   "$.standings[].number:str",
+   "$.standings[].points:float",
+   "$.standings[].position:int",
+   "$.standings[].teamColor:str",
+   "$.standings[].wins:int",
+   "$.standings[]:object",
+   "$:object"
+  ],
+  "path": "GET /api/driver-standings?season=1985"
+ },
+ "constructor-standings 2007": {
+  "status": 200,
+  "ms": 3,
+  "error": "",
+  "shape": [
+   "$.round:str",
+   "$.season:str",
+   "$.standings:array",
+   "$.standings[].color:str",
+   "$.standings[].constructorId:str",
+   "$.standings[].flag:str",
+   "$.standings[].name:str",
+   "$.standings[].nationality:str",
+   "$.standings[].points:float",
+   "$.standings[].position:int",
+   "$.standings[].wins:int",
+   "$.standings[]:object",
+   "$:object"
+  ],
+  "path": "GET /api/constructor-standings?season=2007"
  }
 }
