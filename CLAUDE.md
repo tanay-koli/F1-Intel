@@ -4,7 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-There is no test suite, linter, or formatter configured in either half of the project.
+**Backend tests and lint** (from `backend/`, after `venv/Scripts/python -m pip install -r requirements-dev.txt`):
+```bash
+venv/Scripts/python -m pytest                       # all tests (~1 s, no network)
+venv/Scripts/python -m pytest tests/test_routes.py -k invalid   # one file / matching tests
+venv/Scripts/ruff check .                           # lint (config in pyproject.toml, line length 100)
+venv/Scripts/ruff format .                          # format
+```
+- **Tests never touch the network.** `tests/conftest.py` blocks every non-loopback socket connect and points the Jolpica cache at a temp file.
+- The `jolpica` fixture replays recorded responses by patching `ergast._get`. The recordings are in `tests/fixtures/jolpica/`, with `manifest.json` mapping URL → file.
+- `scripts/record_fixtures.py` (uses the network) re-records them, along with the 2022 Monza race analysis and the race-analyst snapshot. Re-run it when you add a call the tests need, or change the analyst on purpose; then review the fixture diff.
+- `test_race_analyst.py` has a snapshot test plus one test per threshold constant, each asserting both sides of the boundary.
+- The frontend has no tests or linter.
 
 **Backend** (FastAPI, run from `backend/`). Use **Python 3.12 or 3.13**: on the newest Python release, compiled deps (pandas, pyarrow, duckdb) may lack prebuilt wheels and fail to build from source. On Windows pick the version with the `py` launcher:
 ```bash

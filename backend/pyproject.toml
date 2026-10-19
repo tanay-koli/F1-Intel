@@ -10,6 +10,7 @@ select = ["E", "W", "F", "I", "B", "UP"]
 [tool.ruff.lint.isort]
 known-first-party = [
     "ergast", "telemetry", "race_analyst", "errors", "params", "schemas", "services", "main",
+    "conftest",
 ]
 
 [tool.pytest.ini_options]

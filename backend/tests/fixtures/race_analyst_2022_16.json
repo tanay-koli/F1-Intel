@@ -1,0 +1,373 @@
+[
+ {
+  "lap": 1,
+  "headline": "Leclerc leads through the first corner from Russell and Ricciardo.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "No strategy data yet \u2014 first racing lap.",
+  "lap_mover": "Clean getaway with no significant position changes at the start."
+ },
+ {
+  "lap": 2,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz gained 2 places to P14; Schumacher lost a place to P19."
+ },
+ {
+  "lap": 3,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Perez moved up to P15; Verstappen set the fastest lap (1:26.181) on 3-lap softs."
+ },
+ {
+  "lap": 4,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz moved up to P13; Magnussen lost a place to P15."
+ },
+ {
+  "lap": 5,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz gained 2 places to P11; Verstappen set the fastest lap (1:25.512) on 5-lap softs."
+ },
+ {
+  "lap": 6,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz moved up to P10; Leclerc set the fastest lap (1:25.559) on 6-lap softs."
+ },
+ {
+  "lap": 7,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Tsunoda gained 2 places to P15; Perez dropped to P18."
+ },
+ {
+  "lap": 8,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz moved up to P9; Perez lost a place to P20."
+ },
+ {
+  "lap": 9,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "The strategic picture is stable this lap.",
+  "lap_mover": "Sainz moved up to P8; Verstappen set the fastest lap (1:25.886) on 9-lap softs."
+ },
+ {
+  "lap": 10,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Stroll on 11-lap mediums.",
+  "lap_mover": "Sainz moved up to P7; Verstappen set the fastest lap (1:25.953) on 10-lap softs."
+ },
+ {
+  "lap": 11,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "18 drivers yet to make their first stop.",
+  "lap_mover": "Hamilton gained 2 places to P13; Leclerc set the fastest lap (1:25.796) on 11-lap softs."
+ },
+ {
+  "lap": 12,
+  "headline": "Verstappen takes the lead from Leclerc.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "17 drivers yet to make their first stop.",
+  "lap_mover": "Verstappen moved up to P1; Perez set the fastest lap (1:40.780) on 5-lap hards."
+ },
+ {
+  "lap": 13,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "17 drivers yet to make their first stop.",
+  "lap_mover": "Russell moved up to P2; Perez set the fastest lap (1:26.068) on 6-lap hards."
+ },
+ {
+  "lap": 14,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "17 drivers yet to make their first stop.",
+  "lap_mover": "Leclerc set the fastest lap (1:25.257) on 2-lap mediums."
+ },
+ {
+  "lap": 15,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "16 drivers yet to make their first stop.",
+  "lap_mover": "Magnussen moved up to P15; Latifi dropped to P18."
+ },
+ {
+  "lap": 16,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "16 drivers yet to make their first stop.",
+  "lap_mover": "Hamilton moved up to P12; Leclerc set the fastest lap (1:25.428) on 4-lap mediums."
+ },
+ {
+  "lap": 17,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "16 drivers yet to make their first stop.",
+  "lap_mover": "Hamilton moved up to P11; Leclerc set the fastest lap (1:25.145) on 5-lap mediums."
+ },
+ {
+  "lap": 18,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "13 drivers yet to make their first stop.",
+  "lap_mover": "Norris gained 2 places to P6; Gasly dropped to P9."
+ },
+ {
+  "lap": 19,
+  "headline": "Schumacher surges forward, gaining 4 places to P11.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "9 drivers yet to make their first stop.",
+  "lap_mover": "Schumacher gained 4 places to P11; Gasly dropped to P16."
+ },
+ {
+  "lap": 20,
+  "headline": "Perez surges forward, gaining 5 places to P10.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "9 drivers yet to make their first stop.",
+  "lap_mover": "Perez gained 5 places to P10; Ocon dropped to P16."
+ },
+ {
+  "lap": 21,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "9 drivers yet to make their first stop.",
+  "lap_mover": "Tsunoda moved up to P17; Leclerc set the fastest lap (1:25.473) on 9-lap mediums."
+ },
+ {
+  "lap": 22,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "9 drivers yet to make their first stop.",
+  "lap_mover": "Perez moved up to P9; Leclerc set the fastest lap (1:25.641) on 10-lap mediums."
+ },
+ {
+  "lap": 23,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "8 drivers yet to make their first stop.",
+  "lap_mover": "Leclerc moved up to P2; Leclerc set the fastest lap (1:25.471) on 11-lap mediums."
+ },
+ {
+  "lap": 24,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Verstappen overdue on 24-lap-old softs (avg stint: 19.6 laps). 7 drivers yet to make their first stop.",
+  "lap_mover": "Sainz moved up to P3; Magnussen dropped to P14."
+ },
+ {
+  "lap": 25,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Verstappen overdue on 25-lap-old softs (avg stint: 19.6 laps). 6 drivers yet to make their first stop.",
+  "lap_mover": "Zhou moved up to P14; Magnussen dropped to P19."
+ },
+ {
+  "lap": 26,
+  "headline": "Leclerc takes the lead from Verstappen.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "6 drivers yet to make their first stop.",
+  "lap_mover": "Leclerc moved up to P1; Leclerc set the fastest lap (1:25.507) on 14-lap mediums."
+ },
+ {
+  "lap": 27,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "6 drivers yet to make their first stop.",
+  "lap_mover": "Hamilton moved up to P6; Verstappen set the fastest lap (1:25.012) on 2-lap mediums."
+ },
+ {
+  "lap": 28,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Sainz, Norris overdue on 28-lap-old mediums (avg stint: 23.2 laps). 6 drivers yet to make their first stop.",
+  "lap_mover": "Verstappen set the fastest lap (1:25.190) on 3-lap mediums."
+ },
+ {
+  "lap": 29,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Sainz, Norris overdue on 29-lap-old mediums (avg stint: 23.2 laps). 6 drivers yet to make their first stop.",
+  "lap_mover": "Verstappen set the fastest lap (1:24.829) on 4-lap mediums."
+ },
+ {
+  "lap": 30,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Sainz, Norris overdue on 30-lap-old mediums (avg stint: 23.2 laps). 5 drivers yet to make their first stop.",
+  "lap_mover": "Russell moved up to P3; Verstappen set the fastest lap (1:24.798) on 5-lap mediums."
+ },
+ {
+  "lap": 31,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Norris, Hamilton overdue on 31-lap-old mediums (avg stint: 23.2 laps). 4 drivers yet to make their first stop.",
+  "lap_mover": "Perez gained 2 places to P6; Sainz dropped to P7."
+ },
+ {
+  "lap": 32,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Norris, Hamilton overdue on 32-lap-old mediums (avg stint: 23.2 laps). 4 drivers yet to make their first stop.",
+  "lap_mover": "Schumacher moved up to P8; Verstappen set the fastest lap (1:24.918) on 7-lap mediums."
+ },
+ {
+  "lap": 33,
+  "headline": "Leclerc leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Norris, Hamilton overdue on 33-lap-old mediums (avg stint: 23.2 laps). Norris, Bottas still on their first set.",
+  "lap_mover": "Sainz gained 2 places to P5; Hamilton lost a place to P7."
+ },
+ {
+  "lap": 34,
+  "headline": "Verstappen takes the lead from Leclerc.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Norris, Bottas overdue on 34-lap-old mediums (avg stint: 23.2 laps). Norris, Bottas still on their first set.",
+  "lap_mover": "Ricciardo gained 2 places to P8; Schumacher dropped to P17."
+ },
+ {
+  "lap": 35,
+  "headline": "Hamilton surges forward, gaining 3 places to P9.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Norris, Bottas overdue on 35-lap-old mediums (avg stint: 23.2 laps).",
+  "lap_mover": "Hamilton gained 3 places to P9; Bottas dropped to P11."
+ },
+ {
+  "lap": 36,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Perez on 29-lap hards.",
+  "lap_mover": "Hamilton gained 2 places to P7; Bottas dropped to P17."
+ },
+ {
+  "lap": 37,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Perez on 30-lap hards.",
+  "lap_mover": "Norris gained 2 places to P7; Ricciardo lost a place to P8."
+ },
+ {
+  "lap": 38,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Perez on 31-lap hards.",
+  "lap_mover": "Leclerc set the fastest lap (1:24.336) on 5-lap softs."
+ },
+ {
+  "lap": 39,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Perez on 32-lap hards.",
+  "lap_mover": "Leclerc set the fastest lap (1:24.411) on 6-lap softs."
+ },
+ {
+  "lap": 40,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Perez overdue on 33-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Magnussen moved up to P17; Hamilton set the fastest lap (1:24.525) on 7-lap softs."
+ },
+ {
+  "lap": 41,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Perez overdue on 34-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Schumacher moved up to P14; Sainz set the fastest lap (1:24.446) on 11-lap softs."
+ },
+ {
+  "lap": 42,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Perez overdue on 35-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Bottas moved up to P15; Hamilton set the fastest lap (1:24.471) on 9-lap softs."
+ },
+ {
+  "lap": 43,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Latifi on 28-lap hards.",
+  "lap_mover": "Hamilton moved up to P5; Perez lost a place to P7."
+ },
+ {
+  "lap": 44,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Latifi on 29-lap hards.",
+  "lap_mover": "Perez set the fastest lap (1:24.457) on 2-lap softs."
+ },
+ {
+  "lap": 45,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Latifi on 30-lap hards.",
+  "lap_mover": "Schumacher moved up to P13; Perez set the fastest lap (1:24.566) on 3-lap softs."
+ },
+ {
+  "lap": 46,
+  "headline": "Perez sets the overall fastest lap (1:24.030) on SOFTs (tyre age: 4 laps).",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Oldest rubber: Latifi on 31-lap hards.",
+  "lap_mover": "Gasly moved up to P8; Perez set the fastest lap (1:24.030) on 4-lap softs."
+ },
+ {
+  "lap": 47,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Vries overdue on 28-lap-old mediums (avg stint: 23.2 laps).",
+  "lap_mover": "Bottas moved up to P13; Verstappen set the fastest lap (1:24.750) on 22-lap mediums."
+ },
+ {
+  "lap": 48,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Vries overdue on 29-lap-old mediums (avg stint: 23.2 laps).",
+  "lap_mover": "Perez moved up to P6; Verstappen set the fastest lap (1:52.443) on 23-lap mediums."
+ },
+ {
+  "lap": 49,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Vries overdue on 30-lap-old mediums (avg stint: 23.2 laps).",
+  "lap_mover": "Tsunoda set the fastest lap (1:32.703) on 2-lap softs."
+ },
+ {
+  "lap": 50,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Gasly, Vries overdue on 33-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Magnussen set the fastest lap (1:33.236) on 4-lap softs."
+ },
+ {
+  "lap": 51,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Gasly, Vries overdue on 34-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Magnussen set the fastest lap (1:28.536) on 5-lap softs."
+ },
+ {
+  "lap": 52,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Gasly, Vries overdue on 35-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Perez set the fastest lap (1:27.911) on 10-lap softs."
+ },
+ {
+  "lap": 53,
+  "headline": "Verstappen leads the race.",
+  "key_battles": "No gaps under 1.5s \u2014 the field is spread out this lap.",
+  "strategy_watch": "Gasly, Vries overdue on 36-lap-old hards (avg stint: 28.2 laps).",
+  "lap_mover": "Schumacher set the fastest lap (1:57.565) on 20-lap softs."
+ }
+]
