@@ -15,6 +15,7 @@ dist-ssr/
 *.local
 .env
 .env.*
+!.env.example
 
 # F1 Cache & Telemetry
 f1_cache/

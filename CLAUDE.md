@@ -34,11 +34,25 @@ Use `127.0.0.1`, not `localhost`, for local calls: uvicorn listens on IPv4 only,
 **Frontend** (Vite + React, run from `frontend/`):
 ```bash
 npm install
-npm run dev      # http://localhost:5173, proxies /api -> localhost:8000
+npm run dev      # http://localhost:5173, proxies /api -> $API_TARGET (default http://127.0.0.1:8000)
 npm run build
 ```
 
-`./start.sh` starts both servers together on Linux/macOS only (it uses `python3` and `venv/bin/activate`); on Windows start the two servers separately.
+**Both servers at once:**
+- **Windows:** `powershell -ExecutionPolicy Bypass -File .\start.ps1`. It creates the venv if missing, installs requirements and starts both servers. Ctrl+C kills both process trees.
+- **Linux/macOS:** `./start.sh`.
+- **Docker:** `docker compose up --build`. The Jolpica and FastF1 caches live in the named volume `f1_cache`, and the frontend container proxies `/api` to `http://backend:8000`. The Docker files have not been run-tested, because Docker wasn't available where they were written.
+
+**Configuration (`backend/settings.py`, pydantic-settings):** environment variables, or `backend/.env` (copy `backend/.env.example`; `.env` is git-ignored):
+
+| Variable | Purpose |
+|---|---|
+| `CORS_ORIGINS` | Comma-separated allowed origins. Default: localhost and 127.0.0.1 on ports 5173 and 3000 |
+| `DEFAULT_SEASON` | Season used when a request names none. Default: the current year. Validated at startup like the `season` param |
+| `CACHE_DIR` | Holds `api_cache.sqlite` and FastF1's cache. Default: `backend/f1_cache` |
+| `LOG_LEVEL` | Default: INFO |
+
+Import `from settings import settings`; don't read `os.environ` directly.
 
 **Smoke-checking the UI** (no Playwright installed). Headless Edge's `--window-size` never goes below ~492px wide, so a "390px" `--screenshot` is just a crop of a wider layout. Use the CDP script instead, which emulates the exact viewport and prints `scrollWidth` (should equal the width, i.e. no horizontal scroll):
 ```bash
@@ -61,7 +75,7 @@ cd backend && python check_db.py                                               #
 ### Data flow
 React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy → FastAPI `backend/main.py` → one of two data sources:
 
-1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `backend/f1_cache/api_cache.sqlite`. Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` (`?expired_only=true` uses the same rules) manage this cache.
+1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `$CACHE_DIR/api_cache.sqlite`. Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` (`?expired_only=true` uses the same rules) manage this cache.
    - **Cache freshness is decided from the data** (`cache_policy.ttl_for`, called by `ergast.is_fresh` when a cached entry is read):
 
      | Data | Lifetime |
@@ -74,7 +88,7 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 
    - The policy reads the season's schedule from the cache itself, not through `_get`, to avoid recursion. With no cached schedule it falls back to 1 h.
    - Because lifetime is evaluated at read time, a stored `last`/`next` response re-expires as the season moves on.
-2. **`telemetry.py`** — FastF1 session loading (cache in `backend/f1_cache/`, enabled at import time). First load of a session can take a minute+, which is why `api.js` uses a separate `telemetryApi` client with a 120s timeout. Data is downsampled (`_resample`) before returning.
+2. **`telemetry.py`** — FastF1 session loading (cache in `$CACHE_DIR`, enabled at import time). First load of a session can take a minute+, which is why `api.js` uses a separate `telemetryApi` client with a 120s timeout. Data is downsampled (`_resample`) before returning.
    - **Timing data is only reachable for 2021 and 2022.** FastF1 fetches post-session data from `livetiming.formula1.com/static/...`, which now returns **401 for every season** (checked 2018 to 2025, from CloudFront, regardless of user agent). On any error ≥400, FastF1 3.8 retries `livetiming-mirror.fastf1.dev`, which only hosts 2021–2022. For other seasons FastF1 loads no laps or telemetry and builds the driver list from Jolpica, so the lap/telemetry routes fail with "data … has not been loaded yet". **An F1 TV login does not help:** FastF1 never sends the token on these requests; only its live-timing client (`fastf1.livetiming`) uses it. Use **2022 round 16 (Monza)** when you need telemetry that actually loads (the smoke check does).
    - FastF1 leaves `TeamColor` empty when it falls back to Jolpica; `telemetry._driver_team_color()` then uses `ergast.TEAM_COLORS` by `TeamId` (equal to the Jolpica constructorId).
    - FastF1 has its own process-wide limit of **500 outgoing calls per hour** (`"any API: 500 calls/h"`). Failed loads burn through it fast, because they fall back to Jolpica, sometimes once per lap. Restarting the server resets the counter.
@@ -96,7 +110,7 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
   - `Number` (`int | float`) stops a computed `0` from becoming `0.0`.
   - When you change a builder's output, change its model in the same commit. Keys missing from the model are silently dropped, and the smoke check flags it as a shape change.
 - Unclassified entries use position `99` everywhere: race results, and standings entries excluded from a championship, which have no position in Jolpica (e.g. Tyrrell 1985, McLaren 2007).
-- Defaults are still `season="2026"` and `round="last"`.
+- Route defaults: `season` = `settings.default_season`, `round` = `"last"`, telemetry `year` = the default season's year. `ergast.py` functions have no season default; callers must pass one.
 
 **Errors:** routes have no try/except. Data code raises the exceptions in `errors.py`, and `main.py`'s handlers turn them into `{"error": <code>, "message": <sentence shown to the user>}`:
 
@@ -113,7 +127,7 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 - Anything else becomes a 500 with a logged traceback.
 - Only catch `NotFound` when "no data" is a legitimate answer. A broad `except Exception` would silently drop rate-limited rounds.
 - `frontend/src/api.js` copies `message` onto the axios error, so pages that render `error.message` show the API's sentence.
-- Log level comes from the `LOG_LEVEL` env var (default INFO).
+- Log level comes from `settings.log_level` (env `LOG_LEVEL`, default INFO).
 
 **`uvicorn --reload` gets stuck on this machine.** After an edit it logs "Reloading…", but the old worker keeps serving stale code. If a change seems to have no effect, kill all `uvicorn`/`multiprocessing-fork` python processes and restart.
 
@@ -129,4 +143,4 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 - **Design tokens** (`index.css :root`, used by old and new code alike): `--bg`, `--bg-card`, `--bg-elevated` (raised card), `--border`, `--border-strong`, `--pill-active`, `--text`, `--text-muted` (≥4.5:1 on every card colour, so dim things with colour rather than `opacity`). `--accent` (#FFC940) is only for "next" states and the focus ring; `--red` only for heading bars and the logo badge. Fonts: `--display` (Bebas Neue) for headings, names, numbers; `--body` is Archivo (variable `wdth` axis; the hero name and countdown use `font-stretch: 70–75%`, weight 800). `tabular-nums` is global. Team colours always come from the API (`teamColor` / `color` from backend `TEAM_COLORS`), never hardcoded in React.
 - `components/SectionHeading.jsx` reproduces the display-font heading with the red bar and the outlined "Round N" badge. Reuse it for new sections.
 - `components/F1Image.jsx` loads `/images/drivers/<driverId>.{webp,png,jpg,jpeg}` and `/images/constructors/<constructorId>.*`, trying extensions in order before falling back to a placeholder. Pass `alt` (the person or team name); it defaults to the id. The image `src` is state seeded from the id, so give each instance a `key` of the id when lists can reorder. Filenames must equal the Jolpica `driverId`/`constructorId` (e.g. `norris`, `max_verstappen`, `red_bull`) — the example table in `public/images/drivers/README.md` is out of date.
-- CORS in `main.py` only allows `localhost:5173` and `localhost:3000`.
+- CORS origins come from `settings.cors_origins`. In dev, the browser calls the API through Vite's same-origin proxy, so CORS only matters for direct calls.

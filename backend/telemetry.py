@@ -9,7 +9,6 @@ import functools
 import logging
 import threading
 from collections import OrderedDict
-from pathlib import Path
 
 import fastf1
 import numpy as np
@@ -24,13 +23,14 @@ from fastf1.exceptions import (
 
 from ergast import TEAM_COLORS
 from errors import AppError, DataNotAvailable, InvalidInput, NotFound, RateLimited
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
 # ── Cache setup ────────────────────────────────────────────────────────────────
 
-CACHE_DIR = Path(__file__).parent / "f1_cache"
-CACHE_DIR.mkdir(exist_ok=True)
+CACHE_DIR = settings.cache_dir
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 fastf1.Cache.enable_cache(str(CACHE_DIR))
 
 

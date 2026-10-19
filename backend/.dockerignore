@@ -1,0 +1,12 @@
+venv/
+f1_cache/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+.env
+tests/
+scripts/baseline.json
+warehouse/db/
+warehouse/dbt_f1/target/
+warehouse/dbt_f1/logs/

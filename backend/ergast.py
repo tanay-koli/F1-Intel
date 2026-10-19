@@ -9,12 +9,12 @@ import logging
 import sqlite3
 import time
 from datetime import UTC, datetime
-from pathlib import Path
 
 import requests
 
 import cache_policy
 from errors import NotFound, RateLimited, UpstreamError
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +26,8 @@ TIMEOUT = 10
 # Raw Jolpica responses keyed by URL. How long each stays fresh is decided
 # from the data itself (past season, finished round, live weekend), see
 # cache_policy.py and is_fresh() below.
-_CACHE_DB = Path(__file__).parent / "f1_cache" / "api_cache.sqlite"
-_CACHE_DB.parent.mkdir(exist_ok=True)
+_CACHE_DB = settings.cache_dir / "api_cache.sqlite"
+_CACHE_DB.parent.mkdir(parents=True, exist_ok=True)
 
 
 def _db() -> sqlite3.Connection:
@@ -181,7 +181,7 @@ def _team_color(constructor_id: str) -> str:
 # ── Drivers ───────────────────────────────────────────────────────────────────
 
 
-def get_drivers(season: str = "2026") -> dict:
+def get_drivers(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/drivers.json?limit=100")
     raw = data["MRData"]["DriverTable"]["Drivers"]
 
@@ -207,7 +207,7 @@ def get_drivers(season: str = "2026") -> dict:
     return {"season": season, "drivers": drivers, "total": len(drivers)}
 
 
-def get_driver_standings(season: str = "2026") -> dict:
+def get_driver_standings(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/driverStandings.json")
     standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
 
@@ -251,7 +251,7 @@ def get_driver_standings(season: str = "2026") -> dict:
 # ── Constructors ──────────────────────────────────────────────────────────────
 
 
-def get_constructors(season: str = "2026") -> dict:
+def get_constructors(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/constructors.json?limit=50")
     raw = data["MRData"]["ConstructorTable"]["Constructors"]
 
@@ -274,7 +274,7 @@ def get_constructors(season: str = "2026") -> dict:
     return {"season": season, "constructors": constructors, "total": len(constructors)}
 
 
-def get_constructor_standings(season: str = "2026") -> dict:
+def get_constructor_standings(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/constructorStandings.json")
     standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
 
@@ -312,7 +312,7 @@ def get_constructor_standings(season: str = "2026") -> dict:
 # ── Circuits ──────────────────────────────────────────────────────────────────
 
 
-def get_circuits(season: str = "2026") -> dict:
+def get_circuits(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/circuits.json?limit=30")
     raw = data["MRData"]["CircuitTable"]["Circuits"]
 
@@ -350,7 +350,7 @@ def get_seasons() -> dict:
 # ── Race Schedule ─────────────────────────────────────────────────────────────
 
 
-def get_schedule(season: str = "2026") -> dict:
+def get_schedule(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}.json?limit=30")
     raw = data["MRData"]["RaceTable"]["Races"]
 
@@ -405,7 +405,7 @@ def _utc_iso(date: str, time_: str) -> str:
     return f"{date}T{time_ or '00:00:00Z'}"
 
 
-def get_next_race(season: str = "2026") -> dict:
+def get_next_race(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/next.json")
     races = data["MRData"]["RaceTable"]["Races"]
     # Past seasons return the *following* season's opener, so check the season
@@ -442,7 +442,7 @@ def get_next_race(season: str = "2026") -> dict:
 # ── Race Results ──────────────────────────────────────────────────────────────
 
 
-def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
+def get_race_results(season: str, round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/results.json?limit=30")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
@@ -499,7 +499,7 @@ def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
 # ── Qualifying Results ────────────────────────────────────────────────────────
 
 
-def get_qualifying(season: str = "2026", round_num: str = "last") -> dict:
+def get_qualifying(season: str, round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/qualifying.json?limit=30")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
@@ -547,7 +547,7 @@ def get_qualifying(season: str = "2026", round_num: str = "last") -> dict:
 # ── Points Progression ────────────────────────────────────────────────────────
 
 
-def get_driver_points_progression(season: str = "2026") -> dict:
+def get_driver_points_progression(season: str) -> dict:
     """
     Returns cumulative points per driver after each race.
     Fetches all round standings in sequence (one call per completed round).
@@ -623,7 +623,7 @@ def get_driver_points_progression(season: str = "2026") -> dict:
 # ── Constructor Points Progression ────────────────────────────────────────────
 
 
-def get_constructor_points_progression(season: str = "2026") -> dict:
+def get_constructor_points_progression(season: str) -> dict:
     sched = get_schedule(season)
     from datetime import date
 
@@ -687,7 +687,7 @@ def get_constructor_points_progression(season: str = "2026") -> dict:
 # ── Sprint Results ─────────────────────────────────────────────────────────────
 
 
-def get_sprint_results(season: str = "2026", round_num: str = "last") -> dict:
+def get_sprint_results(season: str, round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/sprint.json?limit=30")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
@@ -755,7 +755,7 @@ def _parse_duration(raw: str) -> float:
         return 0.0
 
 
-def get_pit_stops(season: str = "2026", round_num: str = "last") -> dict:
+def get_pit_stops(season: str, round_num: str = "last") -> dict:
     data = _get(f"{BASE_URL}/{season}/{round_num}/pitstops.json?limit=100")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
@@ -814,7 +814,7 @@ def get_pit_stops(season: str = "2026", round_num: str = "last") -> dict:
 # ── Driver Season Results (for H2H) ──────────────────────────────────────────
 
 
-def get_driver_season_results(season: str = "2026", driver_id: str = "") -> dict:
+def get_driver_season_results(season: str, driver_id: str = "") -> dict:
     data = _get(f"{BASE_URL}/{season}/drivers/{driver_id}/results.json?limit=30")
     races = data["MRData"]["RaceTable"]["Races"]
 
@@ -865,7 +865,7 @@ def get_driver_season_results(season: str = "2026", driver_id: str = "") -> dict
     return {"season": season, "driver": driver_meta, "results": results}
 
 
-def get_driver_season_sprint_results(season: str = "2026", driver_id: str = "") -> list:
+def get_driver_season_sprint_results(season: str, driver_id: str = "") -> list:
     """Fetch sprint race results and points for a driver in a season."""
     try:
         data = _get(f"{BASE_URL}/{season}/drivers/{driver_id}/sprint.json?limit=30")
@@ -890,7 +890,7 @@ def get_driver_season_sprint_results(season: str = "2026", driver_id: str = "") 
         return []  # no sprint/qualifying entries for this driver
 
 
-def get_driver_season_qualifying(season: str = "2026", driver_id: str = "") -> list:
+def get_driver_season_qualifying(season: str, driver_id: str = "") -> list:
     """Fetch qualifying results for a driver across an entire season."""
     try:
         data = _get(f"{BASE_URL}/{season}/drivers/{driver_id}/qualifying.json?limit=30")

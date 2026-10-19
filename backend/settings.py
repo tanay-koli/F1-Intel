@@ -1,0 +1,53 @@
+"""
+Runtime configuration, read from environment variables or backend/.env.
+See .env.example for the available settings.
+"""
+
+from datetime import date
+from pathlib import Path
+from typing import Annotated
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+from params import _check_season
+
+BACKEND_DIR = Path(__file__).resolve().parent
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=BACKEND_DIR / ".env", extra="ignore")
+
+    # Comma-separated in the environment: CORS_ORIGINS=http://a,http://b
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+    # Season used when a request doesn't name one
+    default_season: str = Field(default_factory=lambda: str(date.today().year))
+    # Holds the Jolpica response cache (api_cache.sqlite) and FastF1's cache
+    cache_dir: Path = BACKEND_DIR / "f1_cache"
+    log_level: str = "INFO"
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def _split_origins(cls, value):
+        if isinstance(value, str):
+            return [v.strip() for v in value.split(",") if v.strip()]
+        return value
+
+    @field_validator("default_season")
+    @classmethod
+    def _valid_season(cls, value: str) -> str:
+        # Same rule as the `season` query parameter
+        return _check_season(value)
+
+    @field_validator("log_level")
+    @classmethod
+    def _upper(cls, value: str) -> str:
+        return value.upper()
+
+
+settings = Settings()

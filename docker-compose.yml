@@ -1,0 +1,28 @@
+# docker compose up --build
+#   Frontend: http://localhost:5173   API docs: http://localhost:8000/docs
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      CACHE_DIR: /data/f1_cache
+    volumes:
+      # Jolpica response cache + FastF1 cache survive rebuilds
+      - f1_cache:/data/f1_cache
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Vite's /api proxy runs inside the container, so it reaches the API by service name
+      API_TARGET: http://backend:8000
+    depends_on:
+      - backend
+
+volumes:
+  f1_cache:

@@ -1,5 +1,5 @@
 import logging
-import os
+from datetime import date
 
 import uvicorn
 from fastapi import FastAPI, Query, Request
@@ -32,6 +32,7 @@ from services.circuits import circuit_outline
 from services.h2h import head_to_head
 from services.profiles import circuit_detail, constructor_profile, driver_profile
 from services.race import race_analyst
+from settings import settings
 from telemetry import (
     get_full_race_analysis,
     get_race_lap_data,
@@ -41,8 +42,12 @@ from telemetry import (
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
 
+DEFAULT_SEASON = settings.default_season
+# Telemetry takes a numeric year; "current" means this calendar year
+DEFAULT_YEAR = int(DEFAULT_SEASON) if DEFAULT_SEASON.isdigit() else date.today().year
+
 logging.basicConfig(
-    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    level=settings.log_level,
     format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -86,7 +91,7 @@ def unhandled_error_handler(request: Request, exc: Exception):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,17 +112,17 @@ def root():
 
 
 @route("/api/drivers", s.DriversResponse)
-def drivers(season: Season = "2026"):
+def drivers(season: Season = DEFAULT_SEASON):
     return get_drivers(season)
 
 
 @route("/api/driver-standings", s.DriverStandingsResponse)
-def driver_standings(season: Season = "2026"):
+def driver_standings(season: Season = DEFAULT_SEASON):
     return get_driver_standings(season)
 
 
 @route("/api/drivers/{driver_id}", s.DriverProfileResponse)
-def driver_profile_route(driver_id: str, season: Season = "2026"):
+def driver_profile_route(driver_id: str, season: Season = DEFAULT_SEASON):
     return driver_profile(driver_id, season)
 
 
@@ -125,17 +130,17 @@ def driver_profile_route(driver_id: str, season: Season = "2026"):
 
 
 @route("/api/constructors", s.ConstructorsResponse)
-def constructors(season: Season = "2026"):
+def constructors(season: Season = DEFAULT_SEASON):
     return get_constructors(season)
 
 
 @route("/api/constructor-standings", s.ConstructorStandingsResponse)
-def constructor_standings(season: Season = "2026"):
+def constructor_standings(season: Season = DEFAULT_SEASON):
     return get_constructor_standings(season)
 
 
 @route("/api/constructors/{constructor_id}", s.ConstructorProfileResponse)
-def constructor_profile_route(constructor_id: str, season: Season = "2026"):
+def constructor_profile_route(constructor_id: str, season: Season = DEFAULT_SEASON):
     return constructor_profile(constructor_id, season)
 
 
@@ -143,12 +148,12 @@ def constructor_profile_route(constructor_id: str, season: Season = "2026"):
 
 
 @route("/api/circuits", s.CircuitsResponse)
-def circuits(season: Season = "2026"):
+def circuits(season: Season = DEFAULT_SEASON):
     return get_circuits(season)
 
 
 @route("/api/circuits/{circuit_id}", s.Circuit)
-def circuit_detail_route(circuit_id: str, season: Season = "2026"):
+def circuit_detail_route(circuit_id: str, season: Season = DEFAULT_SEASON):
     return circuit_detail(circuit_id, season)
 
 
@@ -166,12 +171,12 @@ def seasons():
 
 
 @route("/api/schedule", s.ScheduleResponse)
-def schedule(season: Season = "2026"):
+def schedule(season: Season = DEFAULT_SEASON):
     return get_schedule(season)
 
 
 @route("/api/next-race", s.NextRaceResponse)
-def next_race(season: Season = "2026"):
+def next_race(season: Season = DEFAULT_SEASON):
     return get_next_race(season)
 
 
@@ -179,22 +184,22 @@ def next_race(season: Season = "2026"):
 
 
 @route("/api/results", s.RaceResultsResponse)
-def race_results(season: Season = "2026", round: Round = "last"):
+def race_results(season: Season = DEFAULT_SEASON, round: Round = "last"):
     return get_race_results(season, round)
 
 
 @route("/api/qualifying", s.QualifyingResponse)
-def qualifying(season: Season = "2026", round: Round = "last"):
+def qualifying(season: Season = DEFAULT_SEASON, round: Round = "last"):
     return get_qualifying(season, round)
 
 
 @route("/api/sprint", s.SprintResponse)
-def sprint_results(season: Season = "2026", round: Round = "last"):
+def sprint_results(season: Season = DEFAULT_SEASON, round: Round = "last"):
     return get_sprint_results(season, round)
 
 
 @route("/api/pitstops", s.PitStopsResponse)
-def pit_stops(season: Season = "2026", round: Round = "last"):
+def pit_stops(season: Season = DEFAULT_SEASON, round: Round = "last"):
     return get_pit_stops(season, round)
 
 
@@ -202,12 +207,12 @@ def pit_stops(season: Season = "2026", round: Round = "last"):
 
 
 @route("/api/driver-progression", s.DriverProgressionResponse)
-def driver_progression(season: Season = "2026"):
+def driver_progression(season: Season = DEFAULT_SEASON):
     return get_driver_points_progression(season)
 
 
 @route("/api/constructor-progression", s.ConstructorProgressionResponse)
-def constructor_progression(season: Season = "2026"):
+def constructor_progression(season: Season = DEFAULT_SEASON):
     return get_constructor_points_progression(season)
 
 
@@ -216,7 +221,7 @@ def constructor_progression(season: Season = "2026"):
 
 @route("/api/h2h", s.H2HResponse)
 def h2h(
-    season: Season = "2026",
+    season: Season = DEFAULT_SEASON,
     driver1: str = Query(..., description="First driver ID"),
     driver2: str = Query(..., description="Second driver ID"),
 ):
@@ -229,7 +234,7 @@ def h2h(
 
 @route("/api/telemetry/drivers", s.SessionDriversResponse)
 def telemetry_drivers(
-    year: TelemetryYear = 2024, round: TelemetryRound = 1, session: SessionType = "R"
+    year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound = 1, session: SessionType = "R"
 ):
     """Drivers in a session, for driver-picker dropdowns."""
     return get_session_drivers(year, round, session)
@@ -237,7 +242,7 @@ def telemetry_drivers(
 
 @route("/api/telemetry", s.SpeedTraceResponse)
 def telemetry(
-    year: TelemetryYear = 2024,
+    year: TelemetryYear = DEFAULT_YEAR,
     round: TelemetryRound = 1,
     session: SessionType = "R",
     driver1: str = "VER",
@@ -249,7 +254,7 @@ def telemetry(
 
 @route("/api/telemetry/race", s.RaceLapResponse)
 def telemetry_race(
-    year: TelemetryYear = 2024,
+    year: TelemetryYear = DEFAULT_YEAR,
     round: TelemetryRound = 1,
     driver1: str = "VER",
     driver2: str = "NOR",
@@ -259,13 +264,13 @@ def telemetry_race(
 
 
 @route("/api/telemetry/race-analysis", s.RaceAnalysisResponse)
-def telemetry_race_analysis(year: TelemetryYear = 2024, round: TelemetryRound = 1):
+def telemetry_race_analysis(year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound = 1):
     """Whole-race analysis for every driver: positions, laps, stints, fastest laps."""
     return get_full_race_analysis(year, round)
 
 
 @route("/api/race-analyst", s.RaceAnalystResponse)
-def race_analyst_route(year: TelemetryYear = 2024, round: TelemetryRound = 1):
+def race_analyst_route(year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound = 1):
     """Per-lap rule-based commentary for a race."""
     return race_analyst(year, round)
 
