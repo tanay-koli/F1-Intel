@@ -14,6 +14,12 @@ venv/Scripts/python -m uvicorn main:app --reload --port 8000   # Swagger UI at h
 ```
 `fastf1` pins `pandas<3`, so keep pandas on 2.x when bumping requirements.
 
+Regression check against a running backend (calls every route, diffs status and JSON shape against the saved baseline; exits 1 on a regression):
+```bash
+venv/Scripts/python scripts/smoke_check.py --compare scripts/baseline.json
+```
+Use `127.0.0.1`, not `localhost`, for local calls: uvicorn listens on IPv4 only, and `localhost` tries IPv6 first (+~2 s per request on Windows).
+
 **Frontend** (Vite + React, run from `frontend/`):
 ```bash
 npm install
@@ -46,7 +52,9 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 
 1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `backend/f1_cache/api_cache.sqlite` with a TTL chosen by URL keyword (`_LIVE_KEYWORDS` → 1h, everything else → 24h). Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` manage this cache.
 2. **`telemetry.py`** — FastF1 session loading (cache in `backend/f1_cache/`, enabled at import time). First load of a session can take a minute+, which is why `api.js` uses a separate `telemetryApi` client with a 120s timeout. Data is downsampled (`_resample`) before returning.
-   - **F1's live-timing server (`livetiming.formula1.com`) returns 401 without an F1 TV login**, for all seasons. Without it, FastF1 loads no laps/telemetry and falls back to Ergast for the driver list only, so `/api/telemetry/drivers` returns `teamColor: "#"` and `/api/telemetry/race-analysis` and `/api/race-analyst` return 500 ("data ... has not been loaded yet"). Authenticate once per machine with `venv/Scripts/python -m fastf1 auth f1tv --authenticate` (opens a browser; needs an F1 TV subscription; `--status` to check).
+   - **Timing data is only reachable for 2021 and 2022.** FastF1 fetches post-session data from `livetiming.formula1.com/static/...`, which now returns **401 for every season** (checked 2018 to 2025, from CloudFront, regardless of user agent). On any error ≥400, FastF1 3.8 retries `livetiming-mirror.fastf1.dev`, which only hosts 2021–2022. For other seasons FastF1 loads no laps or telemetry and builds the driver list from Jolpica, so the lap/telemetry routes fail with "data … has not been loaded yet". **An F1 TV login does not help:** FastF1 never sends the token on these requests; only its live-timing client (`fastf1.livetiming`) uses it. Use **2022 round 16 (Monza)** when you need telemetry that actually loads (the smoke check does).
+   - FastF1 leaves `TeamColor` empty when it falls back to Jolpica; `telemetry._driver_team_color()` then uses `ergast.TEAM_COLORS` by `TeamId` (equal to the Jolpica constructorId).
+   - FastF1 has its own process-wide limit of **500 outgoing calls per hour** (`"any API: 500 calls/h"`). Failed loads burn through it fast, because they fall back to Jolpica, sometimes once per lap. Restarting the server resets the counter.
 
 **`race_analyst.py`** is a deterministic, rule-based (no LLM, no network) per-lap commentary generator. It consumes the output of `telemetry.get_full_race_analysis()` and emits `{headline, key_battles, strategy_watch, lap_mover}` per lap; tune behavior via the threshold constants at the top.
 

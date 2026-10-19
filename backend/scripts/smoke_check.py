@@ -50,6 +50,13 @@ ROUTES = [
     ("telemetry race",          "GET",    "/api/telemetry/race?year=2025&round=16&driver1=VER&driver2=NOR"),
     ("race-analysis",           "GET",    "/api/telemetry/race-analysis?year=2025&round=16"),
     ("race-analyst",            "GET",    "/api/race-analyst?year=2025&round=16"),
+    # 2021-2022 are the only seasons whose timing data is still reachable
+    # (FastF1's mirror); F1's own server returns 401. See CLAUDE.md.
+    ("telemetry drivers 2022",  "GET",    "/api/telemetry/drivers?year=2022&round=16&session=R"),
+    ("telemetry trace 2022",    "GET",    "/api/telemetry?year=2022&round=16&session=Q&driver1=VER&driver2=LEC"),
+    ("telemetry race 2022",     "GET",    "/api/telemetry/race?year=2022&round=16&driver1=VER&driver2=LEC"),
+    ("race-analysis 2022",      "GET",    "/api/telemetry/race-analysis?year=2022&round=16"),
+    ("race-analyst 2022",       "GET",    "/api/race-analyst?year=2022&round=16"),
     ("cache stats",             "GET",    "/api/cache/stats"),
     # expired_only so the check never wipes the whole cache
     ("cache clear",             "DELETE", "/api/cache/clear?expired_only=true"),
@@ -152,6 +159,7 @@ def shape_diffs(current, baseline):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows consoles default to cp1252
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     # Not "localhost": it tries IPv6 first, adding ~2 s per call on Windows
     ap.add_argument("--base", default="http://127.0.0.1:8000")

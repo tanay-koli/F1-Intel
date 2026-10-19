@@ -11,6 +11,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+from ergast import TEAM_COLORS
+
 # ── Cache setup ────────────────────────────────────────────────────────────────
 
 CACHE_DIR = Path(__file__).parent / "f1_cache"
@@ -34,6 +36,18 @@ def _resample(series: pd.Series, n: int = 500) -> list:
         return []
     indices = np.linspace(0, len(arr) - 1, min(n, len(arr))).astype(int)
     return [round(float(x), 2) for x in arr[indices]]
+
+
+def _driver_team_color(info) -> str:
+    """
+    Team colour for a FastF1 driver record. FastF1 leaves TeamColor empty when
+    timing data can't be loaded, so fall back to our palette by TeamId (which
+    matches the Jolpica constructorId), then to grey.
+    """
+    color = info.get("TeamColor")
+    if isinstance(color, str) and len(color) == 6:
+        return f"#{color}"
+    return TEAM_COLORS.get(info.get("TeamId") or "", "#CCCCCC")
 
 
 from typing import Optional
@@ -74,7 +88,7 @@ def get_session_drivers(year: int, round_num: int, session_type: str = "R") -> d
                 "driverId":  drv,
                 "code":      info.get("Abbreviation", drv),
                 "fullName":  f"{info.get('FirstName', '')} {info.get('LastName', '')}".strip(),
-                "teamColor": f"#{info.get('TeamColor', 'CCCCCC')}",
+                "teamColor": _driver_team_color(info),
             })
         except Exception:
             continue
@@ -108,7 +122,7 @@ def get_race_lap_data(
             return {
                 "code":      info.get("Abbreviation", drv_code),
                 "fullName":  f"{info.get('FirstName', '')} {info.get('LastName', '')}".strip(),
-                "teamColor": f"#{info.get('TeamColor', 'CCCCCC')}",
+                "teamColor": _driver_team_color(info),
             }
         except Exception:
             return {"code": drv_code, "fullName": drv_code, "teamColor": "#CCCCCC"}
@@ -275,7 +289,7 @@ def get_full_race_analysis(year: int, round_num: int) -> dict:
             drv_code  = info.get("Abbreviation", drv)
             full_name = f"{info.get('FirstName', '')} {info.get('LastName', '')}".strip()
             team      = info.get("TeamName", "Unknown")
-            team_color = f"#{info.get('TeamColor', 'CCCCCC')}"
+            team_color = _driver_team_color(info)
         except Exception:
             drv_code  = str(drv)
             full_name = str(drv)
@@ -483,7 +497,7 @@ def get_speed_trace(
             return {
                 "code":      info.get("Abbreviation", drv_code),
                 "fullName":  f"{info.get('FirstName', '')} {info.get('LastName', '')}".strip(),
-                "teamColor": f"#{info.get('TeamColor', 'CCCCCC')}",
+                "teamColor": _driver_team_color(info),
                 "lapTime":   _lap_time_str(drv_code),
             }
         except Exception:
