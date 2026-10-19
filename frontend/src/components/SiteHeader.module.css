@@ -1,0 +1,122 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  min-height: 44px;
+  border-radius: 6px;
+}
+
+.badge {
+  background: var(--red);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+
+.wordmark {
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pill:hover { color: var(--text); background: var(--bg-elevated); }
+
+.active,
+.active:hover {
+  color: var(--text);
+  background: var(--pill-active);
+  font-weight: 600;
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background: var(--border-strong);
+}
+
+.season {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.seasonLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.select {
+  min-height: 44px;
+  padding: 0 32px 0 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background-color: var(--bg-elevated);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  appearance: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* Mobile: brand + season on the first row, nav wraps onto its own rows below */
+@media (max-width: 900px) {
+  .header { padding: 8px 16px; }
+  .inner { flex-wrap: wrap; row-gap: 4px; }
+  .nav { order: 3; flex-basis: 100%; justify-content: flex-start; gap: 2px; }
+  .pill { padding: 0 12px; }
+}
+
+@media (max-width: 420px) {
+  .divider { display: none; }
+}

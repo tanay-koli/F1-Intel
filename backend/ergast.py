@@ -24,7 +24,7 @@ _TTL_LIVE   = 3_600       # standings, results, qualifying
 _TTL_STATIC = 86_400      # circuits, seasons, schedule
 
 _LIVE_KEYWORDS = ("/driverStandings", "/constructorStandings",
-                  "/results", "/qualifying", "/driverStandings")
+                  "/results", "/qualifying", "/next.json")
 
 
 def _db() -> sqlite3.Connection:
@@ -170,6 +170,7 @@ def get_driver_standings(season: str = "2026") -> dict:
             "code":           d.get("code", ""),
             "number":         d.get("permanentNumber", ""),
             "fullName":       f"{d['givenName']} {d['familyName']}",
+            "familyName":     d["familyName"],
             "nationality":    d.get("nationality", ""),
             "flag":           FLAG_MAP.get(d.get("nationality", ""), "🏁"),
             "constructorId":  constructor_id,
@@ -307,6 +308,57 @@ def get_schedule(season: str = "2026") -> dict:
     return {"season": season, "total": len(races), "races": races}
 
 
+# ── Next Race ─────────────────────────────────────────────────────────────────
+
+# Jolpica session keys in weekend order, with display names
+_SESSION_KEYS = [
+    ("FirstPractice",    "fp1",               "Practice 1"),
+    ("SecondPractice",   "fp2",               "Practice 2"),
+    ("ThirdPractice",    "fp3",               "Practice 3"),
+    ("SprintQualifying", "sprint_qualifying", "Sprint Qualifying"),
+    ("Sprint",           "sprint",            "Sprint"),
+    ("Qualifying",       "qualifying",        "Qualifying"),
+]
+
+
+def _utc_iso(date: str, time_: str) -> str:
+    """Combine Jolpica's date + time ('20:00:00Z') into an ISO UTC string."""
+    if not date:
+        return ""
+    return f"{date}T{time_ or '00:00:00Z'}"
+
+
+def get_next_race(season: str = "2026") -> dict:
+    data = _get(f"{BASE_URL}/{season}/next.json")
+    races = data["MRData"]["RaceTable"]["Races"]
+    # Past seasons return the *following* season's opener, so check the season
+    if not races or races[0]["season"] != str(season):
+        return {"season": season, "race": None}
+
+    r = races[0]
+    circuit = r.get("Circuit", {})
+    loc = circuit.get("Location", {})
+    sessions = [
+        {"key": key, "name": name, "start": _utc_iso(r[field]["date"], r[field].get("time", ""))}
+        for field, key, name in _SESSION_KEYS if field in r
+    ]
+    sessions.append({"key": "race", "name": "Race", "start": _utc_iso(r.get("date", ""), r.get("time", ""))})
+    sessions.sort(key=lambda s: s["start"])
+
+    return {
+        "season": season,
+        "race": {
+            "round":       int(r["round"]),
+            "raceName":    r["raceName"],
+            "circuitId":   circuit.get("circuitId", ""),
+            "circuitName": circuit.get("circuitName", ""),
+            "locality":    loc.get("locality", ""),
+            "country":     loc.get("country", ""),
+            "sessions":    sessions,
+        },
+    }
+
+
 # ── Race Results ──────────────────────────────────────────────────────────────
 
 def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
@@ -334,6 +386,7 @@ def get_race_results(season: str = "2026", round_num: str = "last") -> dict:
             "code":           driver.get("code", ""),
             "number":         driver.get("permanentNumber", ""),
             "fullName":       f"{driver['givenName']} {driver['familyName']}",
+            "familyName":     driver["familyName"],
             "nationality":    nat,
             "flag":           FLAG_MAP.get(nat, "🏁"),
             "constructorId":  cid,

@@ -7,13 +7,17 @@ from ergast import (
     get_driver_points_progression, get_constructor_points_progression,
     get_sprint_results, get_pit_stops, get_driver_season_results,
     get_driver_season_sprint_results, get_driver_season_qualifying,
+    get_next_race,
     _db as _api_db,
 )
 from telemetry import get_speed_trace, get_session_drivers, get_race_lap_data, get_full_race_analysis
 from race_analyst import analyze_race
 
+import json
+import re
 import time
 import uvicorn
+from pathlib import Path
 
 app = FastAPI(title="F1 Dashboard API", version="1.0.0")
 
@@ -429,6 +433,42 @@ def race_analyst_endpoint(
 
 
 
+
+
+# ── Next race ─────────────────────────────────────────────────────────────────
+
+@app.get("/api/next-race")
+def next_race(season: str = "2026"):
+    try:
+        return get_next_race(season)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Circuit outline ───────────────────────────────────────────────────────────
+
+# Written by warehouse/ingest/ingest_fastf1.py, one file per GP
+_CIRCUITS_DIR = Path(__file__).parent / "warehouse" / "raw" / "circuits"
+_OUTLINE_POINTS = 300
+
+
+@app.get("/api/circuit-outline")
+def circuit_outline(circuit_id: str, alt: str = ""):
+    """
+    X/Y outline of a circuit, downsampled to ~300 points.
+    Files are named after the GP passed to the export script, so `alt`
+    (e.g. the locality) is tried as a second filename.
+    """
+    names = [n.strip().lower().replace(" ", "_") for n in (circuit_id, alt) if n.strip()]
+    for name in names:
+        if not re.fullmatch(r"[a-z0-9_]+", name):
+            raise HTTPException(status_code=400, detail="Invalid circuit id")
+        path = _CIRCUITS_DIR / f"{name}.json"
+        if path.exists():
+            points = json.loads(path.read_text())
+            step = max(1, len(points) // _OUTLINE_POINTS)
+            return {"circuitId": circuit_id, "points": points[::step]}
+    raise HTTPException(status_code=404, detail="No outline for this circuit")
 
 
 # ── Cache management ──────────────────────────────────────────────────────────

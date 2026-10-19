@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, SectionHeader, TeamDot, useIsMobile } from '../components/ui'
 import {
@@ -1555,8 +1556,11 @@ function FastestLapView({ tel, isMobile }) {
 
 export default function TelemetryPage({ season }) {
   const isMobile = useIsMobile()
-  const [year,     setYear]     = useState('2026')
-  const [round,    setRound]    = useState('1')
+  // `?round=N` (e.g. Home's "Open race analysis") opens that race's analysis directly
+  const [searchParams] = useSearchParams()
+  const linkedRound = searchParams.get('round')
+  const [year,     setYear]     = useState(season)
+  const [round,    setRound]    = useState(linkedRound || '1')
   const [viewTab,  setViewTab]  = useState('analysis')
   const [selectedDriver, setSelectedDriver] = useState('')
 
@@ -1567,7 +1571,9 @@ export default function TelemetryPage({ season }) {
   const [fastlapQueryKey, setFastlapQueryKey] = useState(null)
 
   // Race analysis query key
-  const [analysisQueryKey, setAnalysisQueryKey] = useState(null)
+  const [analysisQueryKey, setAnalysisQueryKey] = useState(
+    linkedRound ? ['race-analysis', season, linkedRound] : null
+  )
 
   // Schedule for round list
   const { data: schedule } = useQuery({

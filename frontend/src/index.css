@@ -1,22 +1,41 @@
 :root {
-  --bg:          #0a0a0b;
-  --bg-card:     #111114;
-  --bg-elevated: #18181c;
-  --border:      #2a2a30;
-  --border-glow: #e1060060;
-  --red:         #e10600;
-  --red-dim:     #991004;
-  --text:        #f0f0f2;
-  --text-muted:  #6b6b7a;
-  --text-dim:    #3a3a46;
-  --mono:        'JetBrains Mono', monospace;
-  --display:     'Bebas Neue', sans-serif;
-  --body:        'DM Sans', sans-serif;
+  --bg:            #141519;
+  --bg-card:       #1A1C21;
+  --bg-elevated:   #1E2025;   /* raised card */
+  --border:        #2A2D34;
+  --border-strong: #343842;
+  --border-glow:   #e1060060;
+  --pill-active:   #262A31;
+  --red:           #E10600;   /* brand: heading bars + logo badge only */
+  --red-dim:       #991004;
+  --accent:        #FFC940;   /* "next" states + focus ring only */
+  --text:          #E8EBEF;
+  --text-muted:    #A3ABB6;   /* ≥4.5:1 on every card colour */
+  --text-dim:      #3a3a46;
+  --mono:          'JetBrains Mono', monospace;
+  --display:       'Bebas Neue', sans-serif;
+  --body:          'Archivo', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; }
+
+body { font-variant-numeric: tabular-nums; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 body {
   background: var(--bg);
@@ -77,14 +96,6 @@ button {
 /* ── Mobile responsive ─────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  /* Tighter header on mobile */
-  header { padding: 0 12px !important; }
-  header > div { height: 52px !important; gap: 8px !important; }
-
-  /* Nav scrollable */
-  nav button { padding: 6px 10px !important; font-size: 12px !important; }
-  nav { justify-content: flex-start !important; }
-
   /* Podium grids → single column */
   .podium-grid { grid-template-columns: 1fr !important; }
 
@@ -99,15 +110,6 @@ button {
   /* Charts — full width */
   .charts-2col { grid-template-columns: 1fr !important; }
 
-  /* Season selector — smaller */
-  select { font-size: 12px !important; }
-
-  /* Footer */
-  footer { font-size: 10px !important; padding: 12px !important; }
-}
-
-@media (max-width: 480px) {
-  nav button span:last-child { display: none; }  /* icon-only nav on very small */
 }
 
 /* Range slider (Race Analyst) */

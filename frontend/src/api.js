@@ -25,6 +25,11 @@ export const f1Api = {
   getRaceResults: (season, round) => api.get(`/results?season=${season}&round=${round}`).then(r => r.data),
   getQualifying: (season, round) => api.get(`/qualifying?season=${season}&round=${round}`).then(r => r.data),
 
+  // Home
+  getNextRace: (season) => api.get(`/next-race?season=${season}`).then(r => r.data),
+  getCircuitOutline: (circuitId, alt = '') =>
+    api.get(`/circuit-outline?circuit_id=${encodeURIComponent(circuitId)}&alt=${encodeURIComponent(alt)}`).then(r => r.data),
+
   // Seasons
   getSeasons: () => api.get('/seasons').then(r => r.data),
 

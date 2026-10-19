@@ -1,0 +1,15 @@
+.block {
+  display: block;
+  background: linear-gradient(90deg, var(--bg-elevated) 0%, var(--pill-active) 50%, var(--bg-elevated) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 100% 0; }
+  to   { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block { animation: none; }
+}

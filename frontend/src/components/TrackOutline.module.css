@@ -1,0 +1,11 @@
+.svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+.track {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.start { fill: var(--accent); }

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, TeamDot, useIsMobile } from '../components/ui'
 
@@ -232,7 +233,8 @@ function ResultRow({ result, isQual }) {
 export default function ResultsPage({ season }) {
   const isMobile       = useIsMobile()
   const [activeTab,     setActiveTab]     = useState('race')
-  const [selectedRound, setSelectedRound] = useState('last')
+  const [searchParams] = useSearchParams()
+  const [selectedRound, setSelectedRound] = useState(searchParams.get('round') || 'last')
 
   const { data: schedule } = useQuery({
     queryKey: ['schedule', season],
