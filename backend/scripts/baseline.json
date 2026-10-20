@@ -647,19 +647,12 @@
   "path": "GET /api/circuit-outline?circuit_id=monza"
  },
  "telemetry drivers": {
-  "status": 200,
-  "ms": 6312,
-  "error": "",
+  "status": 503,
+  "ms": 13,
+  "error": "Lap and telemetry data isn't available for 2025: F1's timing service currently only serves 2021, 2022.",
   "shape": [
-   "$.drivers:array",
-   "$.drivers[].code:str",
-   "$.drivers[].driverId:str",
-   "$.drivers[].fullName:str",
-   "$.drivers[].teamColor:str",
-   "$.drivers[]:object",
-   "$.round:int",
-   "$.session:str",
-   "$.year:int",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/telemetry/drivers?year=2025&round=16&session=R"
@@ -867,7 +860,7 @@
  },
  "race-analysis 2022": {
   "status": 200,
-  "ms": 1586,
+  "ms": 8,
   "error": "",
   "shape": [
    "$.drivers:array",
@@ -917,6 +910,10 @@
    "$.overallFastestLap.timeStr:str",
    "$.overallFastestLap:object",
    "$.raceEvents:array",
+   "$.raceEvents[].lap:int",
+   "$.raceEvents[].message:str",
+   "$.raceEvents[].type:str",
+   "$.raceEvents[]:object",
    "$.raceName:str",
    "$.round:int",
    "$.session:str",

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { DriverImage, ConstructorImage } from '../../components/F1Image'
 import SectionHeading from '../../components/SectionHeading'
 import Skeleton from '../../components/Skeleton'
@@ -6,6 +7,15 @@ import { surname, points } from '../../lib/format'
 import styles from './Home.module.css'
 
 const TOP_N = 6
+
+/** Link under a panel to the season's points-progression chart. */
+function ProgressionLink({ season, view }) {
+  return (
+    <Link to={withSeason('/standings/progression', season, view ? { view } : {})} className={styles.panelFooterLink}>
+      Points through the season
+    </Link>
+  )
+}
 
 function Row({ position, color, image, name, subline, pts, leaderPts }) {
   const gap = leaderPts - pts
@@ -82,6 +92,7 @@ export function DriversPanel({ season, drivers }) {
           ))}
         </ol>
       )}
+      {rows.length > 0 && <ProgressionLink season={season} />}
     </section>
   )
 }
@@ -132,6 +143,7 @@ export function ConstructorsPanel({ season, constructors, drivers }) {
           ))}
         </ol>
       )}
+      {rows.length > 0 && <ProgressionLink season={season} view="constructors" />}
     </section>
   )
 }

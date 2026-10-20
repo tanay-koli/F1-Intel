@@ -351,6 +351,20 @@
   color: var(--text-muted);
 }
 
+.panelFooterLink {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 4px;
+}
+.panelFooterLink:hover { color: var(--text); text-decoration-color: currentColor; }
+
 /* ── Rest of the season ─────────────────────────────────────────────────── */
 
 .strip {

@@ -9,6 +9,7 @@ import ResultsPage from './pages/ResultsPage'
 import TelemetryPage from './pages/TelemetryPage'
 import PitStopsPage from './pages/PitStopsPage'
 import H2HPage from './pages/H2HPage'
+import StandingsChartPage from './pages/StandingsChartPage'
 import styles from './App.module.css'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/telemetry"              element={<TelemetryPage    season={season} key={season} />} />
           <Route path="/standings/drivers"      element={<DriversPage      season={season} />} />
           <Route path="/standings/constructors" element={<ConstructorsPage season={season} />} />
+          <Route path="/standings/progression"  element={<StandingsChartPage season={season} />} />
           <Route path="/calendar"               element={<SchedulePage     season={season} />} />
           <Route path="*"                       element={<Navigate to="/" replace />} />
         </Routes>

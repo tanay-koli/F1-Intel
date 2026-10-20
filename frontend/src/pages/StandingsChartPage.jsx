@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, SectionHeader, TeamDot } from '../components/ui'
 import {
@@ -48,7 +49,7 @@ function DriverProgressionChart({ season }) {
   })
 
   if (isLoading) return <Loader label="Building driver points chart..." />
-  if (error) return <ErrorMsg message={error.message} />
+  if (error) return <ErrorMsg error={error} />
   if (!data?.rounds?.length) return (
     <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>
       No race data available yet for {season}.
@@ -112,7 +113,7 @@ function ConstructorProgressionChart({ season }) {
   })
 
   if (isLoading) return <Loader label="Building constructor points chart..." />
-  if (error) return <ErrorMsg message={error.message} />
+  if (error) return <ErrorMsg error={error} />
   if (!data?.rounds?.length) return (
     <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>
       No race data available yet for {season}.
@@ -168,7 +169,9 @@ function ConstructorProgressionChart({ season }) {
 }
 
 export default function StandingsChartPage({ season }) {
-  const [view, setView] = useState('drivers')
+  // ?view=constructors (e.g. from Home's Constructors panel) opens that tab
+  const [searchParams] = useSearchParams()
+  const [view, setView] = useState(searchParams.get('view') === 'constructors' ? 'constructors' : 'drivers')
 
   const tabs = [
     { id: 'drivers',      label: '🏎 Driver Championship'      },

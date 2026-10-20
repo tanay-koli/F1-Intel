@@ -30,10 +30,6 @@ export const f1Api = {
   getConstructor: (id, season) => api.get(`/constructors/${id}?season=${season}`).then(r => r.data),
   getConstructorProgression: (season) => api.get(`/constructor-progression?season=${season}`).then(r => r.data),
 
-  // Circuits
-  getCircuits: (season) => api.get(`/circuits?season=${season}`).then(r => r.data),
-  getCircuit: (id, season) => api.get(`/circuits/${id}?season=${season}`).then(r => r.data),
-
   // Races
   getSchedule: (season) => api.get(`/schedule?season=${season}`).then(r => r.data),
   getRaceResults: (season, round) => api.get(`/results?season=${season}&round=${round}`).then(r => r.data),
