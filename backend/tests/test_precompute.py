@@ -81,7 +81,9 @@ def test_analyst_built_from_stored_analysis(tmp_store, mocker, race_analysis, an
 
 def test_routes_return_identical_json_either_way(tmp_store, mocker, race_analysis):
     client = TestClient(main.app)
+    # Both the live route path and the job must use the fixture, never FastF1
     mocker.patch("services.race.get_full_race_analysis", return_value=race_analysis)
+    mocker.patch("jobs.precompute.get_full_race_analysis", return_value=race_analysis)
     live = {
         p: client.get(p).json()
         for p in (

@@ -51,10 +51,17 @@ def _fastf1_errors(fn):
     """
     Translate FastF1 exceptions from a public function (first two args:
     year, round_num) into app errors with messages a user can act on.
+    Seasons outside settings.telemetry_seasons fail at once, without a load.
     """
 
     @functools.wraps(fn)
     def wrapper(year, round_num, *args, **kwargs):
+        available = settings.telemetry_seasons
+        if available and year not in available:
+            raise DataNotAvailable(
+                f"Lap and telemetry data isn't available for {year}: F1's timing service "
+                f"currently only serves {', '.join(map(str, sorted(available)))}."
+            )
         try:
             return fn(year, round_num, *args, **kwargs)
         except AppError:
@@ -86,7 +93,8 @@ def _load_session(year: int, round_num: int, session_type: str = "R"):
     # Later callers for the same session wait, then hit FastF1's disk cache.
     with _lock_for(("session", year, round_num, session_type)):
         session = fastf1.get_session(year, round_num, session_type)
-        session.load(telemetry=True, laps=True, weather=False, messages=False)
+        # messages: race control (safety cars, red flags) for race events
+        session.load(telemetry=True, laps=True, weather=False, messages=True)
     return session
 
 
@@ -298,6 +306,28 @@ def get_race_lap_data(
     }
 
 
+def classify_race_event(message: str, flag: str) -> str | None:
+    """
+    Event type for a race-control message, or None. SC/VSC/RED mark the lap
+    the period *started*; messages that merely mention one ("SAFETY CAR IN
+    THIS LAP", "VIRTUAL SAFETY CAR ENDING", stewards' "SAFETY CAR
+    INFRINGEMENT" notes, "RESUME AFTER RED FLAG") are not deployments.
+    """
+    m = message.upper()
+    if "VIRTUAL SAFETY CAR DEPLOYED" in m:
+        return "VSC"
+    if "SAFETY CAR DEPLOYED" in m:
+        return "SC"
+    # Not a substring test: "CHEQUERED FLAG" contains "RED FLAG"
+    if flag == "RED" or m.startswith("RED FLAG"):
+        return "RED"
+    if flag == "YELLOW":
+        return "YELLOW"
+    if flag == "GREEN":
+        return "GREEN"
+    return None
+
+
 # ── Full Race Analysis (all drivers) ──────────────────────────────────────────
 
 # Recent analyses kept in memory; /api/race-analyst and /api/telemetry/race-analysis
@@ -348,17 +378,7 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
                 except Exception:
                     lap_num = None
 
-                event_type = None
-                if "SAFETY CAR" in message.upper() and "VIRTUAL" not in message.upper():
-                    event_type = "SC"
-                elif "VIRTUAL SAFETY CAR" in message.upper() or "VSC" in message.upper():
-                    event_type = "VSC"
-                elif "RED FLAG" in message.upper():
-                    event_type = "RED"
-                elif flag == "YELLOW":
-                    event_type = "YELLOW"
-                elif flag == "GREEN" and event_type is None:
-                    event_type = "GREEN"
+                event_type = classify_race_event(message, flag)
 
                 if event_type:
                     race_events.append(

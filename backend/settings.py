@@ -39,9 +39,15 @@ class Settings(BaseSettings):
     # precomputed database is locked by it
     api_url: str = "http://127.0.0.1:8000"
 
-    @field_validator("cors_origins", mode="before")
+    # Seasons FastF1 can actually load lap/telemetry data for. F1's own server
+    # returns 401 and FastF1's mirror only hosts 2021-2022 (see CLAUDE.md).
+    # Requests for other seasons get a 503 at once instead of a ~5 s doomed
+    # load that spends FastF1's 500 calls/hour. Empty = always try.
+    telemetry_seasons: Annotated[list[int], NoDecode] = [2021, 2022]
+
+    @field_validator("cors_origins", "telemetry_seasons", mode="before")
     @classmethod
-    def _split_origins(cls, value):
+    def _split_list(cls, value):
         if isinstance(value, str):
             return [v.strip() for v in value.split(",") if v.strip()]
         return value

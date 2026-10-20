@@ -8,6 +8,7 @@ import ergast
 import jobs.scheduler
 import main
 import precomputed
+import telemetry
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -31,6 +32,17 @@ def no_network(monkeypatch):
         return _real_connect(sock, address)
 
     monkeypatch.setattr(socket.socket, "connect", guarded_connect)
+
+
+@pytest.fixture(autouse=True)
+def no_fastf1_loads(monkeypatch):
+    """No test may load a real FastF1 session (it would read the local cache or
+    the network). Mock get_full_race_analysis / the telemetry function instead."""
+
+    def blocked(*args, **kwargs):
+        raise RuntimeError("Loading FastF1 sessions in tests is disabled; mock it.")
+
+    monkeypatch.setattr(telemetry.fastf1, "get_session", blocked)
 
 
 @pytest.fixture(autouse=True)

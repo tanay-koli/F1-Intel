@@ -13,7 +13,7 @@ venv/Scripts/python -m pytest tests/test_routes.py -k invalid   # one file / mat
 venv/Scripts/ruff check .                           # lint (config in pyproject.toml, line length 100)
 venv/Scripts/ruff format .                          # format
 ```
-- **Tests never touch the network.** `tests/conftest.py` blocks every non-loopback socket connect and points the Jolpica cache at a temp file.
+- **Tests never touch the network or FastF1.** `tests/conftest.py` blocks every non-loopback socket connect, makes `fastf1.get_session` raise (mock `get_full_race_analysis` or the telemetry function instead), and points the Jolpica cache and the precomputed store at temp files.
 - The `jolpica` fixture replays recorded responses by patching `ergast._get`. The recordings are in `tests/fixtures/jolpica/`, with `manifest.json` mapping URL → file.
 - `scripts/record_fixtures.py` (uses the network) re-records them, along with the 2022 Monza race analysis and the race-analyst snapshot. Re-run it when you add a call the tests need, or change the analyst on purpose; then review the fixture diff.
 - `test_race_analyst.py` has a snapshot test plus one test per threshold constant, each asserting both sides of the boundary.
@@ -56,6 +56,7 @@ npm run build
 | `PRECOMPUTE_ENABLED` | Run the precompute scheduler in this API process. Default: true |
 | `PRECOMPUTE_DELAY_HOURS` | Hours after a race's start to precompute it. Default: 5 |
 | `API_URL` | Where the precompute CLI finds the running API. Default: `http://127.0.0.1:8000` |
+| `TELEMETRY_SEASONS` | Seasons FastF1 can load. Others get an immediate 503 without a load. Default: `2021,2022`; empty = always try |
 
 Import `from settings import settings`; don't read `os.environ` directly.
 
@@ -94,7 +95,8 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
    - The policy reads the season's schedule from the cache itself, not through `_get`, to avoid recursion. With no cached schedule it falls back to 1 h.
    - Because lifetime is evaluated at read time, a stored `last`/`next` response re-expires as the season moves on.
 2. **`telemetry.py`** — FastF1 session loading (cache in `$CACHE_DIR`, enabled at import time). First load of a session can take a minute+, which is why `api.js` uses a separate `telemetryApi` client with a 120s timeout. Data is downsampled (`_resample`) before returning.
-   - **Timing data is only reachable for 2021 and 2022.** FastF1 fetches post-session data from `livetiming.formula1.com/static/...`, which now returns **401 for every season** (checked 2018 to 2025, from CloudFront, regardless of user agent). On any error ≥400, FastF1 3.8 retries `livetiming-mirror.fastf1.dev`, which only hosts 2021–2022. For other seasons FastF1 loads no laps or telemetry and builds the driver list from Jolpica, so the lap/telemetry routes fail with "data … has not been loaded yet". **An F1 TV login does not help:** FastF1 never sends the token on these requests; only its live-timing client (`fastf1.livetiming`) uses it. Use **2022 round 16 (Monza)** when you need telemetry that actually loads (the smoke check does).
+   - **Timing data is only reachable for 2021 and 2022.** FastF1 fetches post-session data from `livetiming.formula1.com/static/...`, which now returns **401 for every season** (checked 2018 to 2025, from CloudFront, regardless of user agent). On any error ≥400, FastF1 3.8 retries `livetiming-mirror.fastf1.dev`, which only hosts 2021–2022. For other seasons FastF1 loads no laps or telemetry and builds the driver list from Jolpica, so the lap/telemetry routes fail with "data … has not been loaded yet". **An F1 TV login does not help:** FastF1 never sends the token on these requests; only its live-timing client (`fastf1.livetiming`) uses it. Use **2022 round 16 (Monza)** when you need telemetry that actually loads (the smoke check does). `settings.telemetry_seasons` encodes this, so requests for other seasons fail at once in `_fastf1_errors`; if F1 reopens access, change the setting, not the code.
+   - Sessions load with `messages=True`, so `raceEvents` comes from race control. `classify_race_event` only counts deployments ("SAFETY CAR DEPLOYED", "VIRTUAL SAFETY CAR DEPLOYED", a message starting "RED FLAG"). "SAFETY CAR IN THIS LAP", stewards' "SAFETY CAR INFRINGEMENT" notes and "CHEQUERED FLAG" (which contains "RED FLAG") are not.
    - FastF1 leaves `TeamColor` empty when it falls back to Jolpica; `telemetry._driver_team_color()` then uses `ergast.TEAM_COLORS` by `TeamId` (equal to the Jolpica constructorId).
    - FastF1 has its own process-wide limit of **500 outgoing calls per hour** (`"any API: 500 calls/h"`). Failed loads burn through it fast, because they fall back to Jolpica, sometimes once per lap. Restarting the server resets the counter.
 
