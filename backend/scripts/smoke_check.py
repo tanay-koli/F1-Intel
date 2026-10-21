@@ -54,7 +54,6 @@ ROUTES = [
         "GET",
         "/api/telemetry?year=2025&round=16&session=Q&driver1=VER&driver2=NOR",
     ),
-    ("telemetry race", "GET", "/api/telemetry/race?year=2025&round=16&driver1=VER&driver2=NOR"),
     ("race-analysis", "GET", "/api/telemetry/race-analysis?year=2025&round=16"),
     ("race-analyst", "GET", "/api/race-analyst?year=2025&round=16"),
     # 2021-2022 are the only seasons whose timing data is still reachable
@@ -64,11 +63,6 @@ ROUTES = [
         "telemetry trace 2022",
         "GET",
         "/api/telemetry?year=2022&round=16&session=Q&driver1=VER&driver2=LEC",
-    ),
-    (
-        "telemetry race 2022",
-        "GET",
-        "/api/telemetry/race?year=2022&round=16&driver1=VER&driver2=LEC",
     ),
     ("race-analysis 2022", "GET", "/api/telemetry/race-analysis?year=2022&round=16"),
     ("race-analyst 2022", "GET", "/api/race-analyst?year=2022&round=16"),

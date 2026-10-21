@@ -79,8 +79,8 @@ def _build_snapshot(
         if lap_data is None or lap_data.get("position") is None:
             continue
 
-        # Previous lap position for this driver
-        prev_pos = None
+        # Previous lap position for this driver; lap 1 compares with the grid
+        prev_pos = None if prev_snapshot else drv.get("gridPosition")
         if prev_snapshot:
             for pe in prev_snapshot["entries"]:
                 if pe["code"] == drv["code"]:

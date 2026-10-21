@@ -57,8 +57,6 @@ export const f1Api = {
     telemetryApi.get(`/telemetry/drivers?year=${year}&round=${round}&session=${session}`).then(r => r.data),
   getTelemetry: (year, round, session, driver1, driver2) =>
     telemetryApi.get(`/telemetry?year=${year}&round=${round}&session=${session}&driver1=${driver1}&driver2=${driver2}`).then(r => r.data),
-  getRaceTelemetry: (year, round, driver1, driver2) =>
-    telemetryApi.get(`/telemetry/race?year=${year}&round=${round}&driver1=${driver1}&driver2=${driver2}`).then(r => r.data),
   getRaceAnalysis: (year, round) =>
     telemetryApi.get(`/telemetry/race-analysis?year=${year}&round=${round}`).then(r => r.data),
   getRaceAnalyst: (year, round) =>

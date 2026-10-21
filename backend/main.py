@@ -38,7 +38,6 @@ from services.profiles import circuit_detail, constructor_profile, driver_profil
 from services.race import race_analysis, race_analyst
 from settings import settings
 from telemetry import (
-    get_race_lap_data,
     get_session_drivers,
     get_speed_trace,
 )
@@ -265,17 +264,6 @@ def telemetry(
 ):
     """Speed/throttle/brake/gear traces of two drivers' fastest laps on one distance axis."""
     return get_speed_trace(year, round, session, driver1, driver2)
-
-
-@route("/api/telemetry/race", s.RaceLapResponse)
-def telemetry_race(
-    year: TelemetryYear = DEFAULT_YEAR,
-    round: TelemetryRound = 1,
-    driver1: str = "VER",
-    driver2: str = "NOR",
-):
-    """Lap-by-lap race data for two drivers: times, positions, gaps, tyres, pit stops."""
-    return get_race_lap_data(year, round, driver1, driver2)
 
 
 @route("/api/telemetry/race-analysis", s.RaceAnalysisResponse)

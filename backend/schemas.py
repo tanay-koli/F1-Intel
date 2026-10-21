@@ -502,30 +502,6 @@ class Lap(Model):
     isPitLap: bool
 
 
-class RaceLapDriver(Model):
-    code: str
-    fullName: str
-    teamColor: str
-    laps: list[Lap]
-    pitLaps: list[int]
-    fastestLap: int | None
-    fastestLapTime: float | None
-    fastestLapTimeStr: str
-    avgLapTime: float | None
-    finishPosition: int | None
-    totalLaps: int
-
-
-class RaceLapResponse(Model):
-    year: int
-    round: int
-    session: str
-    raceName: str
-    maxLap: int
-    driver1: RaceLapDriver
-    driver2: RaceLapDriver
-
-
 class Stint(Model):
     compound: str
     startLap: int | None
