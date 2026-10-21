@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import sys
 import time
 from pathlib import Path
 
@@ -248,6 +249,23 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
     print("  ✓ standings (driver)")
 
 
+def ingest_seasons(seasons: list[int], con: duckdb.DuckDBPyConnection) -> list[int]:
+    """Ingest each season in its own transaction; returns the seasons that failed."""
+    failed = []
+    for season in seasons:
+        # A failed fetch must not leave the season's rows deleted
+        # (each table is cleared before it's refilled)
+        con.begin()
+        try:
+            ingest_season(season, con)
+            con.commit()
+        except Exception as e:
+            con.rollback()
+            failed.append(season)
+            print(f"  ✗ season {season} failed, previous data kept: {e}")
+    return failed
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--seasons", default="2024-2025", help="e.g. '1950-2025' or single '2025'")
@@ -263,11 +281,7 @@ if __name__ == "__main__":
     con = duckdb.connect(str(DB_PATH))
 
     print(f"🏎  Ingesting {len(seasons)} seasons into {DB_PATH}")
-    for season in seasons:
-        try:
-            ingest_season(season, con)
-        except Exception as e:
-            print(f"  ✗ season {season} failed: {e}")
+    failed = ingest_seasons(seasons, con)
 
     # Quick summary
     print("\n── Summary ──────────────────────────────────────")
@@ -285,4 +299,7 @@ if __name__ == "__main__":
             pass  # table not created (no data for that kind)
 
     con.close()
+    if failed:
+        print(f"\n✗ Ingest finished with {len(failed)} failed season(s): {failed}")
+        sys.exit(1)
     print("\n✅ Ingest complete")
