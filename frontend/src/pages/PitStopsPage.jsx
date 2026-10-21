@@ -47,6 +47,7 @@ function buildDriverStints(pitstops, totalLaps) {
         teamColor:       ps.teamColor,
         constructorName: ps.constructorName,
         finishPosition:  ps.finishPosition,
+        laps:            ps.laps,
         stops:           [],
       }
     }
@@ -62,7 +63,8 @@ function buildDriverStints(pitstops, totalLaps) {
       stints.push({ startLap: prevLap, endLap: s.lap - 1, stintNum: stints.length + 1 })
       prevLap = s.lap
     }
-    stints.push({ startLap: prevLap, endLap: totalLaps, stintNum: stints.length + 1 })
+    // A driver who retired stops at their last lap, not the race distance
+    stints.push({ startLap: prevLap, endLap: d.laps ?? totalLaps, stintNum: stints.length + 1 })
     return { ...d, stints }
   })
 

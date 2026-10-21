@@ -78,6 +78,7 @@ def test_pit_stops_enriched_from_results(jolpica):
     stop = data["pitstops"][0]
     # code/name/colour come from the race results, not the pit-stop feed
     assert len(stop["code"]) == 3 and stop["teamColor"].startswith("#")
+    assert 0 < stop["laps"] <= data["totalLaps"]
     assert stop["duration"] > 0
     roundtrip(schemas.PitStopsResponse, data)
 

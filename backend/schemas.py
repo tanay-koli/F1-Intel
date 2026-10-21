@@ -320,6 +320,7 @@ class PitStop(Model):
     teamColor: str
     constructorName: str
     finishPosition: int
+    laps: int | None
     stop: int
     lap: int
     time: str

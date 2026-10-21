@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
+import { CURRENT_SEASON } from '../hooks/useSeason'
 import { Loader, ErrorMsg, SectionHeader, TeamDot, useIsMobile } from '../components/ui'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
@@ -10,6 +11,14 @@ import {
 } from 'recharts'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+
+const FIRST_TELEMETRY_YEAR = 2018
+
+/** Years for the year pickers, newest first (the viewed season may be next year's). */
+function telemetryYears(season) {
+  const latest = Math.max(Number(CURRENT_SEASON), Number(season))
+  return Array.from({ length: latest - FIRST_TELEMETRY_YEAR + 1 }, (_, i) => String(latest - i))
+}
 
 const SESSION_OPTS = [
   { value: 'R',   label: 'Race' },
@@ -384,7 +393,7 @@ function PositionChart({ analysis, highlightDriver, isMobile }) {
           />
           <YAxis
             reversed
-            domain={[1, 20]}
+            domain={[1, drivers.length]}
             tick={{ fontSize: 9, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
             axisLine={false} tickLine={false}
             tickFormatter={v => `P${v}`}
@@ -624,24 +633,21 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
     return () => clearInterval(intervalRef.current)
   }, [isPlaying, totalLaps])
 
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
-      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-        e.preventDefault()
-        setCurrentLap(prev => Math.min(prev + 1, totalLaps))
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-        e.preventDefault()
-        setCurrentLap(prev => Math.max(prev - 1, 1))
-      } else if (e.key === ' ') {
-        e.preventDefault()
-        setIsPlaying(p => !p)
-      }
+  // Keyboard navigation, only while the panel itself has focus, so the
+  // arrow keys still scroll the page and Space still presses buttons
+  function handleKeyDown(e) {
+    if (e.target !== e.currentTarget) return
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setCurrentLap(prev => Math.min(prev + 1, totalLaps))
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      setCurrentLap(prev => Math.max(prev - 1, 1))
+    } else if (e.key === ' ') {
+      e.preventDefault()
+      setIsPlaying(p => !p)
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [totalLaps])
+  }
 
   if (!insights || insights.length === 0) return null
 
@@ -654,6 +660,9 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
     <div
       ref={panelRef}
       id="race-analyst-panel"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label="Race analyst. Arrow keys change lap, Space plays or pauses."
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
@@ -1182,7 +1191,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             />
             <YAxis
               reversed
-              domain={[1, 20]}
+              domain={[1, analysis.drivers.length]}
               tick={{ fontSize: 9, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
               axisLine={false} tickLine={false}
               tickFormatter={v => `P${v}`}
@@ -1560,6 +1569,7 @@ export default function TelemetryPage({ season }) {
   const [searchParams] = useSearchParams()
   const linkedRound = searchParams.get('round')
   const [year,     setYear]     = useState(season)
+  const years = telemetryYears(season)
   const [round,    setRound]    = useState(linkedRound || '1')
   const [viewTab,  setViewTab]  = useState('analysis')
   const [selectedDriver, setSelectedDriver] = useState('')
@@ -1591,8 +1601,8 @@ export default function TelemetryPage({ season }) {
     isLoading: driversLoading,
     error: driversError,
   } = useQuery({
-    queryKey: ['telemetry-drivers', year, round, 'R'],
-    queryFn: () => f1Api.getTelemetryDrivers(Number(year), Number(round), 'R'),
+    queryKey: ['telemetry-drivers', year, round, session],
+    queryFn: ({ queryKey: [, y, r, s] }) => f1Api.getTelemetryDrivers(Number(y), Number(r), s),
     enabled: !!round && round !== '' && viewTab === 'fastlap',
     staleTime: 10 * 60 * 1000,
     retry: 1,
@@ -1606,7 +1616,7 @@ export default function TelemetryPage({ season }) {
     error: analysisError,
   } = useQuery({
     queryKey: analysisQueryKey ?? ['analysis-placeholder'],
-    queryFn: () => f1Api.getRaceAnalysis(Number(year), Number(round)),
+    queryFn: ({ queryKey: [, y, r] }) => f1Api.getRaceAnalysis(Number(y), Number(r)),
     enabled: !!analysisQueryKey,
     staleTime: 30 * 60 * 1000,
     retry: 0,
@@ -1617,7 +1627,7 @@ export default function TelemetryPage({ season }) {
     data: analystData,
   } = useQuery({
     queryKey: analysisQueryKey ? ['race-analyst', ...analysisQueryKey.slice(1)] : ['analyst-placeholder'],
-    queryFn: () => f1Api.getRaceAnalyst(Number(year), Number(round)),
+    queryFn: ({ queryKey: [, y, r] }) => f1Api.getRaceAnalyst(Number(y), Number(r)),
     enabled: !!analysisQueryKey && !!analysisData,
     staleTime: 30 * 60 * 1000,
     retry: 0,
@@ -1631,7 +1641,7 @@ export default function TelemetryPage({ season }) {
     error: telError,
   } = useQuery({
     queryKey: fastlapQueryKey ?? ['fastlap-tel-placeholder'],
-    queryFn: () => f1Api.getTelemetry(Number(year), Number(round), session, driver1, driver2),
+    queryFn: ({ queryKey: [, y, r, s, d1, d2] }) => f1Api.getTelemetry(Number(y), Number(r), s, d1, d2),
     enabled: !!fastlapQueryKey,
     staleTime: 30 * 60 * 1000,
     retry: 0,
@@ -1708,7 +1718,7 @@ export default function TelemetryPage({ season }) {
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
         }}>
           <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound('1'); setSelectedDriver(''); setAnalysisQueryKey(null) }}>
-            {['2026','2025','2024','2023','2022','2021','2020','2019','2018'].map(y => (
+            {years.map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </SelectBox>
@@ -1762,7 +1772,7 @@ export default function TelemetryPage({ season }) {
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
         }}>
           <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound('1'); setDriver1(''); setDriver2('') }}>
-            {['2026','2025','2024','2023','2022','2021','2020','2019','2018'].map(y => (
+            {years.map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
           </SelectBox>

@@ -1,7 +1,7 @@
 {
  "root": {
   "status": 200,
-  "ms": 35,
+  "ms": 15,
   "error": "",
   "shape": [
    "$.message:str",
@@ -12,7 +12,7 @@
  },
  "drivers": {
   "status": 200,
-  "ms": 21,
+  "ms": 3,
   "error": "",
   "shape": [
    "$.drivers:array",
@@ -36,7 +36,7 @@
  },
  "driver-standings": {
   "status": 200,
-  "ms": 26,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.round:str",
@@ -62,7 +62,7 @@
  },
  "driver-standings 2024": {
   "status": 200,
-  "ms": 3,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.round:str",
@@ -86,9 +86,56 @@
   ],
   "path": "GET /api/driver-standings?season=2024"
  },
- "driver profile": {
+ "driver-standings 1985": {
   "status": 200,
   "ms": 2,
+  "error": "",
+  "shape": [
+   "$.round:str",
+   "$.season:str",
+   "$.standings:array",
+   "$.standings[].code:str",
+   "$.standings[].constructorId:str",
+   "$.standings[].constructorName:str",
+   "$.standings[].driverId:str",
+   "$.standings[].familyName:str",
+   "$.standings[].flag:str",
+   "$.standings[].fullName:str",
+   "$.standings[].nationality:str",
+   "$.standings[].number:str",
+   "$.standings[].points:float",
+   "$.standings[].position:int",
+   "$.standings[].teamColor:str",
+   "$.standings[].wins:int",
+   "$.standings[]:object",
+   "$:object"
+  ],
+  "path": "GET /api/driver-standings?season=1985"
+ },
+ "constructor-standings 2007": {
+  "status": 200,
+  "ms": 2,
+  "error": "",
+  "shape": [
+   "$.round:str",
+   "$.season:str",
+   "$.standings:array",
+   "$.standings[].color:str",
+   "$.standings[].constructorId:str",
+   "$.standings[].flag:str",
+   "$.standings[].name:str",
+   "$.standings[].nationality:str",
+   "$.standings[].points:float",
+   "$.standings[].position:int",
+   "$.standings[].wins:int",
+   "$.standings[]:object",
+   "$:object"
+  ],
+  "path": "GET /api/constructor-standings?season=2007"
+ },
+ "driver profile": {
+  "status": 200,
+  "ms": 6,
   "error": "",
   "shape": [
    "$.driver.code:str",
@@ -123,17 +170,18 @@
  },
  "driver profile 404": {
   "status": 404,
-  "ms": 2,
-  "error": "Driver not found",
+  "ms": 3,
+  "error": "No driver 'nobody' in the 2026 season.",
   "shape": [
-   "$.detail:str",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/drivers/nobody?season=2026"
  },
  "constructors": {
   "status": 200,
-  "ms": 2,
+  "ms": 27,
   "error": "",
   "shape": [
    "$.constructors:array",
@@ -153,7 +201,7 @@
  },
  "constructor-standings": {
   "status": 200,
-  "ms": 686,
+  "ms": 4,
   "error": "",
   "shape": [
    "$.round:str",
@@ -174,7 +222,7 @@
  },
  "constructor profile": {
   "status": 200,
-  "ms": 2,
+  "ms": 3,
   "error": "",
   "shape": [
    "$.constructor.color:str",
@@ -240,7 +288,7 @@
  },
  "seasons": {
   "status": 200,
-  "ms": 1,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.seasons:array",
@@ -281,7 +329,7 @@
  },
  "results last": {
   "status": 200,
-  "ms": 743,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.circuitId:str",
@@ -320,7 +368,7 @@
  },
  "results 2024 r1": {
   "status": 200,
-  "ms": 4,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.circuitId:str",
@@ -359,7 +407,7 @@
  },
  "qualifying": {
   "status": 200,
-  "ms": 14,
+  "ms": 2,
   "error": "",
   "shape": [
    "$.circuitName:str",
@@ -390,7 +438,7 @@
  },
  "driver-progression": {
   "status": 200,
-  "ms": 15,
+  "ms": 28,
   "error": "",
   "shape": [
    "$.rounds:array",
@@ -410,7 +458,7 @@
  },
  "constructor-progression": {
   "status": 200,
-  "ms": 556,
+  "ms": 16,
   "error": "",
   "shape": [
    "$.rounds:array",
@@ -429,7 +477,7 @@
  },
  "sprint": {
   "status": 200,
-  "ms": 425,
+  "ms": 3,
   "error": "",
   "shape": [
    "$.circuitId:str",
@@ -466,7 +514,7 @@
  },
  "pitstops": {
   "status": 200,
-  "ms": 487,
+  "ms": 3,
   "error": "",
   "shape": [
    "$.country:str",
@@ -480,6 +528,7 @@
    "$.pitstops[].finishPosition:int",
    "$.pitstops[].fullName:str",
    "$.pitstops[].lap:int",
+   "$.pitstops[].laps:int",
    "$.pitstops[].stop:int",
    "$.pitstops[].teamColor:str",
    "$.pitstops[].time:str",
@@ -494,7 +543,7 @@
  },
  "h2h": {
   "status": 200,
-  "ms": 3800,
+  "ms": 6,
   "error": "",
   "shape": [
    "$.driver1.avgPosition:float",
@@ -627,7 +676,7 @@
  },
  "next-race 2024": {
   "status": 200,
-  "ms": 2,
+  "ms": 29,
   "error": "",
   "shape": [
    "$.race:NoneType",
@@ -638,17 +687,18 @@
  },
  "circuit-outline": {
   "status": 404,
-  "ms": 1,
-  "error": "No outline for this circuit",
+  "ms": 4,
+  "error": "No track outline has been exported for this circuit.",
   "shape": [
-   "$.detail:str",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/circuit-outline?circuit_id=monza"
  },
  "telemetry drivers": {
   "status": 503,
-  "ms": 13,
+  "ms": 2,
   "error": "Lap and telemetry data isn't available for 2025: F1's timing service currently only serves 2021, 2022.",
   "shape": [
    "$.error:str",
@@ -658,82 +708,41 @@
   "path": "GET /api/telemetry/drivers?year=2025&round=16&session=R"
  },
  "telemetry trace": {
-  "status": 500,
-  "ms": 4941,
-  "error": "The data you are trying to access has not been loaded yet. See `Session.load`",
+  "status": 503,
+  "ms": 2,
+  "error": "Lap and telemetry data isn't available for 2025: F1's timing service currently only serves 2021, 2022.",
   "shape": [
-   "$.detail:str",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/telemetry?year=2025&round=16&session=Q&driver1=VER&driver2=NOR"
  },
  "race-analysis": {
-  "status": 500,
-  "ms": 5664,
-  "error": "The data you are trying to access has not been loaded yet. See `Session.load`",
+  "status": 503,
+  "ms": 4,
+  "error": "Lap and telemetry data isn't available for 2025: F1's timing service currently only serves 2021, 2022.",
   "shape": [
-   "$.detail:str",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/telemetry/race-analysis?year=2025&round=16"
  },
  "race-analyst": {
-  "status": 500,
-  "ms": 5550,
-  "error": "The data you are trying to access has not been loaded yet. See `Session.load`",
+  "status": 503,
+  "ms": 5,
+  "error": "Lap and telemetry data isn't available for 2025: F1's timing service currently only serves 2021, 2022.",
   "shape": [
-   "$.detail:str",
+   "$.error:str",
+   "$.message:str",
    "$:object"
   ],
   "path": "GET /api/race-analyst?year=2025&round=16"
  },
- "cache stats": {
-  "status": 200,
-  "ms": 3,
-  "error": "",
-  "shape": [
-   "$.db_size_bytes:int",
-   "$.newest_entry:float",
-   "$.oldest_entry:float",
-   "$.total_entries:int",
-   "$:object"
-  ],
-  "path": "GET /api/cache/stats"
- },
- "cache clear": {
-  "status": 200,
-  "ms": 6,
-  "error": "",
-  "shape": [
-   "$.deleted:int",
-   "$.mode:str",
-   "$:object"
-  ],
-  "path": "DELETE /api/cache/clear?expired_only=true"
- },
- "bad season": {
-  "status": 500,
-  "ms": 476,
-  "error": "404 Client Error: Not Found for url: https://api.jolpi.ca/ergast/f1/abc/driverStandings.json",
-  "shape": [
-   "$.detail:str",
-   "$:object"
-  ],
-  "path": "GET /api/driver-standings?season=abc"
- },
- "bad round": {
-  "status": 500,
-  "ms": 435,
-  "error": "404 Client Error: Not Found for url: https://api.jolpi.ca/ergast/f1/2026/-3/results.json?limit=30",
-  "shape": [
-   "$.detail:str",
-   "$:object"
-  ],
-  "path": "GET /api/results?season=2026&round=-3"
- },
  "telemetry drivers 2022": {
   "status": 200,
-  "ms": 1503,
+  "ms": 3334,
   "error": "",
   "shape": [
    "$.drivers:array",
@@ -751,7 +760,7 @@
  },
  "telemetry trace 2022": {
   "status": 200,
-  "ms": 1178,
+  "ms": 2713,
   "error": "",
   "shape": [
    "$.distance:array",
@@ -792,7 +801,7 @@
  },
  "race-analysis 2022": {
   "status": 200,
-  "ms": 8,
+  "ms": 27,
   "error": "",
   "shape": [
    "$.drivers:array",
@@ -857,7 +866,7 @@
  },
  "race-analyst 2022": {
   "status": 200,
-  "ms": 1565,
+  "ms": 5,
   "error": "",
   "shape": [
    "$.insights:array",
@@ -875,51 +884,50 @@
   ],
   "path": "GET /api/race-analyst?year=2022&round=16"
  },
- "driver-standings 1985": {
+ "cache stats": {
   "status": 200,
-  "ms": 24,
+  "ms": 8,
   "error": "",
   "shape": [
-   "$.round:str",
-   "$.season:str",
-   "$.standings:array",
-   "$.standings[].code:str",
-   "$.standings[].constructorId:str",
-   "$.standings[].constructorName:str",
-   "$.standings[].driverId:str",
-   "$.standings[].familyName:str",
-   "$.standings[].flag:str",
-   "$.standings[].fullName:str",
-   "$.standings[].nationality:str",
-   "$.standings[].number:str",
-   "$.standings[].points:float",
-   "$.standings[].position:int",
-   "$.standings[].teamColor:str",
-   "$.standings[].wins:int",
-   "$.standings[]:object",
+   "$.db_size_bytes:int",
+   "$.newest_entry:float",
+   "$.oldest_entry:float",
+   "$.total_entries:int",
    "$:object"
   ],
-  "path": "GET /api/driver-standings?season=1985"
+  "path": "GET /api/cache/stats"
  },
- "constructor-standings 2007": {
+ "cache clear": {
   "status": 200,
-  "ms": 3,
+  "ms": 76,
   "error": "",
   "shape": [
-   "$.round:str",
-   "$.season:str",
-   "$.standings:array",
-   "$.standings[].color:str",
-   "$.standings[].constructorId:str",
-   "$.standings[].flag:str",
-   "$.standings[].name:str",
-   "$.standings[].nationality:str",
-   "$.standings[].points:float",
-   "$.standings[].position:int",
-   "$.standings[].wins:int",
-   "$.standings[]:object",
+   "$.deleted:int",
+   "$.mode:str",
    "$:object"
   ],
-  "path": "GET /api/constructor-standings?season=2007"
+  "path": "DELETE /api/cache/clear?expired_only=true"
+ },
+ "bad season": {
+  "status": 422,
+  "ms": 22,
+  "error": "Invalid 'season': use a year from 1950 to 2027, or 'current'.",
+  "shape": [
+   "$.error:str",
+   "$.message:str",
+   "$:object"
+  ],
+  "path": "GET /api/driver-standings?season=abc"
+ },
+ "bad round": {
+  "status": 422,
+  "ms": 16,
+  "error": "Invalid 'round': use a round number (1 or higher), 'last' or 'next'.",
+  "shape": [
+   "$.error:str",
+   "$.message:str",
+   "$:object"
+  ],
+  "path": "GET /api/results?season=2026&round=-3"
  }
 }

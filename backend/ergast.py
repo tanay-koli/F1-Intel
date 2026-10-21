@@ -720,6 +720,7 @@ def get_pit_stops(season: str, round_num: str = "last") -> dict:
                 "teamColor": info.get("teamColor", "#888888"),
                 "constructorName": info.get("constructorName", ""),
                 "finishPosition": info.get("position", 99),
+                "laps": info.get("laps"),  # laps completed; None without race results
                 "stop": int(ps["stop"]),
                 "lap": int(ps["lap"]),
                 "time": ps.get("time", ""),

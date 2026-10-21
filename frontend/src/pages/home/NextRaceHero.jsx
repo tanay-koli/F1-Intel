@@ -2,6 +2,7 @@ import TrackOutline from '../../components/TrackOutline'
 import Skeleton from '../../components/Skeleton'
 import Countdown from './Countdown'
 import WeekendSchedule from './WeekendSchedule'
+import { endMs } from './weekend'
 import { titleContext } from '../../lib/titleMath'
 import { countWord, surname, points } from '../../lib/format'
 import styles from './Home.module.css'
@@ -80,7 +81,12 @@ export default function NextRaceHero({ season, nextRace, standings, schedule }) 
   const race = nextRace.data?.race
   if (!race) return <SeasonComplete season={season} standings={standings.data?.standings} />
 
-  const remaining = (schedule.data?.races ?? []).filter(r => r.round >= race.round)
+  // Once this weekend's sprint is over its points are in the standings, not still to play for
+  const sprint = race.sessions.find(s => s.key === 'sprint')
+  const sprintDone = sprint && Date.now() > endMs(sprint)
+  const remaining = (schedule.data?.races ?? [])
+    .filter(r => r.round >= race.round)
+    .map(r => (sprintDone && r.round === race.round ? { ...r, sprint: '' } : r))
   const context = standings.data?.standings?.length && remaining.length
     ? titleContext(standings.data.standings, remaining)
     : null
