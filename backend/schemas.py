@@ -345,7 +345,7 @@ class DriverSeries(Model):
     code: str
     fullName: str
     teamColor: str
-    points: list[Number]
+    points: list[Number | None]  # None before the first round they appear in
 
 
 class DriverProgressionResponse(Model):
@@ -358,7 +358,7 @@ class ConstructorSeries(Model):
     constructorId: str
     name: str
     color: str
-    points: list[Number]
+    points: list[Number | None]  # None before the first round they appear in
 
 
 class ConstructorProgressionResponse(Model):

@@ -3,7 +3,7 @@
   "xmlns": "",
   "series": "f1",
   "url": "https://api.jolpi.ca/ergast/f1/2026/last/results.json",
-  "limit": "30",
+  "limit": "100",
   "offset": "0",
   "total": "22",
   "RaceTable": {

@@ -10,7 +10,7 @@ import json
 import logging
 import sqlite3
 import time
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import requests
 
@@ -66,20 +66,6 @@ TEAM_COLORS = {
     "hrt": "#B2945A",
 }
 
-TEAM_LOGOS = {
-    "red_bull": "🐂",
-    "ferrari": "🐴",
-    "mercedes": "⭐",
-    "mclaren": "🟠",
-    "aston_martin": "🍀",
-    "alpine": "🔵",
-    "williams": "🔷",
-    "haas": "🇺🇸",
-    "rb": "🔵",
-    "kick_sauber": "🟢",
-    "sauber": "🟢",
-}
-
 FLAG_MAP = {
     "British": "🇬🇧",
     "German": "🇩🇪",
@@ -127,6 +113,8 @@ def is_fresh(con: sqlite3.Connection, url: str, body: dict, stored_at: float) ->
     """Whether a cached response is still usable; see cache_policy for the rules."""
     now = datetime.now(UTC)
     season, _ = cache_policy.parse(url, BASE_URL)
+    if season and season.isdigit() and int(season) < now.year:
+        return True  # past seasons never expire; skip reading the schedule
     races = _cached_races(con, season, now) if season else None
     ttl = cache_policy.ttl_for(url, now, races, body, BASE_URL)
     return ttl is None or now.timestamp() - stored_at < ttl
@@ -210,7 +198,7 @@ def get_drivers(season: str) -> dict:
 
 
 def get_driver_standings(season: str) -> dict:
-    data = _get(f"{BASE_URL}/{season}/driverStandings.json")
+    data = _get(f"{BASE_URL}/{season}/driverStandings.json?limit=100")
     standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
 
     if not standings_list:
@@ -277,7 +265,7 @@ def get_constructors(season: str) -> dict:
 
 
 def get_constructor_standings(season: str) -> dict:
-    data = _get(f"{BASE_URL}/{season}/constructorStandings.json")
+    data = _get(f"{BASE_URL}/{season}/constructorStandings.json?limit=100")
     standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
 
     if not standings_list:
@@ -411,7 +399,8 @@ def get_next_race(season: str) -> dict:
     data = _get(f"{BASE_URL}/{season}/next.json")
     races = data["MRData"]["RaceTable"]["Races"]
     # Past seasons return the *following* season's opener, so check the season
-    if not races or races[0]["season"] != str(season):
+    expected = str(date.today().year) if season == "current" else str(season)
+    if not races or races[0]["season"] != expected:
         return {"season": season, "race": None}
 
     r = races[0]
@@ -445,7 +434,7 @@ def get_next_race(season: str) -> dict:
 
 
 def get_race_results(season: str, round_num: str = "last") -> dict:
-    data = _get(f"{BASE_URL}/{season}/{round_num}/results.json?limit=30")
+    data = _get(f"{BASE_URL}/{season}/{round_num}/results.json?limit=100")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
         return {"season": season, "round": round_num, "results": []}
@@ -502,7 +491,7 @@ def get_race_results(season: str, round_num: str = "last") -> dict:
 
 
 def get_qualifying(season: str, round_num: str = "last") -> dict:
-    data = _get(f"{BASE_URL}/{season}/{round_num}/qualifying.json?limit=30")
+    data = _get(f"{BASE_URL}/{season}/{round_num}/qualifying.json?limit=100")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
         return {"season": season, "round": round_num, "results": []}
@@ -549,148 +538,91 @@ def get_qualifying(season: str, round_num: str = "last") -> dict:
 # ── Points Progression ────────────────────────────────────────────────────────
 
 
-def get_driver_points_progression(season: str) -> dict:
-    """
-    Returns cumulative points per driver after each race.
-    Fetches all round standings in sequence (one call per completed round).
-    """
-    # first get total rounds completed
-    sched = get_schedule(season)
-    from datetime import date
+def _driver_series_meta(s: dict) -> dict:
+    d = s["Driver"]
+    teams = s.get("Constructors", [{}])
+    cid = teams[0].get("constructorId", "") if teams else ""
+    return {
+        "driverId": d["driverId"],
+        "code": d.get("code", d["driverId"][:3].upper()),
+        "fullName": f"{d['givenName']} {d['familyName']}",
+        "teamColor": _team_color(cid),
+    }
 
+
+def _constructor_series_meta(s: dict) -> dict:
+    c = s["Constructor"]
+    return {
+        "constructorId": c["constructorId"],
+        "name": c["name"],
+        "color": _team_color(c["constructorId"]),
+    }
+
+
+def _progression(
+    season: str, endpoint: str, list_key: str, id_key: str, meta, top_n: int | None
+) -> dict:
+    """
+    Points after each completed round, one series per entrant (one call per round).
+    Every series has one value per round: None before the entrant's first
+    appearance, then the last known total carried over rounds they miss.
+    """
     today = date.today().isoformat()
-    completed = [r for r in sched["races"] if r["date"] <= today]
-    total_rounds = len(completed)
+    completed = [r for r in get_schedule(season)["races"] if r["date"] <= today]
 
-    if total_rounds == 0:
-        return {"season": season, "rounds": [], "series": []}
-
-    # fetch standings after each round (parallel-ish via list)
     rounds_data = []
-    for rnd in range(1, total_rounds + 1):
+    for rnd in range(1, len(completed) + 1):
         try:
-            data = _get(f"{BASE_URL}/{season}/{rnd}/driverStandings.json")
+            data = _get(f"{BASE_URL}/{season}/{rnd}/{endpoint}.json?limit=100")
             slist = data["MRData"]["StandingsTable"]["StandingsLists"]
             if slist:
                 rounds_data.append(slist[0])
         except NotFound:
             pass  # a round with no standings yet; rate limits/outages still raise
 
-    if not rounds_data:
-        return {"season": season, "rounds": [], "series": []}
+    series_map: dict[str, dict] = {}
+    for i, rnd in enumerate(rounds_data):
+        for s in rnd[list_key]:
+            entry = meta(s)
+            key = entry[id_key]
+            if key not in series_map:
+                series_map[key] = {**entry, "points": [None] * i}
+            series_map[key]["points"].append(float(s["points"]))
+        for v in series_map.values():
+            if len(v["points"]) == i:  # missing from this round: carry the total
+                v["points"].append(v["points"][-1])
 
-    # collect all driver ids
-    all_driver_ids = set()
-    for rnd in rounds_data:
-        for s in rnd["DriverStandings"]:
-            all_driver_ids.add(s["Driver"]["driverId"])
-
-    # build series: {driverId: {code, color, points: [r1, r2, ...]}}
-    series_map = {}
-    for rnd in rounds_data:
-        standings = {s["Driver"]["driverId"]: s for s in rnd["DriverStandings"]}
-        for did in all_driver_ids:
-            if did not in series_map:
-                s = standings.get(did)
-                if s:
-                    d = s["Driver"]
-                    teams = s.get("Constructors", [{}])
-                    cid = teams[0].get("constructorId", "") if teams else ""
-                    series_map[did] = {
-                        "driverId": did,
-                        "code": d.get("code", did[:3].upper()),
-                        "fullName": f"{d['givenName']} {d['familyName']}",
-                        "teamColor": _team_color(cid),
-                        "points": [],
-                    }
-            entry = standings.get(did)
-            if did not in series_map:
-                continue  # driver not yet seen in any round
-            pts = (
-                float(entry["points"])
-                if entry
-                else (series_map[did]["points"][-1] if series_map[did]["points"] else 0)
-            )
-            series_map[did]["points"].append(pts)
-
-    round_labels = [f"R{r['round']}" for r in rounds_data]
-    # keep only top 10 in final standing
-    final_pts = {did: v["points"][-1] for did, v in series_map.items()}
-    top10 = sorted(final_pts, key=lambda x: -final_pts[x])[:10]
-    series = [series_map[did] for did in top10]
-
-    return {"season": season, "rounds": round_labels, "series": series}
+    ranked = sorted(series_map.values(), key=lambda v: -v["points"][-1])
+    return {
+        "season": season,
+        "rounds": [f"R{r['round']}" for r in rounds_data],
+        "series": ranked[:top_n] if top_n else ranked,
+    }
 
 
-# ── Constructor Points Progression ────────────────────────────────────────────
+def get_driver_points_progression(season: str) -> dict:
+    """Top 10 drivers' cumulative points after each round."""
+    return _progression(
+        season, "driverStandings", "DriverStandings", "driverId", _driver_series_meta, 10
+    )
 
 
 def get_constructor_points_progression(season: str) -> dict:
-    sched = get_schedule(season)
-    from datetime import date
-
-    today = date.today().isoformat()
-    completed = [r for r in sched["races"] if r["date"] <= today]
-    total_rounds = len(completed)
-
-    if total_rounds == 0:
-        return {"season": season, "rounds": [], "series": []}
-
-    rounds_data = []
-    for rnd in range(1, total_rounds + 1):
-        try:
-            data = _get(f"{BASE_URL}/{season}/{rnd}/constructorStandings.json")
-            slist = data["MRData"]["StandingsTable"]["StandingsLists"]
-            if slist:
-                rounds_data.append(slist[0])
-        except NotFound:
-            pass  # a round with no standings yet; rate limits/outages still raise
-
-    if not rounds_data:
-        return {"season": season, "rounds": [], "series": []}
-
-    all_cids = set()
-    for rnd in rounds_data:
-        for s in rnd["ConstructorStandings"]:
-            all_cids.add(s["Constructor"]["constructorId"])
-
-    series_map = {}
-    for rnd in rounds_data:
-        standings = {s["Constructor"]["constructorId"]: s for s in rnd["ConstructorStandings"]}
-        for cid in all_cids:
-            if cid not in series_map:
-                s = standings.get(cid)
-                if s:
-                    c = s["Constructor"]
-                    series_map[cid] = {
-                        "constructorId": cid,
-                        "name": c["name"],
-                        "color": _team_color(cid),
-                        "points": [],
-                    }
-            entry = standings.get(cid)
-            if cid not in series_map:
-                continue  # constructor not yet seen
-            pts = (
-                float(entry["points"])
-                if entry
-                else (series_map[cid]["points"][-1] if series_map[cid]["points"] else 0)
-            )
-            series_map[cid]["points"].append(pts)
-
-    round_labels = [f"R{r['round']}" for r in rounds_data]
-    final_pts = {cid: v["points"][-1] for cid, v in series_map.items()}
-    sorted_cids = sorted(final_pts, key=lambda x: -final_pts[x])
-    series = [series_map[cid] for cid in sorted_cids]
-
-    return {"season": season, "rounds": round_labels, "series": series}
+    return _progression(
+        season,
+        "constructorStandings",
+        "ConstructorStandings",
+        "constructorId",
+        _constructor_series_meta,
+        None,
+    )
 
 
 # ── Sprint Results ─────────────────────────────────────────────────────────────
 
 
 def get_sprint_results(season: str, round_num: str = "last") -> dict:
-    data = _get(f"{BASE_URL}/{season}/{round_num}/sprint.json?limit=30")
+    data = _get(f"{BASE_URL}/{season}/{round_num}/sprint.json?limit=100")
     races = data["MRData"]["RaceTable"]["Races"]
     if not races:
         return {"season": season, "round": round_num, "results": []}

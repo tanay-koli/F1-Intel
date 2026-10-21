@@ -41,6 +41,11 @@ def test_standings_without_position_are_unclassified(jolpica):
     assert mclaren["points"] == 0
 
 
+def test_standings_are_not_truncated(jolpica):
+    # Jolpica's default page is 30 rows; 1985 has 36 classified-or-excluded drivers
+    assert len(ergast.get_driver_standings("1985")["standings"]) == 36
+
+
 def test_constructor_standings(jolpica):
     data = ergast.get_constructor_standings("2026")
     assert data["standings"][0]["position"] == 1
@@ -95,6 +100,14 @@ def test_next_race_sessions_in_order(jolpica):
 def test_next_race_past_season_is_none(jolpica):
     # Jolpica answers /2024/next.json with 2025's round 1
     assert ergast.get_next_race("2024") == {"season": "2024", "race": None}
+
+
+def test_next_race_current_keyword(mocker):
+    this_year = str(ergast.date.today().year)
+    race = {"season": this_year, "round": "5", "raceName": "X GP", "date": "2099-01-01"}
+    body = {"MRData": {"RaceTable": {"Races": [race]}}}
+    mocker.patch("ergast._get", return_value=body)
+    assert ergast.get_next_race("current")["race"]["round"] == 5
 
 
 def test_head_to_head(jolpica):
@@ -164,3 +177,30 @@ def test_progression_does_not_hide_rate_limits(mocker):
     mocker.patch("ergast._get", side_effect=RateLimited())
     with pytest.raises(RateLimited):
         ergast.get_driver_points_progression("2026")
+
+
+def _standings_round(rnd, *entries):
+    rows = [
+        {"points": str(pts), "Driver": {"driverId": d, "givenName": "A", "familyName": d}}
+        for d, pts in entries
+    ]
+    return {
+        "MRData": {
+            "StandingsTable": {"StandingsLists": [{"round": str(rnd), "DriverStandings": rows}]}
+        }
+    }
+
+
+def test_progression_aligns_late_joiners_and_carries_absences(mocker):
+    races = [{"round": r, "date": "2000-01-01"} for r in (1, 2, 3)]
+    mocker.patch("ergast.get_schedule", return_value={"races": races})
+    rounds = {
+        1: _standings_round(1, ("ver", 25)),
+        2: _standings_round(2, ("ver", 50), ("law", 10)),  # law joins in round 2
+        3: _standings_round(3, ("law", 28)),  # ver missing: total carried over
+    }
+    mocker.patch("ergast._get", side_effect=lambda url: rounds[int(url.split("/")[-2])])
+    data = ergast.get_driver_points_progression("2000")
+    series = {s["driverId"]: s["points"] for s in data["series"]}
+    assert data["rounds"] == ["R1", "R2", "R3"]
+    assert series == {"ver": [25.0, 50.0, 50.0], "law": [None, 10.0, 28.0]}
