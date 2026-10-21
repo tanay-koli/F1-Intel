@@ -1,0 +1,5 @@
+# Offline warehouse only (ingest + dbt); the API doesn't need these
+-r ../requirements.txt
+dbt-core==1.12.6
+dbt-duckdb==1.11.0
+tqdm==4.70.1

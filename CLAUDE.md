@@ -19,7 +19,7 @@ venv/Scripts/ruff format .                          # format
 - `test_race_analyst.py` has a snapshot test plus one test per threshold constant, each asserting both sides of the boundary.
 - The frontend has no tests or linter.
 
-**Backend** (FastAPI, run from `backend/`). Use **Python 3.12 or 3.13**: on the newest Python release, compiled deps (pandas, pyarrow, duckdb) may lack prebuilt wheels and fail to build from source. On Windows pick the version with the `py` launcher:
+**Backend** (FastAPI, run from `backend/`). Use **Python 3.12 or 3.13**: on the newest Python release, compiled deps (pandas, duckdb) may lack prebuilt wheels and fail to build from source. On Windows pick the version with the `py` launcher:
 ```bash
 py -3.13 -m venv venv
 venv/Scripts/python -m pip install -r requirements.txt     # Linux/macOS: venv/bin/python
@@ -68,8 +68,9 @@ node scripts/screenshot.mjs http://localhost:5173/ mobile.png 390 844 full   # `
 ```
 Set `EDGE_PATH` to use another Chromium-based browser.
 
-**Warehouse** (DuckDB + dbt, optional, not used by the running API):
+**Warehouse** (DuckDB + dbt, optional, not used by the running API). Its extra deps (dbt, tqdm) live in `backend/warehouse/requirements.txt`:
 ```bash
+venv/Scripts/python -m pip install -r warehouse/requirements.txt              # from backend/
 cd backend/warehouse/ingest && python ingest_jolpica.py --seasons 2024-2025   # writes backend/warehouse/db/f1.duckdb
 cd backend/warehouse/dbt_f1 && dbt run --profiles-dir .                        # profiles.yml lives in the project dir
 cd backend && python check_db.py                                               # summarise warehouse tables
@@ -165,7 +166,7 @@ React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy →
 ### Frontend
 - **Routing:** React Router (`BrowserRouter` in `main.jsx`, routes in `App.jsx`): `/` Home, `/results`, `/pit-stops`, `/h2h`, `/telemetry`, `/standings/drivers`, `/standings/constructors`, `/standings/progression` (`StandingsChartPage`, points-through-the-season chart; `?view=constructors` opens that tab), `/calendar`. Only Home + the four analysis pages are in the nav (`components/SiteHeader.jsx`); standings, the progression chart and the calendar are reached from Home.
 - **Season lives in the URL** (`?season=2026`, omitted for the current year). `hooks/useSeason.js` reads/sets it; `App` passes `season` as a prop to every page. Build internal links with `withSeason(path, season, extra)` so the season carries over. `?round=N` deep-links `ResultsPage` and `TelemetryPage`; Telemetry then auto-runs that race's analysis. `TelemetryPage` is keyed by season so its local state resets on season change.
-- **Home** (`pages/HomePage.jsx` + `pages/home/*`): next-race hero (countdown via `weekend.js#countdownTarget`, local-time weekend schedule, title-fight line from `lib/titleMath.js` using 25/GP + 8/sprint), last-race podium + final-lap race-analyst headline (hidden on any failure, since it 500s without FastF1 auth), top-6 drivers/constructors, remaining-rounds strip. Each panel handles its own loading skeleton / one-line error. Home uses the same query keys as the other pages (`['schedule', season]`, `['driver-standings', season]`, …) so caches are shared; keep them in sync.
+- **Home** (`pages/HomePage.jsx` + `pages/home/*`): next-race hero (countdown via `weekend.js#countdownTarget`, local-time weekend schedule, title-fight line from `lib/titleMath.js` using 25/GP + 8/sprint), last-race podium + final-lap race-analyst headline (hidden on any failure; it 503s for seasons outside `TELEMETRY_SEASONS`), top-6 drivers/constructors, remaining-rounds strip. Each panel handles its own loading skeleton / one-line error. Home uses the same query keys as the other pages (`['schedule', season]`, `['driver-standings', season]`, …) so caches are shared; keep them in sync.
 - Data fetching uses TanStack Query (`main.jsx` sets 5-min `staleTime`, 2 retries); all endpoints are declared in `f1Api` in `api.js`, so add new ones there.
 - **Styling:** new components use CSS Modules (`*.module.css`) and media queries. Older pages still use inline `style={{...}}` + `useIsMobile` from `components/ui.jsx`; leave them unless restyling them is the task. Charts use Recharts.
 - **Design tokens** (`index.css :root`, used by old and new code alike): `--bg`, `--bg-card`, `--bg-elevated` (raised card), `--border`, `--border-strong`, `--pill-active`, `--text`, `--text-muted` (≥4.5:1 on every card colour, so dim things with colour rather than `opacity`). `--accent` (#FFC940) is only for "next" states and the focus ring; `--red` only for heading bars and the logo badge. Fonts: `--display` (Bebas Neue) for headings, names, numbers; `--body` is Archivo (variable `wdth` axis; the hero name and countdown use `font-stretch: 70–75%`, weight 800). `tabular-nums` is global. Team colours always come from the API (`teamColor` / `color` from backend `TEAM_COLORS`), never hardcoded in React.
