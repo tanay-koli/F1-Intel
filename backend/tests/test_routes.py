@@ -63,8 +63,22 @@ def test_race_analysis_and_analyst(client, mocker, race_analysis):
 
 def test_cache_routes(client):
     assert client.get("/api/cache/stats").json()["total_entries"] == 0
-    r = client.delete("/api/cache/clear?expired_only=true")
+    local = TestClient(main.app, client=("127.0.0.1", 50000))
+    r = local.delete("/api/cache/clear?expired_only=true")
     assert r.json() == {"deleted": 0, "mode": "expired_only"}
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [("post", "/api/admin/precompute?year=2022&round=16"), ("delete", "/api/cache/clear")],
+)
+def test_local_only_routes_reject_browsers_and_remote_clients(method, path):
+    # A page in the browser reaches loopback too, but always sends Origin
+    browser = TestClient(main.app, client=("127.0.0.1", 50000))
+    r = browser.request(method, path, headers={"Origin": "http://evil.example"})
+    assert r.status_code == 403
+    remote = TestClient(main.app, client=("203.0.113.9", 50000))
+    assert remote.request(method, path).status_code == 403
 
 
 # ── Invalid input → 422 ───────────────────────────────────────────────────────

@@ -81,7 +81,7 @@ cd backend && python check_db.py                                               #
 ### Data flow
 React page → `frontend/src/api.js` (axios, base `/api`) → Vite dev proxy → FastAPI `backend/main.py` → one of two data sources:
 
-1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `$CACHE_DIR/api_cache.sqlite`. Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` (`?expired_only=true` uses the same rules) manage this cache.
+1. **`ergast.py`** — wraps the **Jolpica** Ergast-compatible API (`https://api.jolpi.ca/ergast/f1`; the original ergast.com is dead even though docstrings/README still say "Ergast"). Every request goes through `_get()`, which caches raw JSON in SQLite at `$CACHE_DIR/api_cache.sqlite`. Functions reshape Ergast's nested `MRData` into flat dicts and attach team colors from `TEAM_COLORS`. `/api/cache/stats` and `DELETE /api/cache/clear` (`?expired_only=true` uses the same rules) manage this cache. Cache-clear and `POST /api/admin/precompute` are local-only (`main._require_local`): loopback client **and** no `Origin` header, so a browser page can't trigger them. In Docker, call them via `docker compose exec backend …`.
    - **Cache freshness is decided from the data** (`cache_policy.ttl_for`, called by `ergast.is_fresh` when a cached entry is read):
 
      | Data | Lifetime |

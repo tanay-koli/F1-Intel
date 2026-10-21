@@ -283,11 +283,22 @@ def race_analyst_route(year: TelemetryYear = DEFAULT_YEAR, round: TelemetryRound
 _LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 
 
+def _require_local(request: Request) -> None:
+    # Loopback alone isn't enough: a web page open in the browser (or the Vite
+    # proxy) also arrives from 127.0.0.1, but browsers always send Origin on
+    # POST/DELETE while the CLI and scripts don't.
+    if (
+        request.client is None
+        or request.client.host not in _LOOPBACK
+        or "origin" in request.headers
+    ):
+        raise Forbidden("This can only be triggered from the server itself.")
+
+
 @route("/api/admin/precompute", s.PrecomputeResponse, method="post")
 def precompute(request: Request, year: TelemetryYear, round: TelemetryRound):
     """Precompute a race's analysis now (used by `python -m jobs.precompute`). Localhost only."""
-    if request.client is None or request.client.host not in _LOOPBACK:
-        raise Forbidden("Precompute can only be triggered from the server itself.")
+    _require_local(request)
     return precompute_race(year, round, store)
 
 
@@ -301,8 +312,9 @@ def cache_stats_route():
 
 
 @route("/api/cache/clear", s.CacheClearResponse, method="delete")
-def cache_clear(expired_only: bool = False):
-    """Clear the Jolpica API cache (everything, or only expired entries)."""
+def cache_clear(request: Request, expired_only: bool = False):
+    """Clear the Jolpica API cache (everything, or only expired entries). Localhost only."""
+    _require_local(request)
     return clear_cache(expired_only)
 
 
