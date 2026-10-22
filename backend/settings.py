@@ -39,10 +39,11 @@ class Settings(BaseSettings):
     # precomputed database is locked by it
     api_url: str = "http://127.0.0.1:8000"
 
-    # Seasons FastF1 can actually load lap/telemetry data for. F1's own server
-    # returns 401 and FastF1's mirror only hosts 2021-2022 (see CLAUDE.md).
-    # Requests for other seasons get a 503 at once instead of a ~5 s doomed
-    # load that spends FastF1's 500 calls/hour. Empty = always try.
+    # Seasons before 2023 that FastF1 can actually load lap/telemetry data for
+    # (2023 on comes from OpenF1). F1's own server returns 401 and FastF1's
+    # mirror only hosts 2021-2022 (see CLAUDE.md). Requests for other pre-2023
+    # seasons get a 503 at once instead of a ~5 s doomed load that spends
+    # FastF1's 500 calls/hour. Empty = always try.
     telemetry_seasons: Annotated[list[int], NoDecode] = [2021, 2022]
 
     @field_validator("cors_origins", "telemetry_seasons", mode="before")

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, TeamDot, useIsMobile } from '../components/ui'
@@ -31,7 +32,7 @@ const STAT_DEFS = [
 
 /* ── Driver picker ─────────────────────────────────────────────────────────── */
 
-function DriverPicker({ label, value, onChange, standings }) {
+function Picker({ label, value, onChange, options, noun }) {
   return (
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
@@ -51,12 +52,8 @@ function DriverPicker({ label, value, onChange, standings }) {
           backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
         }}
       >
-        <option value="">— Select driver —</option>
-        {standings.map(s => (
-          <option key={s.driverId} value={s.driverId}>
-            {s.fullName} ({s.constructorName})
-          </option>
-        ))}
+        <option value="">— Select {noun} —</option>
+        {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
       </select>
     </div>
   )
@@ -218,24 +215,7 @@ function RaceLogRow({ race, driver1Id, driver2Id, d1Color, d2Color, isMobile }) 
   }
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
-      alignItems: 'center',
-      gap: isMobile ? 6 : 12,
-      padding: isMobile ? '8px 10px' : '10px 16px',
-      borderRadius: 8,
-      background: winner ? (isD1Win ? hex2rgba(d1Color, 0.07) : hex2rgba(d2Color, 0.07)) : 'var(--bg-card)',
-      border: `1px solid ${winner ? (isD1Win ? hex2rgba(d1Color, 0.25) : hex2rgba(d2Color, 0.25)) : 'var(--border)'}`,
-      marginBottom: 4,
-      animation: 'fadeUp 0.3s ease',
-    }}>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
-        R{race.round}
-      </span>
-      <span style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {race.raceName.replace(' Grand Prix', isMobile ? ' GP' : ' Grand Prix')}
-      </span>
+    <LogRow race={race} winnerColor={isD1Win ? d1Color : isD2Win ? d2Color : null} isMobile={isMobile}>
       <div style={cellStyle(isD1Win, d1Color)}>
         {posLabel(d1)}
         {ptsLabel(d1) && <span style={{ opacity: 0.6, marginLeft: 4 }}>({ptsLabel(d1)})</span>}
@@ -248,7 +228,56 @@ function RaceLogRow({ race, driver1Id, driver2Id, d1Color, d2Color, isMobile }) 
         <SprintBadge pts={sp2?.points} color={d2Color} />
         <QualiBadge pos={q2?.position} outQualified={d2OutQuali} color={d2Color} />
       </div>
+    </LogRow>
+  )
+}
+
+/** One race-log row: round, race name, then the two sides; tinted with the winner's colour. */
+function LogRow({ race, winnerColor, isMobile, children }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
+      alignItems: 'center',
+      gap: isMobile ? 6 : 12,
+      padding: isMobile ? '8px 10px' : '10px 16px',
+      borderRadius: 8,
+      background: winnerColor ? hex2rgba(winnerColor, 0.07) : 'var(--bg-card)',
+      border: `1px solid ${winnerColor ? hex2rgba(winnerColor, 0.25) : 'var(--border)'}`,
+      marginBottom: 4,
+      animation: 'fadeUp 0.3s ease',
+    }}>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
+        R{race.round}
+      </span>
+      <span style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {race.raceName.replace(' Grand Prix', isMobile ? ' GP' : ' Grand Prix')}
+      </span>
+      {children}
     </div>
+  )
+}
+
+/** Constructor race-log row: each team's cars (best first) and its points that round. */
+function ConstructorRaceRow({ race, c1Id, c1Color, c2Color, isMobile }) {
+  const isC1Win = race.winner === c1Id
+  const isC2Win = !!race.winner && !isC1Win
+  const cell = (side, isWinner, color) => (
+    <div style={{
+      fontFamily: 'var(--mono)', fontSize: isMobile ? 10 : 12,
+      color: isWinner ? color : 'var(--text-muted)', fontWeight: isWinner ? 700 : 400,
+    }}>
+      {side
+        ? side.cars.map(c => /^\d+$/.test(c.positionText) ? `P${c.position}` : c.positionText).join(' · ')
+        : '—'}
+      {side?.points > 0 && <span style={{ opacity: 0.6, marginLeft: 4 }}>(+{side.points})</span>}
+    </div>
+  )
+  return (
+    <LogRow race={race} winnerColor={isC1Win ? c1Color : isC2Win ? c2Color : null} isMobile={isMobile}>
+      {cell(race.c1, isC1Win, c1Color)}
+      {cell(race.c2, isC2Win, c2Color)}
+    </LogRow>
   )
 }
 
@@ -300,27 +329,69 @@ function DriverHero({ driver, side, isMobile }) {
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
+const MODES = {
+  drivers: {
+    noun: 'driver',
+    standingsKey: 'driver-standings',
+    getStandings: f1Api.getDriverStandings,
+    option: s => ({ id: s.driverId, label: `${s.fullName} (${s.constructorName})` }),
+    getH2H: f1Api.getH2H,
+  },
+  constructors: {
+    noun: 'constructor',
+    standingsKey: 'constructor-standings',
+    getStandings: f1Api.getConstructorStandings,
+    option: s => ({ id: s.constructorId, label: s.name }),
+    getH2H: f1Api.getConstructorH2H,
+  },
+}
+
+// A team summary in the shape DriverHero / StatRow expect (same stat keys)
+const asHero = c => c && {
+  ...c,
+  fullName: c.name,
+  code: c.name.slice(0, 3).toUpperCase(),
+  teamColor: c.color,
+  constructorName: c.drivers.join(' · '),
+}
+
 export default function H2HPage({ season }) {
   const isMobile = useIsMobile()
-  const [driver1, setDriver1] = useState('')
-  const [driver2, setDriver2] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const modeKey = searchParams.get('mode') === 'constructors' ? 'constructors' : 'drivers'
+  const mode = MODES[modeKey]
+  // null = not picked: default to P1 vs P2 in the championship
+  const [picks, setPicks] = useState({ drivers: [null, null], constructors: [null, null] })
+
+  const setMode = (next) => setSearchParams(prev => {
+    const p = new URLSearchParams(prev)
+    if (next === 'constructors') p.set('mode', next)
+    else p.delete('mode')
+    return p
+  })
 
   const { data: standingsData } = useQuery({
-    queryKey: ['driver-standings', season],
-    queryFn:  () => f1Api.getDriverStandings(season),
+    queryKey: [mode.standingsKey, season],
+    queryFn:  () => mode.getStandings(season),
   })
-  const standings = standingsData?.standings || []
+  const options = (standingsData?.standings || []).map(mode.option)
+  const [pick1, pick2] = picks[modeKey]
+  const id1 = pick1 ?? options[0]?.id ?? ''
+  const id2 = pick2 ?? options[1]?.id ?? ''
+  const setPick = (i) => (value) =>
+    setPicks(prev => ({ ...prev, [modeKey]: prev[modeKey].map((v, j) => (j === i ? value : v)) }))
 
-  const canLoad = Boolean(driver1 && driver2 && driver1 !== driver2)
+  const canLoad = Boolean(id1 && id2 && id1 !== id2)
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['h2h', season, driver1, driver2],
-    queryFn:  () => f1Api.getH2H(season, driver1, driver2),
+    queryKey: ['h2h', modeKey, season, id1, id2],
+    queryFn:  () => mode.getH2H(season, id1, id2),
     enabled:  canLoad,
   })
 
-  const d1 = data?.driver1
-  const d2 = data?.driver2
+  const isTeams = modeKey === 'constructors'
+  const d1 = isTeams ? asHero(data?.constructor1) : data?.driver1
+  const d2 = isTeams ? asHero(data?.constructor2) : data?.driver2
   const races = data?.races || []
 
   return (
@@ -339,21 +410,42 @@ export default function H2HPage({ season }) {
           }}>{season}</span>
         </div>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', paddingLeft: 14 }}>
-          Compare two drivers across the full season — stats, records, race by race
+          Compare two {mode.noun}s across the full season — stats, records, race by race
         </p>
       </div>
 
-      {/* Driver pickers */}
+      {/* Drivers | Constructors */}
+      <div role="group" aria-label="Compare" style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+        {Object.entries(MODES).map(([key, m]) => (
+          <button
+            key={key}
+            id={`h2h-mode-${key}`}
+            aria-pressed={modeKey === key}
+            onClick={() => setMode(key)}
+            style={{
+              padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
+              fontFamily: 'var(--body)', fontSize: 13, fontWeight: modeKey === key ? 600 : 400,
+              background: modeKey === key ? 'var(--pill-active)' : 'transparent',
+              border: `1px solid ${modeKey === key ? 'var(--border-strong)' : 'var(--border)'}`,
+              color: modeKey === key ? 'var(--text)' : 'var(--text-muted)',
+            }}
+          >
+            {m.noun[0].toUpperCase() + m.noun.slice(1)}s
+          </button>
+        ))}
+      </div>
+
+      {/* Pickers */}
       <div style={{
         display: 'flex', gap: 12, marginBottom: 24,
         flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-end',
       }}>
-        <DriverPicker label="DRIVER 1" value={driver1} onChange={setDriver1} standings={standings} />
+        <Picker label={`${mode.noun.toUpperCase()} 1`} value={id1} onChange={setPick(0)} options={options} noun={mode.noun} />
         <div style={{
           fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text-muted)',
           paddingBottom: isMobile ? 0 : 10,
         }}>VS</div>
-        <DriverPicker label="DRIVER 2" value={driver2} onChange={setDriver2} standings={standings} />
+        <Picker label={`${mode.noun.toUpperCase()} 2`} value={id2} onChange={setPick(1)} options={options} noun={mode.noun} />
       </div>
 
       {/* Empty state */}
@@ -363,7 +455,7 @@ export default function H2HPage({ season }) {
           color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 13,
         }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
-          <div>Select two different drivers to begin the comparison</div>
+          <div>Select two different {mode.noun}s to begin the comparison</div>
         </div>
       )}
 
@@ -450,12 +542,21 @@ export default function H2HPage({ season }) {
 
               {races.map((race, idx) => {
                 if (!race) return null
-                return (
+                return isTeams ? (
+                  <ConstructorRaceRow
+                    key={race.round || idx}
+                    race={race}
+                    c1Id={id1}
+                    c1Color={d1?.teamColor || '#e10600'}
+                    c2Color={d2?.teamColor || '#3671C6'}
+                    isMobile={isMobile}
+                  />
+                ) : (
                   <RaceLogRow
                     key={race.round || idx}
                     race={race}
-                    driver1Id={driver1}
-                    driver2Id={driver2}
+                    driver1Id={id1}
+                    driver2Id={id2}
                     d1Color={d1?.teamColor || '#e10600'}
                     d2Color={d2?.teamColor || '#3671C6'}
                     isMobile={isMobile}

@@ -46,11 +46,11 @@ export const f1Api = {
   // Sprint
   getSprintResults: (season, round) => api.get(`/sprint?season=${season}&round=${round}`).then(r => r.data),
 
-  // Pit Stops
-  getPitStops: (season, round) => api.get(`/pitstops?season=${season}&round=${round}`).then(r => r.data),
 
   // Head-to-Head
   getH2H: (season, driver1, driver2) => api.get(`/h2h?season=${season}&driver1=${driver1}&driver2=${driver2}`).then(r => r.data),
+  getConstructorH2H: (season, c1, c2) =>
+    api.get(`/h2h/constructors?season=${season}&constructor1=${c1}&constructor2=${c2}`).then(r => r.data),
 
   // Telemetry (FastF1)
   getTelemetryDrivers: (year, round, session) =>

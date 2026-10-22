@@ -6,8 +6,8 @@ In-process scheduler (APScheduler) that precomputes each race after it ends.
 - The plan is rebuilt at startup and then daily (calendars change).
 - A run missed in the last CATCH_UP window (e.g. the API was down) is done
   on the next plan if that race isn't stored yet. There is deliberately no
-  full-season backfill: most seasons have no reachable timing data, and each
-  failed load spends FastF1's 500 calls/hour budget. Use the CLI for those.
+  full-season backfill: ~9 OpenF1 calls per race would run into its 30/min
+  limit, and 2018-2020 have no reachable timing data. Use the CLI for those.
 
 Runs inside the API process because that process owns the precomputed store
 (see precomputed.py). With several API workers, enable it in one only

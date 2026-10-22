@@ -825,6 +825,43 @@ def get_driver_season_sprint_results(season: str, driver_id: str = "") -> list:
         return []  # no sprint/qualifying entries for this driver
 
 
+_CONSTRUCTOR_RESULT_KEYS = {
+    "results": "Results",
+    "sprint": "SprintResults",
+    "qualifying": "QualifyingResults",
+}
+
+
+def get_constructor_season(season: str, constructor_id: str, endpoint: str) -> list[dict]:
+    """
+    One row per car per round for a constructor's season. endpoint is
+    "results", "sprint" or "qualifying"; [] if the team has no such entries.
+    """
+    try:
+        data = _get(f"{BASE_URL}/{season}/constructors/{constructor_id}/{endpoint}.json?limit=100")
+    except NotFound:
+        return []
+    rows = []
+    for race in data["MRData"]["RaceTable"]["Races"]:
+        for r in race.get(_CONSTRUCTOR_RESULT_KEYS[endpoint], []):
+            pos_str = str(r["position"])
+            fastest = r.get("FastestLap", {})
+            rows.append(
+                {
+                    "round": int(race["round"]),
+                    "raceName": race["raceName"],
+                    "constructorName": r.get("Constructor", {}).get("name", ""),
+                    "driverId": r["Driver"]["driverId"],
+                    "code": r["Driver"].get("code", r["Driver"]["driverId"][:3].upper()),
+                    "position": int(pos_str) if pos_str.isdigit() else 99,
+                    "positionText": r.get("positionText", pos_str),
+                    "points": float(r.get("points", 0)),
+                    "fastestLapRank": int(fastest.get("rank", 99)) if fastest else 99,
+                }
+            )
+    return rows
+
+
 def get_driver_season_qualifying(season: str, driver_id: str = "") -> list:
     """Fetch qualifying results for a driver across an entire season."""
     try:

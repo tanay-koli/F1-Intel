@@ -7,6 +7,7 @@ Invalid values fail FastAPI validation, which main.py turns into a 422 with
 the message raised here.
 """
 
+import re
 from datetime import date
 from typing import Annotated, Literal
 
@@ -49,7 +50,15 @@ def _check_telemetry_year(value: int) -> int:
     return value
 
 
+def _check_id(value: str) -> str:
+    # Jolpica ids (e.g. "red_bull"); spliced into URLs, so nothing else gets through
+    if not re.fullmatch(r"[a-z0-9_]+", value):
+        raise ValueError("use an id of lowercase letters, digits and underscores")
+    return value
+
+
 Season = Annotated[str, AfterValidator(_check_season)]
+EntityId = Annotated[str, AfterValidator(_check_id)]
 Round = Annotated[str, AfterValidator(_check_round)]
 TelemetryYear = Annotated[int, AfterValidator(_check_telemetry_year)]
 TelemetryRound = Annotated[int, Query(ge=1, le=30)]

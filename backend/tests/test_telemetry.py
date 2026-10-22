@@ -37,7 +37,7 @@ def test_classify_race_event(message, flag, expected):
 def test_unavailable_season_fails_fast(mocker):
     load = mocker.patch("telemetry._load_session")
     with pytest.raises(DataNotAvailable, match="2021, 2022"):
-        telemetry.get_full_race_analysis(2025, 16)
+        telemetry.get_full_race_analysis(2019, 16)
     load.assert_not_called()  # no FastF1 load, no API calls spent
 
 
@@ -52,5 +52,5 @@ def test_empty_setting_disables_fast_path(mocker, monkeypatch):
     monkeypatch.setattr(settings, "telemetry_seasons", [])
     load = mocker.patch("telemetry._load_session", side_effect=DataNotAvailable("probe"))
     with pytest.raises(DataNotAvailable, match="probe"):
-        telemetry.get_session_drivers(2025, 16)
+        telemetry.get_session_drivers(2019, 16)
     load.assert_called_once()

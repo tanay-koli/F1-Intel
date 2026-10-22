@@ -1,13 +1,108 @@
 """
-Head-to-head comparison of two drivers over a season: race-by-race results,
-sprint and qualifying pairs, and season aggregates.
+Head-to-head comparison of two drivers (or two constructors) over a season:
+race-by-race results, sprint and qualifying pairs, and season aggregates.
 """
 
 from ergast import (
+    _team_color,
+    get_constructor_season,
     get_driver_season_qualifying,
     get_driver_season_results,
     get_driver_season_sprint_results,
 )
+from errors import InvalidInput
+
+
+def _by_round(rows: list[dict]) -> dict[int, list[dict]]:
+    out: dict[int, list[dict]] = {}
+    for r in rows:
+        out.setdefault(r["round"], []).append(r)
+    return out
+
+
+def _avg(positions: list[int]) -> float:
+    classified = [p for p in positions if p < 99]
+    return round(sum(classified) / len(classified), 2) if classified else 0.0
+
+
+def _team_summary(cid: str, results: list, sprint: list, quali: list) -> dict:
+    codes = list(dict.fromkeys(r["code"] for r in results))  # first-seen order
+    return {
+        "constructorId": cid,
+        "name": results[0]["constructorName"] if results else cid,
+        "color": _team_color(cid),
+        "drivers": codes,
+        "points": sum(r["points"] for r in results),
+        "sprintPoints": sum(s["points"] for s in sprint),
+        "totalPoints": sum(r["points"] for r in results) + sum(s["points"] for s in sprint),
+        "wins": sum(1 for r in results if r["position"] == 1),
+        "podiums": sum(1 for r in results if r["position"] <= 3),
+        "fastestLaps": sum(1 for r in results if r["fastestLapRank"] == 1),
+        "dnf": sum(1 for r in results if not r["positionText"].isdigit()),
+        "avgPosition": _avg([r["position"] for r in results]),
+        "races": len({r["round"] for r in results}),
+        "qualiWins": 0,  # filled in by the pairwise comparison
+        "avgQualiPosition": _avg([q["position"] for q in quali]),
+        "headToHeadWins": 0,
+    }
+
+
+def constructor_head_to_head(season: str, c1: str, c2: str) -> dict:
+    """Two teams compared car by car; a round goes to the team whose best car was ahead."""
+    if c1 == c2:
+        raise InvalidInput("Pick two different constructors.")
+    data = {
+        cid: {
+            ep: get_constructor_season(season, cid, ep)
+            for ep in ("results", "sprint", "qualifying")
+        }
+        for cid in (c1, c2)
+    }
+    summary = {cid: _team_summary(cid, *data[cid].values()) for cid in (c1, c2)}
+    results = {cid: _by_round(data[cid]["results"]) for cid in (c1, c2)}
+    quali = {cid: _by_round(data[cid]["qualifying"]) for cid in (c1, c2)}
+
+    def best(rows: list[dict]) -> int:
+        return min(r["position"] for r in rows)
+
+    races = []
+    for rnd in sorted(results[c1].keys() | results[c2].keys()):
+        sides = {cid: results[cid].get(rnd) for cid in (c1, c2)}
+        winner = None
+        if sides[c1] and sides[c2] and best(sides[c1]) != best(sides[c2]):
+            winner = c1 if best(sides[c1]) < best(sides[c2]) else c2
+            summary[winner]["headToHeadWins"] += 1
+        races.append(
+            {
+                "round": rnd,
+                "raceName": (sides[c1] or sides[c2])[0]["raceName"],
+                "c1": _side(sides[c1]),
+                "c2": _side(sides[c2]),
+                "winner": winner,
+            }
+        )
+
+    for rnd in quali[c1].keys() & quali[c2].keys():
+        q1, q2 = best(quali[c1][rnd]), best(quali[c2][rnd])
+        if q1 != q2:
+            summary[c1 if q1 < q2 else c2]["qualiWins"] += 1
+
+    return {
+        "season": season,
+        "constructor1": summary[c1],
+        "constructor2": summary[c2],
+        "races": races,
+    }
+
+
+def _side(rows: list[dict] | None) -> dict | None:
+    if not rows:
+        return None
+    cars = [
+        {k: r[k] for k in ("code", "position", "positionText", "points")}
+        for r in sorted(rows, key=lambda r: r["position"])
+    ]
+    return {"cars": cars, "points": sum(r["points"] for r in rows)}
 
 
 def head_to_head(season: str, driver1: str, driver2: str) -> dict:

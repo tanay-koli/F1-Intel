@@ -7,7 +7,6 @@ import ConstructorsPage from './pages/ConstructorsPage'
 import SchedulePage from './pages/SchedulePage'
 import ResultsPage from './pages/ResultsPage'
 import TelemetryPage from './pages/TelemetryPage'
-import PitStopsPage from './pages/PitStopsPage'
 import H2HPage from './pages/H2HPage'
 import StandingsChartPage from './pages/StandingsChartPage'
 import styles from './App.module.css'
@@ -23,7 +22,6 @@ export default function App() {
         <Routes>
           <Route path="/"                       element={<HomePage         season={season} />} />
           <Route path="/results"                element={<ResultsPage      season={season} key={season} />} />
-          <Route path="/pit-stops"              element={<PitStopsPage     season={season} key={season} />} />
           <Route path="/h2h"                    element={<H2HPage          season={season} key={season} />} />
           <Route path="/telemetry"              element={<TelemetryPage    season={season} key={season} />} />
           <Route path="/standings/drivers"      element={<DriversPage      season={season} />} />
@@ -35,7 +33,7 @@ export default function App() {
       </main>
 
       <footer className={styles.footer}>
-        Data: Jolpica F1 · FastF1
+        Data: Jolpica F1 · OpenF1 · FastF1
       </footer>
     </div>
   )

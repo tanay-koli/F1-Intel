@@ -6,7 +6,6 @@ import styles from './SiteHeader.module.css'
 
 const ANALYSIS_LINKS = [
   { to: '/results',   label: 'Results' },
-  { to: '/pit-stops', label: 'Pit stops' },
   { to: '/h2h',       label: 'Head-to-head' },
   { to: '/telemetry', label: 'Telemetry' },
 ]

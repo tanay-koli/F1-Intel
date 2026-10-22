@@ -3,6 +3,9 @@ FastF1 telemetry module
 Provides speed traces and multi-metric overlays for driver comparison,
 plus full-race lap-by-lap data (lap times, positions, tyre strategy).
 Cache is stored in ./f1_cache relative to this file (auto-created).
+
+Seasons from openf1.FIRST_YEAR on come from OpenF1 instead (FastF1 can't
+load them); both sources produce the same JSON.
 """
 
 import functools
@@ -21,6 +24,7 @@ from fastf1.exceptions import (
     RateLimitExceededError,
 )
 
+import openf1
 from ergast import TEAM_COLORS
 from errors import AppError, DataNotAvailable, InvalidInput, NotFound, RateLimited
 from settings import settings
@@ -51,16 +55,16 @@ def _fastf1_errors(fn):
     """
     Translate FastF1 exceptions from a public function (first two args:
     year, round_num) into app errors with messages a user can act on.
-    Seasons outside settings.telemetry_seasons fail at once, without a load.
+    FastF1 seasons outside settings.telemetry_seasons fail at once, without a load.
     """
 
     @functools.wraps(fn)
     def wrapper(year, round_num, *args, **kwargs):
         available = settings.telemetry_seasons
-        if available and year not in available:
+        if available and year not in available and year < openf1.FIRST_YEAR:
             raise DataNotAvailable(
-                f"Lap and telemetry data isn't available for {year}: F1's timing service "
-                f"currently only serves {', '.join(map(str, sorted(available)))}."
+                f"Lap and telemetry data isn't available for {year}. It's available for "
+                f"{', '.join(map(str, sorted(available)))} and from {openf1.FIRST_YEAR} on."
             )
         try:
             return fn(year, round_num, *args, **kwargs)
@@ -125,12 +129,14 @@ def _format_lap_time(lt) -> str:
     try:
         if pd.isnull(lt):
             return "N/A"
-        total_s = lt.total_seconds()
-        mins = int(total_s // 60)
-        secs = total_s % 60
-        return f"{mins}:{secs:06.3f}"
+        return _seconds_str(lt.total_seconds())
     except Exception:
         return "N/A"
+
+
+def _seconds_str(seconds: float | None) -> str:
+    """Seconds as m:ss.mmm, or "N/A"."""
+    return f"{int(seconds // 60)}:{seconds % 60:06.3f}" if seconds else "N/A"
 
 
 # ── Driver list for a session ─────────────────────────────────────────────────
@@ -139,6 +145,9 @@ def _format_lap_time(lt) -> str:
 @_fastf1_errors
 def get_session_drivers(year: int, round_num: int, session_type: str = "R") -> dict:
     """Return list of drivers that have laps in the given session."""
+    if year >= openf1.FIRST_YEAR:
+        drivers = openf1.session_drivers(year, round_num, session_type)
+        return {"year": year, "round": round_num, "session": session_type, "drivers": drivers}
     session = _load_session(year, round_num, session_type)
     drivers = []
     for drv in session.drivers:
@@ -205,6 +214,115 @@ def get_full_race_analysis(year: int, round_num: int) -> dict:
         return result
 
 
+def _stints(laps_out: list[dict]) -> list[dict]:
+    """Tyre stints from consecutive laps on one compound; UNKNOWN laps extend the current one."""
+    stints = []
+    current_stint = None
+    for lap in laps_out:
+        if lap["compound"] == "UNKNOWN" and current_stint:
+            current_stint["endLap"] = lap["lap"]
+            current_stint["length"] += 1
+        elif current_stint is None or current_stint["compound"] != lap["compound"]:
+            if current_stint:
+                stints.append(current_stint)
+            current_stint = {
+                "compound": lap["compound"],
+                "startLap": lap["lap"],
+                "endLap": lap["lap"],
+                "length": 1,
+            }
+        else:
+            current_stint["endLap"] = lap["lap"]
+            current_stint["length"] += 1
+    if current_stint:
+        stints.append(current_stint)
+    return stints
+
+
+def _driver_entry(
+    ident: dict, laps_out: list[dict], pit_laps: list[int], grid_pos, fin_pos
+) -> dict:
+    """
+    One driver's analysis from their per-lap rows. `ident` holds driverId,
+    code, fullName, team and teamColor. Shared by the FastF1 and OpenF1 paths.
+    """
+    # Laps under 10 s are timing glitches
+    valid = [lap for lap in laps_out if lap["lapTime"] is not None and lap["lapTime"] > 10]
+    fastest = min(
+        (lap for lap in valid if lap["lap"] is not None),
+        key=lambda lap: lap["lapTime"],
+        default=None,
+    )
+    times = [lap["lapTime"] for lap in valid]
+    avg_lap = round(sum(times) / len(times), 3) if times else None
+    fastest_time = fastest["lapTime"] if fastest else None
+    return {
+        **ident,
+        "gridPosition": grid_pos,
+        "finishPosition": fin_pos,
+        "positionsGained": (grid_pos - fin_pos) if grid_pos and fin_pos else None,
+        "fastestLap": fastest["lap"] if fastest else None,
+        "fastestLapTime": fastest_time,
+        "fastestLapTimeStr": _seconds_str(fastest_time),
+        "fastestLapCompound": fastest["compound"] if fastest else None,
+        "avgLapTime": avg_lap,
+        "avgLapTimeStr": _seconds_str(avg_lap),
+        "pitStops": len(pit_laps),
+        "pitLaps": pit_laps,
+        "stints": _stints(laps_out),
+        "totalLaps": len(laps_out),
+        "laps": laps_out,
+    }
+
+
+def _race_payload(
+    year: int, round_num: int, race_name: str, race_events: list[dict], drivers_data: list[dict]
+) -> dict:
+    """The /api/telemetry/race-analysis response from the drivers' entries."""
+    timed = [d for d in drivers_data if d["fastestLapTime"] is not None]
+    overall = min(timed, key=lambda d: d["fastestLapTime"], default=None)
+
+    # Sort by finishing position (DNFs at the end)
+    drivers_data.sort(key=lambda d: d["finishPosition"] if d["finishPosition"] is not None else 999)
+
+    return {
+        "year": year,
+        "round": round_num,
+        "session": "R",
+        "raceName": race_name,
+        "totalLaps": max((d["totalLaps"] for d in drivers_data), default=0),
+        "overallFastestLap": {
+            "driver": overall["code"] if overall else None,
+            "lap": overall["fastestLap"] if overall else None,
+            "time": overall["fastestLapTime"] if overall else None,
+            "timeStr": _seconds_str(overall["fastestLapTime"] if overall else None),
+            "compound": overall["fastestLapCompound"] if overall else None,
+        },
+        "raceEvents": race_events,
+        "drivers": drivers_data,
+    }
+
+
+def _openf1_race_analysis(year: int, round_num: int) -> dict:
+    race = openf1.race(year, round_num)
+    events = [
+        {"type": event_type, "lap": lap, "message": message}
+        for lap, message, flag in race["control"]
+        if (event_type := classify_race_event(message, flag))
+    ]
+    drivers_data = [
+        _driver_entry(
+            {k: d[k] for k in ("driverId", "code", "fullName", "team", "teamColor")},
+            [{**lap, "lapTimeStr": _seconds_str(lap["lapTime"])} for lap in d["laps"]],
+            d["pitLaps"],
+            d["grid"],
+            d["finish"],
+        )
+        for d in race["drivers"]
+    ]
+    return _race_payload(year, round_num, race["raceName"], events, drivers_data)
+
+
 def _compute_full_race_analysis(year: int, round_num: int) -> dict:
     """
     Returns comprehensive race analysis for ALL drivers:
@@ -212,6 +330,8 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
       tyre strategy (stints), lap-by-lap data
     - Race-level: overall fastest lap, safety car periods, total laps
     """
+    if year >= openf1.FIRST_YEAR:
+        return _openf1_race_analysis(year, round_num)
     session = _load_session(year, round_num, "R")
     all_laps = session.laps
     # Starting grid by driver number; 0 = pit-lane start or unknown
@@ -245,11 +365,6 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
         pass  # race control messages not available for all sessions
 
     # ── Process every driver ──────────────────────────────────────────────
-    overall_fastest_time = None
-    overall_fastest_driver = None
-    overall_fastest_lap_num = None
-    overall_fastest_compound = None
-
     drivers_data = []
 
     for drv in session.drivers:
@@ -272,9 +387,6 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
 
         laps_out = []
         pit_laps = []
-        fastest_lap_num = None
-        fastest_lap_time = None
-        fastest_lap_compound = None
 
         for _, row in drv_laps.iterrows():
             lap_num = int(row["LapNumber"]) if not pd.isnull(row["LapNumber"]) else None
@@ -306,13 +418,6 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
             if is_pit_lap and lap_num is not None:
                 pit_laps.append(lap_num)
 
-            # Track driver's fastest lap
-            if lap_time_s is not None and lap_num is not None and lap_time_s > 10:
-                if fastest_lap_time is None or lap_time_s < fastest_lap_time:
-                    fastest_lap_time = lap_time_s
-                    fastest_lap_num = lap_num
-                    fastest_lap_compound = compound
-
             laps_out.append(
                 {
                     "lap": lap_num,
@@ -326,99 +431,21 @@ def _compute_full_race_analysis(year: int, round_num: int) -> dict:
                 }
             )
 
-        # Build tyre stints
-        stints = []
-        current_stint = None
-        for lap in laps_out:
-            if lap["compound"] == "UNKNOWN" and current_stint:
-                current_stint["endLap"] = lap["lap"]
-                current_stint["length"] += 1
-            elif current_stint is None or current_stint["compound"] != lap["compound"]:
-                if current_stint:
-                    stints.append(current_stint)
-                current_stint = {
-                    "compound": lap["compound"],
-                    "startLap": lap["lap"],
-                    "endLap": lap["lap"],
-                    "length": 1,
-                }
-            else:
-                current_stint["endLap"] = lap["lap"]
-                current_stint["length"] += 1
-        if current_stint:
-            stints.append(current_stint)
-
-        # Summary stats
-        valid_times = [
-            lap["lapTime"] for lap in laps_out if lap["lapTime"] is not None and lap["lapTime"] > 10
-        ]
-        avg_lap = round(sum(valid_times) / len(valid_times), 3) if valid_times else None
-
         grid = grid_by_driver.get(drv)
         grid_pos = int(grid) if grid is not None and not pd.isnull(grid) and grid > 0 else None
         fin_pos = laps_out[-1]["position"] if laps_out else None
-        positions_gained = (grid_pos - fin_pos) if grid_pos and fin_pos else None
+        ident = {
+            "driverId": str(drv),
+            "code": drv_code,
+            "fullName": full_name,
+            "team": team,
+            "teamColor": team_color,
+        }
+        drivers_data.append(_driver_entry(ident, laps_out, pit_laps, grid_pos, fin_pos))
 
-        # Track overall race fastest lap
-        if fastest_lap_time is not None:
-            if overall_fastest_time is None or fastest_lap_time < overall_fastest_time:
-                overall_fastest_time = fastest_lap_time
-                overall_fastest_driver = drv_code
-                overall_fastest_lap_num = fastest_lap_num
-                overall_fastest_compound = fastest_lap_compound
-
-        drivers_data.append(
-            {
-                "driverId": str(drv),
-                "code": drv_code,
-                "fullName": full_name,
-                "team": team,
-                "teamColor": team_color,
-                "gridPosition": grid_pos,
-                "finishPosition": fin_pos,
-                "positionsGained": positions_gained,
-                "fastestLap": fastest_lap_num,
-                "fastestLapTime": fastest_lap_time,
-                "fastestLapTimeStr": _format_lap_time(pd.Timedelta(seconds=fastest_lap_time))
-                if fastest_lap_time
-                else "N/A",
-                "fastestLapCompound": fastest_lap_compound,
-                "avgLapTime": avg_lap,
-                "avgLapTimeStr": _format_lap_time(pd.Timedelta(seconds=avg_lap))
-                if avg_lap
-                else "N/A",
-                "pitStops": len(pit_laps),
-                "pitLaps": pit_laps,
-                "stints": stints,
-                "totalLaps": len(laps_out),
-                "laps": laps_out,
-            }
-        )
-
-    # Sort by finishing position (DNFs at the end)
-    drivers_data.sort(key=lambda d: d["finishPosition"] if d["finishPosition"] is not None else 999)
-
-    # Determine total race laps
-    max_lap = max((d["totalLaps"] for d in drivers_data), default=0)
-
-    return {
-        "year": year,
-        "round": round_num,
-        "session": "R",
-        "raceName": session.event.get("EventName", ""),
-        "totalLaps": max_lap,
-        "overallFastestLap": {
-            "driver": overall_fastest_driver,
-            "lap": overall_fastest_lap_num,
-            "time": overall_fastest_time,
-            "timeStr": _format_lap_time(pd.Timedelta(seconds=overall_fastest_time))
-            if overall_fastest_time
-            else "N/A",
-            "compound": overall_fastest_compound,
-        },
-        "raceEvents": race_events,
-        "drivers": drivers_data,
-    }
+    return _race_payload(
+        year, round_num, session.event.get("EventName", ""), race_events, drivers_data
+    )
 
 
 # ── Speed trace comparison ────────────────────────────────────────────────────
@@ -438,6 +465,15 @@ def get_speed_trace(
     respective fastest laps in the given session.
     Returns a unified distance axis and per-driver speed arrays.
     """
+    if year >= openf1.FIRST_YEAR:
+        traces = []
+        for drv in (driver1, driver2):
+            ident, seconds, tel = openf1.fastest_lap(year, round_num, session_type, drv)
+            info = {k: ident[k] for k in ("code", "fullName", "teamColor")}
+            traces.append(({**info, "lapTime": _seconds_str(seconds)}, tel))
+        race_name = openf1.scheduled_race(year, round_num)["raceName"]
+        return _speed_trace_payload(year, round_num, session_type, race_name, traces, n_points)
+
     session = _load_session(year, round_num, session_type)
 
     def _fastest_tel(drv_code: str):
@@ -448,23 +484,6 @@ def get_speed_trace(
         # Normalise distance to metres from 0
         tel["Distance"] = tel["Distance"] - tel["Distance"].iloc[0]
         return tel
-
-    tel1 = _fastest_tel(driver1)
-    tel2 = _fastest_tel(driver2)
-
-    # Build a unified distance axis from 0 to min(max_dist1, max_dist2)
-    max_dist = min(tel1["Distance"].max(), tel2["Distance"].max())
-    distance_axis = np.linspace(0, max_dist, n_points)
-
-    # Output key -> telemetry column; gear is a whole number, the rest 1 dp
-    channels = {"speed": "Speed", "throttle": "Throttle", "brake": "Brake", "gear": "nGear"}
-
-    def _traces(tel: pd.DataFrame) -> dict:
-        out = {}
-        for key, col in channels.items():
-            values = np.interp(distance_axis, tel["Distance"].values, tel[col].values.astype(float))
-            out[key] = [int(round(v)) if key == "gear" else round(float(v), 1) for v in values]
-        return out
 
     def _drv_info(drv_code: str) -> dict:
         try:
@@ -485,14 +504,45 @@ def get_speed_trace(
                 "lapTime": "N/A",
             }
 
-    distance_list = [round(float(d), 1) for d in distance_axis]
+    traces = [(_drv_info(drv), _fastest_tel(drv)) for drv in (driver1, driver2)]
+    return _speed_trace_payload(
+        year, round_num, session_type, session.event.get("EventName", ""), traces, n_points
+    )
 
+
+def _speed_trace_payload(
+    year: int,
+    round_num: int,
+    session_type: str,
+    race_name: str,
+    traces: list[tuple[dict, pd.DataFrame]],
+    n_points: int,
+) -> dict:
+    """
+    The /api/telemetry response from two (driver info, telemetry) pairs; the
+    telemetry has Distance (m from 0), Speed, Throttle, Brake and nGear columns.
+    """
+    # Build a unified distance axis from 0 to the shorter lap's distance
+    max_dist = min(tel["Distance"].max() for _, tel in traces)
+    distance_axis = np.linspace(0, max_dist, n_points)
+
+    # Output key -> telemetry column; gear is a whole number, the rest 1 dp
+    channels = {"speed": "Speed", "throttle": "Throttle", "brake": "Brake", "gear": "nGear"}
+
+    def _traces(tel: pd.DataFrame) -> dict:
+        out = {}
+        for key, col in channels.items():
+            values = np.interp(distance_axis, tel["Distance"].values, tel[col].values.astype(float))
+            out[key] = [int(round(v)) if key == "gear" else round(float(v), 1) for v in values]
+        return out
+
+    (info1, tel1), (info2, tel2) = traces
     return {
         "year": year,
         "round": round_num,
         "session": session_type,
-        "raceName": session.event.get("EventName", ""),
-        "distance": distance_list,
-        "driver1": {**_drv_info(driver1), **_traces(tel1)},
-        "driver2": {**_drv_info(driver2), **_traces(tel2)},
+        "raceName": race_name,
+        "distance": [round(float(d), 1) for d in distance_axis],
+        "driver1": {**info1, **_traces(tel1)},
+        "driver2": {**info2, **_traces(tel2)},
     }

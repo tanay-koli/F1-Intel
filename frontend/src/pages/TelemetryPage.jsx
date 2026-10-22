@@ -1570,7 +1570,8 @@ export default function TelemetryPage({ season }) {
   const linkedRound = searchParams.get('round')
   const [year,     setYear]     = useState(season)
   const years = telemetryYears(season)
-  const [round,    setRound]    = useState(linkedRound || '1')
+  // null = not picked by hand: follow the latest race (set below once the schedule loads)
+  const [roundPick, setRound]   = useState(linkedRound)
   const [viewTab,  setViewTab]  = useState('analysis')
   const [selectedDriver, setSelectedDriver] = useState('')
 
@@ -1594,6 +1595,12 @@ export default function TelemetryPage({ season }) {
 
   const today = new Date().toISOString().slice(0, 10)
   const completedRaces = schedule?.races?.filter(r => r.date <= today) ?? []
+  // Latest race before today (a race run today usually has no data published yet)
+  const latestRound = schedule?.races?.filter(r => r.date < today).at(-1)?.round
+  const round = roundPick ?? (latestRound ? String(latestRound) : '1')
+  // Until a round is picked by hand, the latest race loads without a click
+  const analysisKey = analysisQueryKey ??
+    (roundPick == null && latestRound ? ['race-analysis', year, String(latestRound)] : null)
 
   // Driver list from FastF1 (for fastest lap trace tab)
   const {
@@ -1615,9 +1622,9 @@ export default function TelemetryPage({ season }) {
     isLoading: analysisLoading,
     error: analysisError,
   } = useQuery({
-    queryKey: analysisQueryKey ?? ['analysis-placeholder'],
+    queryKey: analysisKey ?? ['analysis-placeholder'],
     queryFn: ({ queryKey: [, y, r] }) => f1Api.getRaceAnalysis(Number(y), Number(r)),
-    enabled: !!analysisQueryKey,
+    enabled: !!analysisKey,
     staleTime: 30 * 60 * 1000,
     retry: 0,
   })
@@ -1626,9 +1633,9 @@ export default function TelemetryPage({ season }) {
   const {
     data: analystData,
   } = useQuery({
-    queryKey: analysisQueryKey ? ['race-analyst', ...analysisQueryKey.slice(1)] : ['analyst-placeholder'],
+    queryKey: analysisKey ? ['race-analyst', ...analysisKey.slice(1)] : ['analyst-placeholder'],
     queryFn: ({ queryKey: [, y, r] }) => f1Api.getRaceAnalyst(Number(y), Number(r)),
-    enabled: !!analysisQueryKey && !!analysisData,
+    enabled: !!analysisKey && !!analysisData,
     staleTime: 30 * 60 * 1000,
     retry: 0,
   })
@@ -1682,8 +1689,8 @@ export default function TelemetryPage({ season }) {
       }}>
         <span>💡</span>
         <span>
-          Powered by <strong>FastF1</strong>. First load for a session may take 20–60s while
-          telemetry data is downloaded and cached. Subsequent loads are instant.
+          Powered by <strong>OpenF1</strong> (2023 on) and <strong>FastF1</strong> (2021–22).
+          First load for a session may take 10–60s while the data is downloaded. Subsequent loads are instant.
         </span>
       </div>
 
@@ -1717,7 +1724,7 @@ export default function TelemetryPage({ season }) {
           borderRadius: 12, padding: '16px 20px', marginBottom: 24,
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
         }}>
-          <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound('1'); setSelectedDriver(''); setAnalysisQueryKey(null) }}>
+          <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound(null); setSelectedDriver(''); setAnalysisQueryKey(null) }}>
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
@@ -1771,7 +1778,7 @@ export default function TelemetryPage({ season }) {
           borderRadius: 12, padding: '16px 20px', marginBottom: 24,
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
         }}>
-          <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound('1'); setDriver1(''); setDriver2('') }}>
+          <SelectBox label="YEAR" value={year} onChange={v => { setYear(v); setRound(null); setDriver1(''); setDriver2('') }}>
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
             ))}
@@ -1836,7 +1843,7 @@ export default function TelemetryPage({ season }) {
 
       {/* Driver list loading (fastlap tab) */}
       {viewTab === 'fastlap' && driversLoading && (
-        <Loader label="Loading session drivers via FastF1 (may take 20–40s on first load)…" />
+        <Loader label="Loading session drivers (may take 20–40s on first load)…" />
       )}
       {viewTab === 'fastlap' && driversError && (
         <ErrorMsg error={driversError} context="Driver list" />

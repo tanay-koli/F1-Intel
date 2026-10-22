@@ -95,6 +95,8 @@ def test_local_only_routes_reject_browsers_and_remote_clients(method, path):
         ("/api/telemetry/race-analysis?year=2022&round=99", "round"),
         ("/api/telemetry/drivers?year=2022&round=1&session=XX", "session"),
         ("/api/h2h?season=2026&driver1=norris", "driver2"),
+        ("/api/h2h/constructors?constructor1=mercedes&constructor2=x/../y", "constructor2"),
+        ("/api/h2h/constructors?constructor1=Mercedes&constructor2=ferrari", "constructor1"),
     ],
 )
 def test_invalid_input(client, path, field):

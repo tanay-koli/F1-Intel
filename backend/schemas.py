@@ -447,6 +447,52 @@ class H2HRace(Model):
     quali: H2HQualiPair
 
 
+class ConstructorH2HSummary(Model):
+    constructorId: str
+    name: str
+    color: str
+    drivers: list[str]
+    points: Number
+    sprintPoints: Number
+    totalPoints: Number
+    wins: int
+    podiums: int
+    fastestLaps: int
+    dnf: int
+    avgPosition: float
+    races: int
+    qualiWins: int
+    avgQualiPosition: float
+    headToHeadWins: int
+
+
+class ConstructorH2HCar(Model):
+    code: str
+    position: int
+    positionText: str
+    points: float
+
+
+class ConstructorH2HSide(Model):
+    cars: list[ConstructorH2HCar]
+    points: Number
+
+
+class ConstructorH2HRace(Model):
+    round: int
+    raceName: str
+    c1: ConstructorH2HSide | None
+    c2: ConstructorH2HSide | None
+    winner: str | None
+
+
+class ConstructorH2HResponse(Model):
+    season: str
+    constructor1: ConstructorH2HSummary
+    constructor2: ConstructorH2HSummary
+    races: list[ConstructorH2HRace]
+
+
 class H2HResponse(Model):
     season: str
     driver1: H2HDriverSummary

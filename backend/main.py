@@ -29,11 +29,11 @@ from ergast import (
 from errors import AppError, Forbidden, InvalidInput
 from jobs.precompute import precompute_race
 from jobs.scheduler import start_scheduler
-from params import Round, Season, SessionType, TelemetryRound, TelemetryYear
+from params import EntityId, Round, Season, SessionType, TelemetryRound, TelemetryYear
 from precomputed import store
 from services.cache import cache_stats, clear_cache
 from services.circuits import circuit_outline
-from services.h2h import head_to_head
+from services.h2h import constructor_head_to_head, head_to_head
 from services.profiles import circuit_detail, constructor_profile, driver_profile
 from services.race import race_analysis, race_analyst
 from settings import settings
@@ -240,6 +240,14 @@ def h2h(
     driver2: str = Query(..., description="Second driver ID"),
 ):
     return head_to_head(season, driver1, driver2)
+
+
+@route("/api/h2h/constructors", s.ConstructorH2HResponse)
+def h2h_constructors(
+    constructor1: EntityId, constructor2: EntityId, season: Season = DEFAULT_SEASON
+):
+    """Two constructors compared over a season, car by car."""
+    return constructor_head_to_head(season, constructor1, constructor2)
 
 
 # ── Telemetry (FastF1) ────────────────────────────────────────────────────────

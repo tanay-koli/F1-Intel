@@ -45,6 +45,11 @@ ROUTES = [
     ("sprint", "GET", "/api/sprint?season=2026&round=17"),
     ("pitstops", "GET", "/api/pitstops?season=2026&round=last"),
     ("h2h", "GET", "/api/h2h?season=2026&driver1=norris&driver2=piastri"),
+    (
+        "h2h constructors",
+        "GET",
+        "/api/h2h/constructors?season=2026&constructor1=mercedes&constructor2=ferrari",
+    ),
     ("next-race", "GET", "/api/next-race?season=2026"),
     ("next-race 2024", "GET", "/api/next-race?season=2024"),
     ("circuit-outline", "GET", "/api/circuit-outline?circuit_id=monza"),
