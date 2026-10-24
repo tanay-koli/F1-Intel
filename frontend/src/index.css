@@ -11,8 +11,7 @@
   --accent:        #FFC940;   /* "next" states + focus ring only */
   --text:          #E8EBEF;
   --text-muted:    #A3ABB6;   /* ≥4.5:1 on every card colour */
-  --text-dim:      #3a3a46;
-  --mono:          'JetBrains Mono', monospace;
+  --text-dim:      #8A919C;   /* quieter than muted, still ≥4.5:1 on cards */
   --display:       'Bebas Neue', sans-serif;
   --body:          'Archivo', system-ui, sans-serif;
 }
@@ -74,7 +73,6 @@ button {
 
 /* Utility */
 .font-display { font-family: var(--display); letter-spacing: 0.02em; }
-.font-mono    { font-family: var(--mono); }
 
 /* Animations */
 @keyframes fadeUp {

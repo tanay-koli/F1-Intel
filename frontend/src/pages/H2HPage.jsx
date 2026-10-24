@@ -2,148 +2,120 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
-import { Loader, ErrorMsg, TeamDot, useIsMobile } from '../components/ui'
+import { Loader, ErrorMsg, useIsMobile } from '../components/ui'
+import { DriverImage, ConstructorImage } from '../components/F1Image'
+import SectionHeading from '../components/SectionHeading'
+import { shortGpName, surname } from '../lib/format'
 
 /* ── helpers ───────────────────────────────────────────────────────────────── */
 
-function hex2rgba(hex, alpha) {
-  try {
-    const r = parseInt(hex.slice(1, 3), 16)
-    const g = parseInt(hex.slice(3, 5), 16)
-    const b = parseInt(hex.slice(5, 7), 16)
-    return `rgba(${r},${g},${b},${alpha})`
-  } catch { return hex }
+const FALLBACK_1 = '#e10600'
+const FALLBACK_2 = '#3671C6'
+// Teammates share a team colour, so the second side switches to the ink colour.
+const SECOND_WHEN_SAME = '#E8EBEF'
+
+/** One colour per side, never the same twice. */
+function sideColors(d1, d2) {
+  const c1 = d1?.teamColor || FALLBACK_1
+  const c2 = d2?.teamColor || FALLBACK_2
+  return [c1, c2.toLowerCase() === c1.toLowerCase() ? SECOND_WHEN_SAME : c2]
 }
 
+const isNumeric = text => /^\d+$/.test(String(text))
+
 const STAT_DEFS = [
-  { key: 'totalPoints',      label: 'Total Points',    icon: '🏆' },
-  { key: 'points',           label: 'Race Points',     icon: '🎯' },
-  { key: 'sprintPoints',     label: 'Sprint Points',   icon: '🏃' },
-  { key: 'wins',             label: 'Wins',            icon: '🥇' },
-  { key: 'podiums',          label: 'Podiums',         icon: '🏅' },
-  { key: 'headToHeadWins',   label: 'H2H Record',      icon: '⚔️' },
-  { key: 'qualiWins',        label: 'Quali H2H',       icon: '🚦' },
-  { key: 'fastestLaps',      label: 'Fastest Laps',    icon: '⚡' },
-  { key: 'avgPosition',      label: 'Avg Race Finish', icon: '📊', lowerBetter: true },
-  { key: 'avgQualiPosition', label: 'Avg Quali Pos',   icon: '📡', lowerBetter: true },
-  { key: 'dnf',              label: 'DNFs',            icon: '❌', lowerBetter: true },
-  { key: 'races',            label: 'Races',           icon: '🏁' },
+  { key: 'totalPoints',      label: 'Total points' },
+  { key: 'points',           label: 'Race points' },
+  { key: 'sprintPoints',     label: 'Sprint points' },
+  { key: 'wins',             label: 'Wins' },
+  { key: 'podiums',          label: 'Podiums' },
+  { key: 'headToHeadWins',   label: 'Finished ahead' },
+  { key: 'qualiWins',        label: 'Qualified ahead' },
+  { key: 'fastestLaps',      label: 'Fastest laps' },
+  { key: 'avgPosition',      label: 'Average finish',     lowerBetter: true, decimals: 1 },
+  { key: 'avgQualiPosition', label: 'Average qualifying', lowerBetter: true, decimals: 1 },
+  { key: 'dnf',              label: 'Retirements',        lowerBetter: true },
+  { key: 'races',            label: 'Races' },
 ]
+
+const selectStyle = {
+  width: '100%', minHeight: 40,
+  background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
+  borderRadius: 8, color: 'var(--text)',
+  padding: '0 32px 0 12px',
+  fontFamily: 'var(--body)', fontSize: 14,
+  cursor: 'pointer', appearance: 'none',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
+}
 
 /* ── Driver picker ─────────────────────────────────────────────────────────── */
 
 function Picker({ label, value, onChange, options, noun }) {
   return (
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: 6 }}>
-        {label}
-      </div>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: 8, color: 'var(--text)',
-          padding: '10px 32px 10px 12px',
-          fontFamily: 'var(--mono)', fontSize: 13,
-          cursor: 'pointer', outline: 'none', appearance: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b7a'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
-        }}
-      >
-        <option value="">— Select {noun} —</option>
+    <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--text-muted)' }}>
+      {label}
+      <select value={value} onChange={e => onChange(e.target.value)} style={selectStyle}>
+        <option value="">Select a {noun}</option>
         {options.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
       </select>
-    </div>
+    </label>
   )
 }
 
-/* ── Stat comparison card ──────────────────────────────────────────────────── */
+/* ── Stat comparison ───────────────────────────────────────────────────────── */
 
-function StatRow({ stat, d1, d2, isMobile }) {
+function StatRow({ stat, d1, d2, c1, c2, isMobile }) {
   const v1 = d1?.[stat.key] ?? 0
   const v2 = d2?.[stat.key] ?? 0
   const d1Wins = stat.lowerBetter ? v1 < v2 : v1 > v2
   const d2Wins = stat.lowerBetter ? v2 < v1 : v2 > v1
-  const c1 = d1?.teamColor || '#e10600'
-  const c2 = d2?.teamColor || '#3671C6'
+  const fmt = v => (stat.decimals ? Number(v).toFixed(stat.decimals) : v)
+  const value = (v, wins, color, align) => (
+    <span style={{
+      textAlign: align, fontFamily: 'var(--display)', fontSize: isMobile ? 22 : 28, lineHeight: 1,
+      color: wins ? color : 'var(--text-muted)',
+    }}>
+      {fmt(v)}
+    </span>
+  )
 
   return (
     <div style={{
-      display: 'grid',
-      gridTemplateColumns: '1fr auto 1fr',
-      alignItems: 'center',
-      gap: isMobile ? 8 : 16,
-      padding: '12px 0',
-      borderBottom: '1px solid var(--border)',
+      display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
+      gap: isMobile ? 8 : 16, padding: '10px 0', borderBottom: '1px solid var(--border)',
     }}>
-      {/* D1 value */}
-      <div style={{ textAlign: 'right' }}>
-        <span style={{
-          fontFamily: 'var(--display)',
-          fontSize: isMobile ? 22 : 28,
-          color: d1Wins ? c1 : 'var(--text)',
-          lineHeight: 1,
-          textShadow: d1Wins ? `0 0 20px ${c1}60` : 'none',
-        }}>
-          {stat.key === 'avgPosition' ? v1.toFixed(1) : v1}
-        </span>
-      </div>
-
-      {/* Label centre */}
-      <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: isMobile ? 14 : 18, marginBottom: 2 }}>{stat.icon}</div>
-        <div style={{
-          fontFamily: 'var(--mono)', fontSize: isMobile ? 8 : 10,
-          color: 'var(--text-muted)', letterSpacing: '0.08em', whiteSpace: 'nowrap',
-        }}>
-          {stat.label}
-        </div>
-      </div>
-
-      {/* D2 value */}
-      <div style={{ textAlign: 'left' }}>
-        <span style={{
-          fontFamily: 'var(--display)',
-          fontSize: isMobile ? 22 : 28,
-          color: d2Wins ? c2 : 'var(--text)',
-          lineHeight: 1,
-          textShadow: d2Wins ? `0 0 20px ${c2}60` : 'none',
-        }}>
-          {stat.key === 'avgPosition' ? v2.toFixed(1) : v2}
-        </span>
-      </div>
+      {value(v1, d1Wins, c1, 'right')}
+      <span style={{ fontSize: 13, color: 'var(--text-muted)', textAlign: 'center', minWidth: isMobile ? 96 : 140 }}>
+        {stat.label}
+      </span>
+      {value(v2, d2Wins, c2, 'left')}
     </div>
   )
 }
 
-/* ── H2H progress bars ─────────────────────────────────────────────────────── */
+/* ── H2H split bars ────────────────────────────────────────────────────────── */
 
-function H2HBar({ d1, d2, valueKey, label }) {
+function H2HBar({ d1, d2, c1, c2, valueKey, label }) {
   if (!d1 || !d2) return null
-  const total = (d1[valueKey] ?? 0) + (d2[valueKey] ?? 0)
-  if (total === 0) return null
-  const pct1 = ((d1[valueKey] ?? 0) / total) * 100
-  const c1 = d1.teamColor || '#e10600'
-  const c2 = d2.teamColor || '#3671C6'
+  const n1 = d1[valueKey] ?? 0
+  const n2 = d2[valueKey] ?? 0
+  if (n1 + n2 === 0) return null
 
   return (
-    <div style={{ marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5, fontSize: 12 }}>
-        <span style={{ color: c1, fontFamily: 'var(--display)', fontSize: 14 }}>
-          {d1.code} · {d1[valueKey] ?? 0}
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+        <span style={{ fontFamily: 'var(--display)', fontSize: 18, letterSpacing: '0.02em' }}>
+          {d1.code} <span style={{ color: c1 }}>{n1}</span>
         </span>
-        <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 10 }}>
-          {label}
-        </span>
-        <span style={{ color: c2, fontFamily: 'var(--display)', fontSize: 14 }}>
-          {d2[valueKey] ?? 0} · {d2.code}
+        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{label}</span>
+        <span style={{ fontFamily: 'var(--display)', fontSize: 18, letterSpacing: '0.02em' }}>
+          <span style={{ color: c2 }}>{n2}</span> {d2.code}
         </span>
       </div>
-      <div style={{ height: 8, borderRadius: 4, overflow: 'hidden', display: 'flex' }}>
-        <div style={{ width: `${pct1}%`, background: c1, transition: 'width 0.6s ease' }} />
-        <div style={{ flex: 1, background: c2 }} />
+      <div style={{ height: 8, display: 'flex', gap: 2 }} role="img" aria-label={`${label}: ${d1.code} ${n1}, ${d2.code} ${n2}`}>
+        {n1 > 0 && <div style={{ flex: n1, background: c1, borderRadius: 4 }} />}
+        {n2 > 0 && <div style={{ flex: n2, background: c2, borderRadius: 4 }} />}
       </div>
     </div>
   )
@@ -151,177 +123,125 @@ function H2HBar({ d1, d2, valueKey, label }) {
 
 /* ── Race log table ────────────────────────────────────────────────────────── */
 
-function SprintBadge({ pts, color }) {
-  if (!pts || pts <= 0) return null
+const LOG_COLUMNS = { desktop: '48px minmax(0, 1.4fr) 1fr 1fr', mobile: 'minmax(0, 1fr) 1fr 1fr' }
+
+function Tag({ children, strong, color }) {
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: 2,
-      fontSize: 9, fontFamily: 'var(--mono)',
-      background: `${color}22`, border: `1px solid ${color}55`,
-      color: color, borderRadius: 4, padding: '1px 5px',
-      marginLeft: 4, verticalAlign: 'middle',
+      flex: 'none', whiteSpace: 'nowrap', fontSize: 12, fontWeight: 400, borderRadius: 4, padding: '0 6px',
+      background: 'var(--bg-card)', border: `1px solid ${strong ? color : 'var(--border-strong)'}`,
+      color: strong ? 'var(--text)' : 'var(--text-muted)',
     }}>
-      🏃+{pts}
+      {children}
     </span>
   )
 }
 
-function QualiBadge({ pos, outQualified, color }) {
-  if (!pos || pos >= 99) return null
+/** A side's cell: the result (bold, with a mark in the side's colour, when it won the round), then its tags. */
+function Cell({ isWinner, color, children }) {
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      fontSize: 9, fontFamily: 'var(--mono)',
-      background: outQualified ? `${color}25` : 'var(--bg-elevated)',
-      border: `1px solid ${outQualified ? color : 'var(--border)'}`,
-      color: outQualified ? color : 'var(--text-dim)',
-      borderRadius: 4, padding: '1px 5px',
-      marginLeft: 4, verticalAlign: 'middle',
+    <div style={{
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4,
+      fontSize: 13, color: isWinner ? 'var(--text)' : 'var(--text-muted)', fontWeight: isWinner ? 700 : 400,
     }}>
-      Q{pos}
-    </span>
+      {isWinner && <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: 2, background: color, flex: 'none' }} />}
+      {children}
+    </div>
   )
 }
 
-function RaceLogRow({ race, driver1Id, driver2Id, d1Color, d2Color, isMobile }) {
+function RaceLogRow({ race, driver1Id, driver2Id, c1, c2, isMobile }) {
   const { d1, d2, winner, sprint, quali } = race
-  const isD1Win = winner === driver1Id
-  const isD2Win = winner === driver2Id
-  const sp1 = sprint?.d1
-  const sp2 = sprint?.d2
   const q1 = quali?.d1
   const q2 = quali?.d2
   // who out-qualified whom this round?
   const d1OutQuali = q1 && q2 && q1.position < q2.position
   const d2OutQuali = q1 && q2 && q2.position < q1.position
 
-  function cellStyle(isWinner, color) {
-    return {
-      fontFamily: 'var(--mono)', fontSize: isMobile ? 10 : 12,
-      color: isWinner ? color : 'var(--text-muted)',
-      fontWeight: isWinner ? 700 : 400,
-    }
-  }
-
-  const posLabel = (r) => {
-    if (!r) return '—'
-    if (!String(r.positionText).match(/^\d+$/)) return r.positionText
-    return `P${r.position}`
-  }
-
-  const ptsLabel = (r) => {
-    if (!r || r.points === undefined) return ''
-    return r.points > 0 ? `+${r.points}` : ''
-  }
+  const side = (r, sp, q, outQuali, isWinner, color) => (
+    <Cell isWinner={isWinner} color={color}>
+      {!r ? '—' : isNumeric(r.positionText) ? `P${r.position}` : r.positionText}
+      {r?.points > 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>+{r.points}</span>}
+      {sp?.points > 0 && <Tag>Sprint +{sp.points}</Tag>}
+      {q?.position && q.position < 99 && <Tag strong={outQuali} color={color}>Quali P{q.position}</Tag>}
+    </Cell>
+  )
 
   return (
-    <LogRow race={race} winnerColor={isD1Win ? d1Color : isD2Win ? d2Color : null} isMobile={isMobile}>
-      <div style={cellStyle(isD1Win, d1Color)}>
-        {posLabel(d1)}
-        {ptsLabel(d1) && <span style={{ opacity: 0.6, marginLeft: 4 }}>({ptsLabel(d1)})</span>}
-        <SprintBadge pts={sp1?.points} color={d1Color} />
-        <QualiBadge pos={q1?.position} outQualified={d1OutQuali} color={d1Color} />
-      </div>
-      <div style={cellStyle(isD2Win, d2Color)}>
-        {posLabel(d2)}
-        {ptsLabel(d2) && <span style={{ opacity: 0.6, marginLeft: 4 }}>({ptsLabel(d2)})</span>}
-        <SprintBadge pts={sp2?.points} color={d2Color} />
-        <QualiBadge pos={q2?.position} outQualified={d2OutQuali} color={d2Color} />
-      </div>
+    <LogRow race={race} isMobile={isMobile}>
+      {side(d1, sprint?.d1, q1, d1OutQuali, winner === driver1Id, c1)}
+      {side(d2, sprint?.d2, q2, d2OutQuali, winner === driver2Id, c2)}
     </LogRow>
   )
 }
 
-/** One race-log row: round, race name, then the two sides; tinted with the winner's colour. */
-function LogRow({ race, winnerColor, isMobile, children }) {
+/** One race-log row: round, race name, then the two sides. */
+function LogRow({ race, isMobile, children }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
-      alignItems: 'center',
-      gap: isMobile ? 6 : 12,
-      padding: isMobile ? '8px 10px' : '10px 16px',
-      borderRadius: 8,
-      background: winnerColor ? hex2rgba(winnerColor, 0.07) : 'var(--bg-card)',
-      border: `1px solid ${winnerColor ? hex2rgba(winnerColor, 0.25) : 'var(--border)'}`,
-      marginBottom: 4,
-      animation: 'fadeUp 0.3s ease',
+    <li style={{
+      display: 'grid', gridTemplateColumns: isMobile ? LOG_COLUMNS.mobile : LOG_COLUMNS.desktop,
+      alignItems: 'center', gap: 12, padding: isMobile ? '10px 12px' : '10px 16px',
+      borderRadius: 8, background: 'var(--bg-elevated)', border: '1px solid var(--border)',
     }}>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
-        R{race.round}
-      </span>
-      <span style={{ fontSize: isMobile ? 10 : 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {race.raceName.replace(' Grand Prix', isMobile ? ' GP' : ' Grand Prix')}
+      {!isMobile && <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>R{race.round}</span>}
+      <span style={{ fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {isMobile ? shortGpName(race.raceName) : race.raceName}
       </span>
       {children}
-    </div>
+    </li>
   )
 }
 
 /** Constructor race-log row: each team's cars (best first) and its points that round. */
-function ConstructorRaceRow({ race, c1Id, c1Color, c2Color, isMobile }) {
+function ConstructorRaceRow({ race, c1Id, c1, c2, isMobile }) {
   const isC1Win = race.winner === c1Id
   const isC2Win = !!race.winner && !isC1Win
   const cell = (side, isWinner, color) => (
-    <div style={{
-      fontFamily: 'var(--mono)', fontSize: isMobile ? 10 : 12,
-      color: isWinner ? color : 'var(--text-muted)', fontWeight: isWinner ? 700 : 400,
-    }}>
+    <Cell isWinner={isWinner} color={color}>
       {side
-        ? side.cars.map(c => /^\d+$/.test(c.positionText) ? `P${c.position}` : c.positionText).join(' · ')
+        ? side.cars.map(c => isNumeric(c.positionText) ? `P${c.position}` : c.positionText).join(' · ')
         : '—'}
-      {side?.points > 0 && <span style={{ opacity: 0.6, marginLeft: 4 }}>(+{side.points})</span>}
-    </div>
+      {side?.points > 0 && <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>+{side.points}</span>}
+    </Cell>
   )
   return (
-    <LogRow race={race} winnerColor={isC1Win ? c1Color : isC2Win ? c2Color : null} isMobile={isMobile}>
-      {cell(race.c1, isC1Win, c1Color)}
-      {cell(race.c2, isC2Win, c2Color)}
+    <LogRow race={race} isMobile={isMobile}>
+      {cell(race.c1, isC1Win, c1)}
+      {cell(race.c2, isC2Win, c2)}
     </LogRow>
   )
 }
 
-/* ── Driver hero ────────────────────────────────────────────────────────────── */
+/* ── Hero card per side ────────────────────────────────────────────────────── */
 
-function DriverHero({ driver, side, isMobile }) {
-  if (!driver?.fullName) return <div style={{ flex: 1 }} />
-  const color = driver.teamColor || '#e10600'
-  const align = side === 'left' ? 'flex-start' : 'flex-end'
-  const textAlign = side === 'left' ? 'left' : 'right'
+function DriverHero({ driver, color, side, isMobile, isTeams }) {
+  if (!driver?.fullName) return <div />
+  const right = side === 'right'
 
   return (
     <div style={{
-      flex: 1,
-      display: 'flex', flexDirection: 'column',
-      alignItems: align,
-      padding: isMobile ? '16px 14px' : '20px 24px',
-      background: `linear-gradient(${side === 'left' ? '135deg' : '225deg'}, ${hex2rgba(color, 0.18)}, #111114 55%)`,
-      border: `1px solid ${color}40`,
-      borderRadius: 12,
-      position: 'relative', overflow: 'hidden',
+      display: 'flex', alignItems: 'center', gap: 14, flexDirection: right ? 'row-reverse' : 'row',
+      padding: isMobile ? 12 : '16px 20px', minWidth: 0,
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderTop: `3px solid ${color}`, borderRadius: 8,
     }}>
-      {/* Watermark */}
-      <div style={{
-        position: 'absolute',
-        [side === 'left' ? 'right' : 'left']: -10,
-        top: -10,
-        fontFamily: 'var(--display)', fontSize: isMobile ? 80 : 120,
-        color: hex2rgba(color, 0.08), letterSpacing: '-0.02em',
-        userSelect: 'none', pointerEvents: 'none', lineHeight: 1,
-      }}>
-        {driver.code}
-      </div>
-
-      <div style={{ fontSize: 22, marginBottom: 4 }}>{driver.flag}</div>
-      <div style={{
-        fontFamily: 'var(--display)', fontSize: isMobile ? 18 : 26,
-        letterSpacing: '0.04em', textAlign,
-      }}>
-        {isMobile ? driver.code : driver.fullName.toUpperCase()}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-        <TeamDot color={color} size={7} />
-        <span style={{ fontSize: 11, color: hex2rgba('#fff', 0.5) }}>{driver.constructorName}</span>
+      {isTeams ? (
+        <ConstructorImage constructorId={driver.constructorId} width={isMobile ? 40 : 72} height={isMobile ? 40 : 48}
+          color={driver.teamColor} name={driver.fullName} alt={`${driver.fullName} logo`} />
+      ) : (
+        <DriverImage driverId={driver.driverId} size={isMobile ? 40 : 64} color={driver.teamColor}
+          initials={driver.code} alt={driver.fullName} />
+      )}
+      <div style={{ minWidth: 0, textAlign: right ? 'right' : 'left' }}>
+        <div style={{
+          fontFamily: 'var(--display)', fontSize: isMobile ? 20 : 26, letterSpacing: '0.03em', lineHeight: 1.05,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {isMobile && !isTeams ? surname(driver) : driver.fullName}
+        </div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {driver.constructorName}
+        </div>
       </div>
     </div>
   )
@@ -393,40 +313,30 @@ export default function H2HPage({ season }) {
   const d1 = isTeams ? asHero(data?.constructor1) : data?.driver1
   const d2 = isTeams ? asHero(data?.constructor2) : data?.driver2
   const races = data?.races || []
+  const [c1, c2] = sideColors(d1, d2)
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <div style={{ width: 4, height: 28, background: 'var(--red)', borderRadius: 2 }} />
-          <h2 style={{ fontFamily: 'var(--display)', fontSize: isMobile ? 24 : 32, letterSpacing: '0.06em' }}>
-            HEAD TO HEAD
-          </h2>
-          <span style={{
-            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            padding: '2px 8px', borderRadius: 4,
-          }}>{season}</span>
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', paddingLeft: 14 }}>
-          Compare two {mode.noun}s across the full season — stats, records, race by race
+      <header style={{ marginBottom: 24 }}>
+        <SectionHeading as="h1" title="Head to head" badge={season} />
+        <p style={{ fontSize: 14, color: 'var(--text-muted)', marginTop: -8 }}>
+          Compare two {mode.noun}s across the season: stats, records and every race.
         </p>
-      </div>
+      </header>
 
       {/* Drivers | Constructors */}
       <div role="group" aria-label="Compare" style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
         {Object.entries(MODES).map(([key, m]) => (
           <button
             key={key}
+            type="button"
             id={`h2h-mode-${key}`}
             aria-pressed={modeKey === key}
             onClick={() => setMode(key)}
             style={{
-              padding: '6px 14px', borderRadius: 999, cursor: 'pointer',
-              fontFamily: 'var(--body)', fontSize: 13, fontWeight: modeKey === key ? 600 : 400,
+              minHeight: 36, padding: '0 16px', borderRadius: 8, cursor: 'pointer',
+              fontFamily: 'var(--body)', fontSize: 14,
               background: modeKey === key ? 'var(--pill-active)' : 'transparent',
-              border: `1px solid ${modeKey === key ? 'var(--border-strong)' : 'var(--border)'}`,
               color: modeKey === key ? 'var(--text)' : 'var(--text-muted)',
             }}
           >
@@ -438,132 +348,78 @@ export default function H2HPage({ season }) {
       {/* Pickers */}
       <div style={{
         display: 'flex', gap: 12, marginBottom: 24,
-        flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-end',
+        flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'flex-end',
       }}>
-        <Picker label={`${mode.noun.toUpperCase()} 1`} value={id1} onChange={setPick(0)} options={options} noun={mode.noun} />
-        <div style={{
-          fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text-muted)',
-          paddingBottom: isMobile ? 0 : 10,
-        }}>VS</div>
-        <Picker label={`${mode.noun.toUpperCase()} 2`} value={id2} onChange={setPick(1)} options={options} noun={mode.noun} />
+        <Picker label={`First ${mode.noun}`} value={id1} onChange={setPick(0)} options={options} noun={mode.noun} />
+        {!isMobile && <span style={{ fontSize: 14, color: 'var(--text-muted)', paddingBottom: 10 }}>vs</span>}
+        <Picker label={`Second ${mode.noun}`} value={id2} onChange={setPick(1)} options={options} noun={mode.noun} />
       </div>
 
-      {/* Empty state */}
       {!canLoad && !isLoading && (
-        <div style={{
-          textAlign: 'center', padding: isMobile ? '40px 20px' : '60px 20px',
-          color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 13,
-        }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>⚔️</div>
-          <div>Select two different {mode.noun}s to begin the comparison</div>
-        </div>
+        <p style={{ padding: '40px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
+          Select two different {mode.noun}s to compare them.
+        </p>
       )}
 
       {isLoading && <Loader label="Computing head-to-head stats..." />}
       {error && <ErrorMsg error={error} />}
 
       {data && !isLoading && (
-        <div style={{ animation: 'fadeUp 0.3s ease' }}>
-          {/* Driver heroes */}
-          <div style={{
-            display: 'flex', gap: 12, marginBottom: 20,
-            flexDirection: isMobile ? 'column' : 'row',
-          }}>
-            <DriverHero driver={d1} side="left"  isMobile={isMobile} />
-            <DriverHero driver={d2} side="right" isMobile={isMobile} />
+        <div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, marginBottom: 20 }}>
+            <DriverHero driver={d1} color={c1} side="left"  isMobile={isMobile} isTeams={isTeams} />
+            <DriverHero driver={d2} color={c2} side="right" isMobile={isMobile} isTeams={isTeams} />
           </div>
 
-          {/* H2H bars */}
           <div style={{ marginBottom: 24 }}>
-            <H2HBar d1={d1} d2={d2} valueKey="headToHeadWins" label="RACE H2H" />
-            <H2HBar d1={d1} d2={d2} valueKey="qualiWins"      label="QUALI H2H" />
+            <H2HBar d1={d1} d2={d2} c1={c1} c2={c2} valueKey="headToHeadWins" label="Finished ahead" />
+            <H2HBar d1={d1} d2={d2} c1={c1} c2={c2} valueKey="qualiWins"      label="Qualified ahead" />
           </div>
 
-          {/* Stats comparison */}
-          <div style={{
+          <section aria-label="Season stats" style={{
             background: 'var(--bg-card)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: isMobile ? '16px 14px' : '20px 24px',
-            marginBottom: 24,
+            borderRadius: 8, padding: isMobile ? '12px 14px' : '16px 24px',
+            marginBottom: 32,
           }}>
-            {/* Column headers */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr auto 1fr',
-              gap: isMobile ? 8 : 16,
-              marginBottom: 4,
-              paddingBottom: 8,
-              borderBottom: '1px solid var(--border)',
+              display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: isMobile ? 8 : 16,
+              paddingBottom: 8, borderBottom: '1px solid var(--border-strong)',
+              fontFamily: 'var(--display)', fontSize: 16, letterSpacing: '0.03em',
             }}>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontFamily: 'var(--display)', fontSize: 14, color: d1?.teamColor }}>
-                  {d1?.code || '—'}
-                </span>
-              </div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-dim)', textAlign: 'center' }}>
-                STAT
-              </div>
-              <div>
-                <span style={{ fontFamily: 'var(--display)', fontSize: 14, color: d2?.teamColor }}>
-                  {d2?.code || '—'}
-                </span>
-              </div>
+              <span style={{ textAlign: 'right' }}>{d1?.code || '—'}</span>
+              <span style={{ minWidth: isMobile ? 96 : 140 }} />
+              <span>{d2?.code || '—'}</span>
             </div>
-
             {STAT_DEFS.map(stat => (
-              <StatRow key={stat.key} stat={stat} d1={d1} d2={d2} isMobile={isMobile} />
+              <StatRow key={stat.key} stat={stat} d1={d1} d2={d2} c1={c1} c2={c2} isMobile={isMobile} />
             ))}
-          </div>
+          </section>
 
-          {/* Race Log */}
           {races.length > 0 && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-dim)' }}>
-                  RACE LOG
-                </span>
-                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              </div>
+            <section aria-labelledby="race-log-heading">
+              <h2 id="race-log-heading" style={{ fontSize: 16, fontWeight: 600, marginBottom: 12 }}>Race by race</h2>
 
-              {/* Column headers */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '28px 1fr 1fr 1fr' : '36px 1fr 1fr 1fr',
-                gap: isMobile ? 6 : 12,
-                padding: isMobile ? '0 10px 6px' : '0 16px 8px',
+              <div aria-hidden="true" style={{
+                display: 'grid', gridTemplateColumns: isMobile ? LOG_COLUMNS.mobile : LOG_COLUMNS.desktop,
+                gap: 12, padding: isMobile ? '0 12px 6px' : '0 16px 8px', fontSize: 12, color: 'var(--text-muted)',
               }}>
-                {['RND', 'RACE', d1?.code || 'D1', d2?.code || 'D2'].map(h => (
-                  <span key={h} style={{
-                    fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-dim)',
-                    letterSpacing: '0.08em',
-                  }}>{h}</span>
-                ))}
+                {!isMobile && <span>Round</span>}
+                <span>Race</span>
+                <span>{d1?.code || 'First'}</span>
+                <span>{d2?.code || 'Second'}</span>
               </div>
 
-              {races.map((race, idx) => {
-                if (!race) return null
-                return isTeams ? (
-                  <ConstructorRaceRow
-                    key={race.round || idx}
-                    race={race}
-                    c1Id={id1}
-                    c1Color={d1?.teamColor || '#e10600'}
-                    c2Color={d2?.teamColor || '#3671C6'}
-                    isMobile={isMobile}
-                  />
-                ) : (
-                  <RaceLogRow
-                    key={race.round || idx}
-                    race={race}
-                    driver1Id={id1}
-                    driver2Id={id2}
-                    d1Color={d1?.teamColor || '#e10600'}
-                    d2Color={d2?.teamColor || '#3671C6'}
-                    isMobile={isMobile}
-                  />
-                )
-              })}
-            </div>
+              <ol style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {races.map((race, idx) => {
+                  if (!race) return null
+                  return isTeams ? (
+                    <ConstructorRaceRow key={race.round || idx} race={race} c1Id={id1} c1={c1} c2={c2} isMobile={isMobile} />
+                  ) : (
+                    <RaceLogRow key={race.round || idx} race={race} driver1Id={id1} driver2Id={id2} c1={c1} c2={c2} isMobile={isMobile} />
+                  )
+                })}
+              </ol>
+            </section>
           )}
         </div>
       )}

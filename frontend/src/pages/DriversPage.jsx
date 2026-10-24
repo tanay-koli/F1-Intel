@@ -1,134 +1,22 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
-import { Loader, ErrorMsg, TeamDot, StatCard, useIsMobile } from '../components/ui'
+import { Loader, ErrorMsg, StatCard, useIsMobile } from '../components/ui'
 import { DriverImage } from '../components/F1Image'
+import SectionHeading from '../components/SectionHeading'
+import Podium from '../components/Podium'
+import StandingsRow, { StandingsList } from '../components/StandingsRow'
+import { points, surname } from '../lib/format'
+import styles from './ranked.module.css'
 
-/* ── helpers ───────────────────────────────────────────────────────────────── */
-
-const MEDAL = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' }
-const MEDAL_LABEL = { 1: '1ST', 2: '2ND', 3: '3RD' }
-
-function hex2rgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
+function gapToLeader(standing, leaderPts) {
+  return standing.position === 1 ? 'Leader' : `−${points(leaderPts - standing.points)} pts`
 }
 
-/* ── Podium card (top 3) ───────────────────────────────────────────────────── */
-
-function PodiumCard({ standing, rank, onClick, selected }) {
-  const isFirst   = rank === 1
-  const color     = standing.teamColor || '#e10600'
-  const medal     = MEDAL[rank]
-
-  return (
-    <div
-      onClick={() => onClick(standing)}
-      style={{
-        position: 'relative',
-        borderRadius: 16,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        border: `1px solid ${selected ? color : color + '40'}`,
-        boxShadow: selected
-          ? `0 0 32px ${color}50, inset 0 0 40px ${color}10`
-          : `0 4px 24px ${color}20`,
-        transform: isFirst ? 'translateY(-16px)' : 'translateY(0)',
-        transition: 'all 0.22s ease',
-        animation: `fadeUp 0.4s ease ${rank * 80}ms both`,
-        background: `linear-gradient(160deg, ${hex2rgba(color, 0.18)} 0%, #111114 55%)`,
-        minHeight: isFirst ? 280 : 240,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-end',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.transform = isFirst ? 'translateY(-20px)' : 'translateY(-4px)' }}
-      onMouseLeave={e => { e.currentTarget.style.transform = isFirst ? 'translateY(-16px)' : 'translateY(0)' }}
-    >
-      {/* Diagonal color stripe top-right */}
-      <div style={{
-        position: 'absolute', top: 0, right: 0, width: '60%', height: '100%',
-        background: `linear-gradient(135deg, transparent 30%, ${hex2rgba(color, 0.10)} 100%)`,
-        pointerEvents: 'none',
-      }} />
-
-      {/* Driver portrait — top-center */}
-      <div style={{
-        position: 'absolute', top: 12, left: '50%',
-        transform: 'translateX(-50%)',
-        zIndex: 2,
-      }}>
-        <DriverImage
-          driverId={standing.driverId}
-          size={isFirst ? 90 : 72}
-          color={color}
-          initials={standing.code || standing.fullName?.slice(0, 3).toUpperCase()}
-          style={{ border: `2px solid ${color}60`, boxShadow: `0 4px 20px ${color}40` }}
-        />
-      </div>
-
-      {/* Giant position number watermark */}
-      <div style={{
-        position: 'absolute', top: -8, left: 8,
-        fontFamily: 'var(--display)', fontSize: isFirst ? 140 : 120,
-        lineHeight: 1, color: hex2rgba(color, 0.18),
-        letterSpacing: '-0.02em', userSelect: 'none', pointerEvents: 'none',
-      }}>
-        {rank}
-      </div>
-
-      {/* Medal ribbon top-right */}
-      <div style={{
-        position: 'absolute', top: 12, right: 12,
-        background: medal, borderRadius: 6,
-        padding: '3px 10px',
-        fontFamily: 'var(--display)', fontSize: 11, letterSpacing: '0.08em',
-        color: '#000', fontWeight: 700,
-      }}>
-        {MEDAL_LABEL[rank]}
-      </div>
-
-      {/* Points badge */}
-      <div style={{
-        position: 'absolute', bottom: 52, right: 12,
-        background: hex2rgba(color, 0.25),
-        border: `1px solid ${color}60`,
-        borderRadius: 8, padding: '4px 10px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
-        <span style={{ fontFamily: 'var(--display)', fontSize: 22, lineHeight: 1, color: '#fff' }}>
-          {standing.points}
-        </span>
-        <span style={{ fontSize: 9, color: hex2rgba('#ffffff', 0.6), letterSpacing: '0.1em' }}>PTS</span>
-      </div>
-
-      {/* Driver info footer */}
-      <div style={{
-        padding: '12px 14px 14px',
-        background: `linear-gradient(transparent, ${hex2rgba(color, 0.30)} 100%)`,
-        borderTop: `1px solid ${color}30`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontSize: 14 }}>{standing.flag}</span>
-          <span style={{ fontFamily: 'var(--display)', fontSize: isFirst ? 20 : 17, letterSpacing: '0.06em', color: '#fff' }}>
-            {standing.fullName?.split(' ').pop().toUpperCase()}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <TeamDot color={color} size={7} />
-          <span style={{ fontSize: 11, color: hex2rgba('#ffffff', 0.55) }}>{standing.constructorName}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── Driver profile drawer ─────────────────────────────────────────────────── */
+/* ── Driver profile panel ──────────────────────────────────────────────────── */
 
 function DriverProfile({ standing, season, onClose }) {
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ['driver', standing.driverId, season],
     queryFn: () => f1Api.getDriver(standing.driverId, season)
   })
@@ -136,157 +24,52 @@ function DriverProfile({ standing, season, onClose }) {
   const color = standing.teamColor || '#e10600'
 
   return (
-    <div style={{
-      background: `linear-gradient(145deg, ${hex2rgba(color, 0.12)}, #111114 50%)`,
-      border: `1px solid ${color}50`,
-      borderRadius: 16, padding: 24,
-      position: 'sticky', top: 80,
-      animation: 'fadeUp 0.25s ease',
-      boxShadow: `0 0 40px ${color}20`,
-    }}>
-      <button onClick={onClose} style={{
-        fontSize: 11, color: 'var(--text-muted)', marginBottom: 16,
-        fontFamily: 'var(--mono)', padding: '4px 10px',
-        border: '1px solid var(--border)', borderRadius: 6,
-        background: 'var(--bg-elevated)',
-      }}>✕ close</button>
+    <section className={styles.panel} style={{ '--team': color }} aria-label={`${standing.fullName} profile`}>
+      {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
 
-      {/* Driver hero image */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
         <DriverImage
           driverId={standing.driverId}
-          size={96}
+          size={80}
           color={color}
           initials={standing.code || standing.fullName?.slice(0, 3).toUpperCase()}
-          style={{ border: `2px solid ${color}60`, boxShadow: `0 4px 24px ${color}30` }}
+          alt={standing.fullName}
         />
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontSize: 24 }}>{standing.flag}</span>
-            <div style={{
-              background: MEDAL[standing.position] || color,
-              borderRadius: 8, padding: '2px 12px',
-              fontFamily: 'var(--display)', fontSize: 13, color: '#000',
-            }}>P{standing.position}</div>
-          </div>
-          <div style={{ fontFamily: 'var(--display)', fontSize: 28, lineHeight: 1.1 }}>
+        <div style={{ minWidth: 0 }}>
+          <h2 style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 28, lineHeight: 1.05, letterSpacing: '0.02em' }}>
             {standing.fullName}
-          </div>
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+            {standing.constructorName}{standing.number ? ` · #${standing.number}` : ''}
+          </p>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <TeamDot color={color} />
-        <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{standing.constructorName}</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color, marginLeft: 4 }}>
-          #{standing.number}
-        </span>
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-        <StatCard label="Points" value={standing.points} accent={color} />
-        <StatCard label="Wins"   value={standing.wins} />
+        <StatCard label="Points" value={points(standing.points)} />
+        <StatCard label="Wins" value={standing.wins} />
         <StatCard label="Position" value={`P${standing.position}`} />
         {data?.driver && (
           <StatCard label="Born" value={data.driver.dateOfBirth?.slice(0, 4)} sub={data.driver.dateOfBirth} />
         )}
       </div>
 
-      <div style={{
-        fontFamily: 'var(--display)', fontSize: 72, letterSpacing: '0.1em',
-        color: hex2rgba(color, 0.18), textAlign: 'right',
-        lineHeight: 1, userSelect: 'none',
-      }}>
-        {standing.code}
-      </div>
-
       {data?.driver?.url && (
         <a href={data.driver.url} target="_blank" rel="noopener noreferrer" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8,
-          fontSize: 12, color: 'var(--text-muted)',
-          border: '1px solid var(--border)', borderRadius: 6, padding: '6px 12px',
+          fontSize: 13, color: 'var(--text-muted)',
+          textDecoration: 'underline', textUnderlineOffset: 4,
         }}>
           Wikipedia ↗
         </a>
       )}
-    </div>
-  )
-}
-
-/* ── Rest of grid row (P4+) ────────────────────────────────────────────────── */
-
-function StandingRow({ standing, onClick, selected }) {
-  const color = standing.teamColor || '#e10600'
-  return (
-    <div
-      onClick={() => onClick(standing)}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '40px 44px 1fr auto auto',
-        alignItems: 'center',
-        gap: 12,
-        padding: '10px 16px',
-        borderRadius: 10,
-        cursor: 'pointer',
-        background: selected ? hex2rgba(color, 0.10) : 'var(--bg-card)',
-        border: `1px solid ${selected ? color + '60' : 'var(--border)'}`,
-        borderLeft: `3px solid ${color}`,
-        transition: 'all 0.15s ease',
-        animation: `fadeUp 0.35s ease ${standing.position * 25}ms both`,
-      }}
-      onMouseEnter={e => { if (!selected) e.currentTarget.style.background = hex2rgba(color, 0.07) }}
-      onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-card)' }}
-    >
-      {/* Position number */}
-      <span style={{
-        fontFamily: 'var(--display)', fontSize: 22, color: 'var(--text-muted)',
-        textAlign: 'center', lineHeight: 1,
-      }}>
-        {standing.position}
-      </span>
-
-      {/* Driver avatar */}
-      <DriverImage
-        driverId={standing.driverId}
-        size={40}
-        color={color}
-        initials={standing.code || standing.fullName?.slice(0, 3).toUpperCase()}
-      />
-
-      {/* Name + team */}
-      <div>
-        <div style={{ fontFamily: 'var(--display)', fontSize: 15, letterSpacing: '0.04em' }}>
-          {standing.fullName?.toUpperCase()}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-          <TeamDot color={color} size={6} />
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{standing.constructorName}</span>
-        </div>
-      </div>
-
-      {/* Driver number */}
-      <span style={{
-        fontFamily: 'var(--display)', fontSize: 18, color: color + 'aa',
-        minWidth: 30, textAlign: 'right',
-      }}>
-        {standing.number || ''}
-      </span>
-
-      {/* Points */}
-      <div style={{ textAlign: 'right', minWidth: 52 }}>
-        <div style={{ fontFamily: 'var(--display)', fontSize: 20, lineHeight: 1 }}>
-          {standing.points}
-        </div>
-        <div style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>PTS</div>
-      </div>
-    </div>
+    </section>
   )
 }
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
 export default function DriversPage({ season }) {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(900)
   const [selected, setSelected] = useState(null)
 
   const { data, isLoading, error } = useQuery({
@@ -295,110 +78,78 @@ export default function DriversPage({ season }) {
   })
 
   if (isLoading) return <Loader label="Fetching driver standings..." />
-  if (error)     return <ErrorMsg message={error.message} />
+  if (error)     return <ErrorMsg error={error} />
 
-  const standings  = data?.standings || []
-  const podium     = standings.filter(s => s.position <= 3).sort((a, b) => a.position - b.position)
-  const rest       = standings.filter(s => s.position > 3)
-
-  // Render order: P2 left, P1 center, P3 right
-  const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean)
+  const standings = data?.standings || []
+  const podium    = standings.filter(s => s.position <= 3).sort((a, b) => a.position - b.position)
+  const rest      = standings.filter(s => s.position > 3)
+  const leaderPts = standings[0]?.points ?? 0
 
   const toggle = (s) => setSelected(prev => prev?.driverId === s.driverId ? null : s)
+  // Wide screens always show a profile (the leader until a row is picked); phones only on demand.
+  const profile = selected ?? (isMobile ? null : standings[0])
+
+  const props = (s) => ({
+    position: s.position,
+    color: s.teamColor,
+    image: (
+      <DriverImage
+        key={s.driverId}
+        driverId={s.driverId}
+        size={s.position <= 3 ? 72 : 40}
+        color={s.teamColor}
+        initials={s.code || s.fullName?.slice(0, 3).toUpperCase()}
+        alt={s.fullName}
+      />
+    ),
+    subline: s.constructorName,
+    figure: points(s.points),
+    unit: 'pts',
+    detail: gapToLeader(s, leaderPts),
+    onClick: () => toggle(s),
+    selected: profile?.driverId === s.driverId,
+  })
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <div style={{
-            width: 4, height: 28, background: 'var(--red)', borderRadius: 2,
-          }} />
-          <h2 style={{ fontFamily: 'var(--display)', fontSize: 32, letterSpacing: '0.06em' }}>
-            DRIVER STANDINGS
-          </h2>
-          <span style={{
-            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)',
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            padding: '2px 8px', borderRadius: 4,
-          }}>
-            {data?.round ? `Round ${data.round}` : season}
-          </span>
-        </div>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', paddingLeft: 14 }}>
-          {standings.length} drivers · {season} season
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: selected && !isMobile ? '1fr 340px' : '1fr', gap: 24 }}>
+      <header className={styles.header}>
         <div>
-          {/* ── Podium top 3 ── */}
+          <SectionHeading as="h1" title="Driver standings" badge={data?.round ? `Round ${data.round}` : season} />
+          <p className={styles.sub}>{standings.length} drivers · {season} season</p>
+        </div>
+      </header>
+
+      <div className={styles.layout}>
+        <div>
           {podium.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: 12,
-              marginBottom: 20,
-              alignItems: isMobile ? 'stretch' : 'flex-end',
-            }}>
-              {(isMobile ? podium : podiumOrder).map(s => (
-                <PodiumCard
-                  key={s.driverId}
-                  standing={s}
-                  rank={s.position}
-                  selected={selected?.driverId === s.driverId}
-                  onClick={toggle}
-                />
-              ))}
-            </div>
+            <Podium
+              label="Top three"
+              items={podium.map(s => ({ key: s.driverId, name: surname(s), ...props(s) }))}
+            />
           )}
-
-          {/* ── Divider ── */}
-          {rest.length > 0 && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 14px',
-            }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text-dim)' }}>
-                POINTS FINISHERS
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
-          )}
-
-          {/* ── P4 onwards ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <StandingsList>
             {rest.map(s => (
-              <StandingRow
+              <StandingsRow
                 key={s.driverId}
-                standing={s}
-                selected={selected?.driverId === s.driverId}
-                onClick={toggle}
+                name={s.fullName}
+                share={leaderPts ? s.points / leaderPts : 0}
+                {...props(s)}
               />
             ))}
-          </div>
+          </StandingsList>
         </div>
 
-        {/* ── Profile panel ── */}
-        {selected && !isMobile && (
-          <DriverProfile
-            standing={selected}
-            season={season}
-            onClose={() => setSelected(null)}
-          />
+        {profile && (
+          <aside className={styles.aside}>
+            <DriverProfile
+              key={profile.driverId}
+              standing={profile}
+              season={season}
+              onClose={selected ? () => setSelected(null) : undefined}
+            />
+          </aside>
         )}
       </div>
-
-      {/* Mobile profile panel — full width below list */}
-      {selected && isMobile && (
-        <div style={{ marginTop: 20 }}>
-          <DriverProfile
-            standing={selected}
-            season={season}
-            onClose={() => setSelected(null)}
-          />
-        </div>
-      )}
     </div>
   )
 }

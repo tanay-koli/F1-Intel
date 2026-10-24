@@ -2,19 +2,13 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
-import { Loader, ErrorMsg, TeamDot, useIsMobile } from '../components/ui'
-
-/* ── helpers ───────────────────────────────────────────────────────────────── */
-
-const MEDAL       = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' }
-const MEDAL_LABEL = { 1: '1ST', 2: '2ND', 3: '3RD' }
-
-function hex2rgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
+import { Loader, ErrorMsg } from '../components/ui'
+import { DriverImage } from '../components/F1Image'
+import SectionHeading from '../components/SectionHeading'
+import Podium from '../components/Podium'
+import StandingsRow, { StandingsList } from '../components/StandingsRow'
+import { points, surname } from '../lib/format'
+import styles from './ranked.module.css'
 
 /* ── Round Selector ────────────────────────────────────────────────────────── */
 
@@ -24,18 +18,18 @@ function RoundSelector({ schedule, selectedRound, onChange }) {
   const completed = schedule.races.filter(r => r.date <= today)
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)' }}>ROUND</span>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+      Round
       <select
         value={selectedRound}
         onChange={e => onChange(e.target.value)}
         style={{
-          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: 6, color: 'var(--text)', padding: '4px 28px 4px 10px',
-          fontFamily: 'var(--mono)', fontSize: 13, cursor: 'pointer',
-          outline: 'none', appearance: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b7a'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center',
+          background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
+          borderRadius: 8, color: 'var(--text)', minHeight: 36, padding: '0 32px 0 12px',
+          fontFamily: 'var(--body)', fontSize: 14, cursor: 'pointer',
+          appearance: 'none', maxWidth: '100%',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
         }}
       >
         <option value="last">Latest</option>
@@ -43,195 +37,91 @@ function RoundSelector({ schedule, selectedRound, onChange }) {
           <option key={r.round} value={r.round}>R{r.round} – {r.raceName}</option>
         ))}
       </select>
+    </label>
+  )
+}
+
+/* ── Rows and summary ──────────────────────────────────────────────────────── */
+
+const isClassified = r => /^\d+$/.test(r.positionText ?? String(r.position))
+const bestSession  = r => ['q3', 'q2', 'q1'].find(q => r[q] && r[q] !== '—')
+
+/** Props shared by the podium cards and the rows. */
+function resultProps(r, isQual) {
+  const team = r.constructorName
+  if (isQual) {
+    const best    = bestSession(r)
+    const earlier = ['q1', 'q2']
+      .filter(q => q !== best && r[q] && r[q] !== '—')
+      .map(q => `${q.toUpperCase()} ${r[q]}`)
+    return {
+      subline: [team, ...earlier].join(' · '),
+      figure:  best ? r[best] : '—',
+      detail:  best ? `Best in ${best.toUpperCase()}` : 'No time',
+    }
+  }
+  const detail = [
+    r.points > 0 && `+${points(r.points)} pts`,
+    r.fastestLapRank === 1 && 'Fastest lap',
+  ].filter(Boolean).join(' · ')
+  return {
+    position: isClassified(r) ? r.position : r.positionText,
+    subline:  `${team} · ${r.grid > 0 ? `started P${r.grid}` : 'pit lane start'}`,
+    figure:   r.time || r.status,
+    detail:   detail || '—',
+  }
+}
+
+function Fact({ label, value, sub }) {
+  return (
+    <div className={styles.fact}>
+      <dt className={styles.factLabel}>{label}</dt>
+      <dd className={styles.factValue}>{value}</dd>
+      {sub && <dd className={styles.factSub}>{sub}</dd>}
     </div>
   )
 }
 
-/* ── Podium card ───────────────────────────────────────────────────────────── */
+function Summary({ results, isQual, isSprint }) {
+  const at = pos => results.find(r => r.position === pos)
+  const first = at(1)
+  const facts = []
 
-function PodiumCard({ result, rank, isQual }) {
-  const isFirst = rank === 1
-  const color   = result.teamColor || '#e10600'
-  const medal   = MEDAL[rank]
+  if (isQual) {
+    const second = at(2)
+    if (first)  facts.push(['Pole', surname(first), `${first[bestSession(first)] ?? '—'} · ${first.constructorName}`])
+    if (second) facts.push(['Alongside on the front row', surname(second), `${second[bestSession(second)] ?? '—'} · ${second.constructorName}`])
+    const inQ3 = results.filter(r => r.q3 && r.q3 !== '—').length
+    facts.push(['Set a time in Q3', `${inQ3} of ${results.length}`])
+  } else {
+    if (first) facts.push(['Winner', surname(first), `${first.time || first.status} · ${first.constructorName}`])
+    const fastest = results.find(r => r.fastestLapRank === 1)
+    if (fastest) facts.push(['Fastest lap', surname(fastest), fastest.fastestLapTime])
+    const gainer = results
+      .filter(r => isClassified(r) && r.grid > 0)
+      .reduce((best, r) => (!best || r.grid - r.position > best.grid - best.position ? r : best), null)
+    if (gainer && gainer.grid > gainer.position) {
+      facts.push(['Most places gained', surname(gainer), `+${gainer.grid - gainer.position}, from P${gainer.grid} to P${gainer.position}`])
+    }
+    const classified = results.filter(isClassified).length
+    facts.push(['Classified', `${classified} of ${results.length}`, `${results.length - classified} not classified`])
+  }
 
   return (
-    <div style={{
-      position: 'relative',
-      borderRadius: 16,
-      overflow: 'hidden',
-      border: `1px solid ${color}40`,
-      boxShadow: `0 4px 24px ${color}20`,
-      transform: isFirst ? 'translateY(-16px)' : 'translateY(0)',
-      transition: 'transform 0.22s ease',
-      animation: `fadeUp 0.4s ease ${rank * 80}ms both`,
-      background: `linear-gradient(160deg, ${hex2rgba(color, 0.18)} 0%, #111114 55%)`,
-      minHeight: isFirst ? 260 : 220,
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'flex-end',
-    }}>
-      {/* Diagonal accent */}
-      <div style={{
-        position: 'absolute', top: 0, right: 0, width: '60%', height: '100%',
-        background: `linear-gradient(135deg, transparent 30%, ${hex2rgba(color, 0.10)} 100%)`,
-        pointerEvents: 'none',
-      }} />
-
-      {/* Giant position watermark */}
-      <div style={{
-        position: 'absolute', top: -8, left: 8,
-        fontFamily: 'var(--display)', fontSize: isFirst ? 140 : 120,
-        lineHeight: 1, color: hex2rgba(color, 0.18),
-        letterSpacing: '-0.02em', userSelect: 'none', pointerEvents: 'none',
-      }}>
-        {rank}
-      </div>
-
-      {/* Medal ribbon */}
-      <div style={{
-        position: 'absolute', top: 12, right: 12,
-        background: medal, borderRadius: 6,
-        padding: '3px 10px',
-        fontFamily: 'var(--display)', fontSize: 11, letterSpacing: '0.08em', color: '#000',
-      }}>
-        {MEDAL_LABEL[rank]}
-      </div>
-
-      {/* Points or time badge */}
-      <div style={{
-        position: 'absolute', bottom: 52, right: 12,
-        background: hex2rgba(color, 0.25),
-        border: `1px solid ${color}60`,
-        borderRadius: 8, padding: '4px 10px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-      }}>
-        {isQual ? (
-          <>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, lineHeight: 1.3, color: '#fff' }}>
-              {result.q3 !== '—' ? result.q3 : result.q2 !== '—' ? result.q2 : result.q1}
-            </span>
-            <span style={{ fontSize: 9, color: hex2rgba('#ffffff', 0.6), letterSpacing: '0.1em' }}>
-              {result.q3 !== '—' ? 'Q3' : result.q2 !== '—' ? 'Q2' : 'Q1'}
-            </span>
-          </>
-        ) : (
-          <>
-            <span style={{ fontFamily: 'var(--display)', fontSize: 22, lineHeight: 1, color: '#fff' }}>
-              {result.points}
-            </span>
-            <span style={{ fontSize: 9, color: hex2rgba('#ffffff', 0.6), letterSpacing: '0.1em' }}>PTS</span>
-          </>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div style={{
-        padding: '12px 14px 14px',
-        background: `linear-gradient(transparent, ${hex2rgba(color, 0.30)} 100%)`,
-        borderTop: `1px solid ${color}30`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontSize: 14 }}>{result.flag}</span>
-          <span style={{ fontFamily: 'var(--display)', fontSize: isFirst ? 20 : 17, letterSpacing: '0.06em', color: '#fff' }}>
-            {result.fullName?.split(' ').pop().toUpperCase()}
-          </span>
-          {result.fastestLapRank === 1 && !isQual && (
-            <span style={{ fontSize: 10, background: '#a855f720', color: '#a855f7', border: '1px solid #a855f740', borderRadius: 4, padding: '1px 5px' }}>⚡FL</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <TeamDot color={color} size={7} />
-          <span style={{ fontSize: 11, color: hex2rgba('#ffffff', 0.55) }}>{result.constructorName}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── Result row (P4+) ──────────────────────────────────────────────────────── */
-
-function ResultRow({ result, isQual }) {
-  const color = result.teamColor || '#e10600'
-  const dnf   = !isQual && !['1','2','3','4','5','6','7','8','9','10',
-                              '11','12','13','14','15','16','17','18','19','20'].includes(result.positionText)
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isQual
-        ? '40px 16px 1fr 90px 90px 90px'
-        : '40px 16px 1fr auto 80px 80px',
-      alignItems: 'center', gap: 12,
-      padding: '10px 16px',
-      borderRadius: 10,
-      background: 'var(--bg-card)',
-      border: `1px solid var(--border)`,
-      borderLeft: `3px solid ${color}`,
-      opacity: dnf ? 0.55 : 1,
-      animation: `fadeUp 0.3s ease ${(result.position || 4) * 20}ms both`,
-    }}>
-      {/* Position */}
-      <span style={{
-        fontFamily: 'var(--display)', fontSize: 20,
-        color: dnf ? 'var(--text-dim)' : 'var(--text-muted)',
-        textAlign: 'center', lineHeight: 1,
-      }}>
-        {dnf ? result.positionText : result.position}
-      </span>
-
-      {/* Flag */}
-      <span style={{ fontSize: 13 }}>{result.flag}</span>
-
-      {/* Driver + team */}
-      <div>
-        <div style={{ fontFamily: 'var(--display)', fontSize: 14, letterSpacing: '0.04em' }}>
-          {result.fullName?.toUpperCase()}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-          <TeamDot color={color} size={5} />
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{result.constructorName}</span>
-        </div>
-      </div>
-
-      {/* Q times or grid→pos */}
-      {isQual ? (
-        ['q1', 'q2', 'q3'].map(q => (
-          <div key={q} style={{
-            fontFamily: 'var(--mono)', fontSize: 11, textAlign: 'center',
-            color: result[q] === '—' ? 'var(--text-dim)' : 'var(--text)',
-          }}>
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 2 }}>{q.toUpperCase()}</div>
-            {result[q]}
-          </div>
-        ))
-      ) : (
-        <>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
-            {result.grid}→{result.positionText}
-          </span>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{
-              fontFamily: 'var(--display)', fontSize: 18,
-              color: result.points > 0 ? 'var(--text)' : 'var(--text-dim)',
-            }}>
-              {result.points > 0 ? `+${result.points}` : '—'}
-            </div>
-            {result.points > 0 && <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>PTS</div>}
-          </div>
-          <div style={{ textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)' }}>
-            {result.fastestLapRank === 1
-              ? <span style={{ color: '#a855f7' }}>⚡ {result.fastestLapTime}</span>
-              : result.time || result.status}
-          </div>
-        </>
-      )}
-    </div>
+    <section className={styles.panel} aria-labelledby="summary-heading">
+      <h2 id="summary-heading" className={styles.panelTitle}>
+        {isQual ? 'Qualifying summary' : isSprint ? 'Sprint summary' : 'Race summary'}
+      </h2>
+      <dl className={styles.facts}>
+        {facts.map(([label, value, sub]) => <Fact key={label} label={label} value={value} sub={sub} />)}
+      </dl>
+    </section>
   )
 }
 
 /* ── Page ──────────────────────────────────────────────────────────────────── */
 
 export default function ResultsPage({ season }) {
-  const isMobile       = useIsMobile()
   const [activeTab,     setActiveTab]     = useState('race')
   const [searchParams] = useSearchParams()
   const [selectedRound, setSelectedRound] = useState(searchParams.get('round') || 'last')
@@ -268,111 +158,90 @@ export default function ResultsPage({ season }) {
 
   const podium = results.filter(r => r.position <= 3).sort((a, b) => a.position - b.position)
   const rest   = results.filter(r => r.position > 3)
-  const podiumOrder = [podium[1], podium[0], podium[2]].filter(Boolean)
 
   const SUB_TABS = [
-    { id: 'race',       label: '🏁 Race' },
-    { id: 'sprint',     label: '🚀 Sprint' },
-    { id: 'qualifying', label: '⏱ Qualifying' },
+    { id: 'race',       label: 'Race' },
+    { id: 'sprint',     label: 'Sprint' },
+    { id: 'qualifying', label: 'Qualifying' },
   ]
+
+  const image = (r, size) => (
+    <DriverImage key={r.driverId} driverId={r.driverId} size={size} color={r.teamColor}
+      initials={r.code || r.fullName?.slice(0, 3).toUpperCase()} alt={r.fullName} />
+  )
 
   return (
     <div>
-      {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: isMobile ? 'flex-start' : 'center',
-        justifyContent: 'space-between', marginBottom: 24,
-        flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 12 : 0,
-      }}>
+      <header className={styles.header}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 4, height: 28, background: 'var(--red)', borderRadius: 2 }} />
-            <h2 style={{ fontFamily: 'var(--display)', fontSize: isMobile ? 24 : 32, letterSpacing: '0.06em' }}>
-              {isSprint ? 'SPRINT RESULTS' : isQual ? 'QUALIFYING' : 'RACE RESULTS'}
-            </h2>
-          </div>
-          {meta && (
-            <div style={{ paddingLeft: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 16 }}>{meta.flag}</span>
-              <span style={{ fontFamily: 'var(--display)', fontSize: 15, letterSpacing: '0.04em' }}>
-                {meta.raceName}
-              </span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)' }}>
-                · Round {meta.round} · {meta.date}
-              </span>
-            </div>
-          )}
+          <SectionHeading
+            as="h1"
+            title={isSprint ? 'Sprint results' : isQual ? 'Qualifying' : 'Race results'}
+            badge={meta?.round ? `Round ${meta.round}` : undefined}
+          />
+          {meta?.raceName && <p className={styles.sub}>{meta.raceName} · {meta.date}</p>}
         </div>
         <RoundSelector schedule={schedule} selectedRound={selectedRound} onChange={setSelectedRound} />
-      </div>
+      </header>
 
-      {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, overflowX: 'auto', scrollbarWidth: 'none' }}>
+      <div className={styles.tabs}>
         {SUB_TABS.map(t => (
           <button
             key={t.id}
+            type="button"
+            className={styles.tab}
+            aria-pressed={activeTab === t.id}
             onClick={() => setActiveTab(t.id)}
-            style={{
-              padding: '6px 16px', borderRadius: 7, whiteSpace: 'nowrap',
-              background: activeTab === t.id ? 'var(--bg-elevated)' : 'transparent',
-              border: `1px solid ${activeTab === t.id ? 'var(--border)' : 'transparent'}`,
-              color: activeTab === t.id ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: 13, fontFamily: 'var(--body)',
-              borderBottom: activeTab === t.id ? '2px solid var(--red)' : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.12s', flexShrink: 0,
-            }}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* Content */}
       {isLoading && <Loader label={`Loading ${activeTab} data...`} />}
       {error     && <ErrorMsg error={error} />}
 
       {!isLoading && !error && results.length === 0 && (
-        <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>
+        <p className={styles.message}>
           {isSprint
-            ? 'No sprint results for this round — may not be a sprint weekend.'
+            ? 'No sprint results for this round. It may not be a sprint weekend.'
             : `No ${activeTab} results available for this round.`}
-        </div>
+        </p>
       )}
 
       {!isLoading && !error && results.length > 0 && (
-        <>
-          {/* Podium */}
-          {podium.length > 0 && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: 12, marginBottom: 20,
-              alignItems: isMobile ? 'stretch' : 'flex-end',
-            }}>
-              {(isMobile ? podium : podiumOrder).map(r => (
-                <PodiumCard key={r.driverId} result={r} rank={r.position} isQual={isQual} />
+        <div className={styles.layout}>
+          <div>
+            {podium.length > 0 && (
+              <Podium
+                label="Top three"
+                items={podium.map(r => ({
+                  key: r.driverId,
+                  position: r.position,
+                  color: r.teamColor,
+                  image: image(r, 72),
+                  name: surname(r),
+                  ...resultProps(r, isQual),
+                }))}
+              />
+            )}
+            <StandingsList>
+              {rest.map(r => (
+                <StandingsRow
+                  key={r.driverId}
+                  position={r.position}
+                  color={r.teamColor}
+                  image={image(r, 40)}
+                  name={r.fullName}
+                  {...resultProps(r, isQual)}
+                />
               ))}
-            </div>
-          )}
-
-          {/* Divider */}
-          {rest.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 14px' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--text-dim)' }}>
-                {isQual ? 'REMAINING QUALIFIERS' : 'POINTS FINISHERS & DNF'}
-              </span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
-          )}
-
-          {/* P4+ rows */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            {rest.map(r => (
-              <ResultRow key={r.driverId} result={r} isQual={isQual} />
-            ))}
+            </StandingsList>
           </div>
-        </>
+          <aside className={styles.aside}>
+            <Summary results={results} isQual={isQual} isSprint={isSprint} />
+          </aside>
+        </div>
       )}
     </div>
   )

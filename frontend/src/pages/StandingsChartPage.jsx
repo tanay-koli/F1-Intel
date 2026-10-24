@@ -2,164 +2,141 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
-import { Loader, ErrorMsg, SectionHeader, TeamDot } from '../components/ui'
+import { Loader, ErrorMsg, SectionHeader } from '../components/ui'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid, Legend
+  ResponsiveContainer, CartesianGrid
 } from 'recharts'
+import { points } from '../lib/format'
+import styles from './ranked.module.css'
+
+const DASH = '6 4'
+
+const VIEWS = {
+  drivers: {
+    label: 'Drivers',
+    queryKey: 'driver-progression',
+    fetch: f1Api.getDriverProgression,
+    id: s => s.driverId,
+    name: s => s.code || s.fullName,
+    color: s => s.teamColor,
+  },
+  constructors: {
+    label: 'Constructors',
+    queryKey: 'constructor-progression',
+    fetch: f1Api.getConstructorProgression,
+    id: s => s.constructorId,
+    name: s => s.name,
+    color: s => s.color,
+  },
+}
+
+/** Round ticks from 0 to one step above the maximum, five at most. */
+function niceTicks(max) {
+  const step = [5, 10, 25, 50, 100, 200, 500, 1000].find(s => max / s <= 4) ?? 1000
+  const top = (Math.floor(max / step) + 1) * step
+  return Array.from({ length: top / step + 1 }, (_, i) => i * step)
+}
 
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   const sorted = [...payload].sort((a, b) => b.value - a.value)
   return (
     <div style={{
-      background: '#18181c', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px',
-      fontFamily: 'var(--mono)', fontSize: 11,
-      maxHeight: 240, overflowY: 'auto'
+      background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
+      borderRadius: 8, padding: '10px 14px', fontSize: 13,
+      maxHeight: 280, overflowY: 'auto'
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
       {sorted.map(p => (
-        <div key={p.dataKey} style={{
-          display: 'flex', justifyContent: 'space-between',
-          gap: 14, color: p.stroke, marginBottom: 3
-        }}>
+        <div key={p.dataKey} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
           <span>{p.dataKey}</span>
-          <span style={{ color: 'var(--text)', fontWeight: 600 }}>{p.value} pts</span>
+          <span style={{ fontWeight: 600 }}>{points(p.value)} pts</span>
         </div>
       ))}
     </div>
   )
 }
 
-function buildChartData(rounds, series) {
-  return rounds.map((r, i) => {
-    const row = { round: r }
-    series.forEach(s => {
-      row[s.code || s.name] = s.points[i]
-    })
-    return row
-  })
+/** The legend swatch is the line itself: team colour, dashed for a team's second entry. */
+function Swatch({ color, dashed }) {
+  return (
+    <svg width="18" height="4" aria-hidden="true">
+      <line x1="0" y1="2" x2="18" y2="2" stroke={color} strokeWidth="2" strokeDasharray={dashed ? '4 3' : undefined} />
+    </svg>
+  )
 }
 
-function DriverProgressionChart({ season }) {
+function ProgressionChart({ season, view }) {
+  const v = VIEWS[view]
   const { data, isLoading, error } = useQuery({
-    queryKey: ['driver-progression', season],
-    queryFn: () => f1Api.getDriverProgression(season)
+    queryKey: [v.queryKey, season],
+    queryFn: () => v.fetch(season)
   })
 
-  if (isLoading) return <Loader label="Building driver points chart..." />
+  if (isLoading) return <Loader label="Building the points chart..." />
   if (error) return <ErrorMsg error={error} />
   if (!data?.rounds?.length) return (
-    <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>
-      No race data available yet for {season}.
-    </div>
+    <p className={styles.message}>No race data available yet for {season}.</p>
   )
 
-  const chartData = buildChartData(data.rounds, data.series)
+  // Teammates share a colour, so the lower-placed one gets a dashed line.
+  const seen = new Set()
+  const series = data.series.map(s => {
+    const color = v.color(s)
+    const dashed = seen.has(color)
+    seen.add(color)
+    return { key: v.id(s), name: v.name(s), color, dashed, points: s.points }
+  })
+
+  const chartData = data.rounds.map((round, i) => {
+    const row = { round }
+    series.forEach(s => { row[s.name] = s.points[i] })
+    return row
+  })
+  const max = Math.max(0, ...series.flatMap(s => s.points.filter(p => p != null)))
+  const ticks = niceTicks(max)
 
   return (
     <div>
-      {/* Legend pills */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-        {data.series.map(s => (
-          <div key={s.driverId} style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            borderRadius: 20, padding: '3px 10px', fontSize: 11
-          }}>
-            <TeamDot color={s.teamColor} size={7} />
-            <span style={{ fontFamily: 'var(--mono)', color: s.teamColor }}>{s.code}</span>
-            <span style={{ color: 'var(--text-muted)' }}>{s.points[s.points.length - 1]}pts</span>
-          </div>
+      <ul style={{ listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginBottom: 16 }}>
+        {series.map(s => (
+          <li key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            <Swatch color={s.color} dashed={s.dashed} />
+            <span>{s.name}</span>
+            <span style={{ color: 'var(--text-muted)' }}>{points(s.points[s.points.length - 1] ?? 0)} pts</span>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <ResponsiveContainer width="100%" height={380}>
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
-          <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+          <CartesianGrid stroke="#2A2D34" vertical={false} />
           <XAxis
             dataKey="round"
-            tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
-            axisLine={{ stroke: 'var(--border)' }}
+            tick={{ fontSize: 12, fill: '#A3ABB6' }}
+            axisLine={{ stroke: '#343842' }}
             tickLine={false}
+            minTickGap={16}
           />
           <YAxis
-            tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
+            ticks={ticks}
+            domain={[0, ticks[ticks.length - 1]]}
+            tick={{ fontSize: 12, fill: '#A3ABB6' }}
             axisLine={false} tickLine={false}
           />
           <Tooltip content={<CustomTooltip />} />
-          {data.series.map(s => (
+          {series.map(s => (
             <Line
-              key={s.driverId}
-              type="monotone"
-              dataKey={s.code}
-              stroke={s.teamColor}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, fill: s.teamColor }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-function ConstructorProgressionChart({ season }) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['constructor-progression', season],
-    queryFn: () => f1Api.getConstructorProgression(season)
-  })
-
-  if (isLoading) return <Loader label="Building constructor points chart..." />
-  if (error) return <ErrorMsg error={error} />
-  if (!data?.rounds?.length) return (
-    <div style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)', fontSize: 12, padding: 20 }}>
-      No race data available yet for {season}.
-    </div>
-  )
-
-  const chartData = buildChartData(data.rounds, data.series)
-
-  return (
-    <div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-        {data.series.map(s => (
-          <div key={s.constructorId} style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            borderRadius: 20, padding: '3px 10px', fontSize: 11
-          }}>
-            <TeamDot color={s.color} size={7} />
-            <span style={{ fontFamily: 'var(--mono)', color: s.color, fontSize: 11 }}>{s.name}</span>
-            <span style={{ color: 'var(--text-muted)' }}>{s.points[s.points.length - 1]}pts</span>
-          </div>
-        ))}
-      </div>
-
-      <ResponsiveContainer width="100%" height={340}>
-        <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
-          <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
-          <XAxis
-            dataKey="round"
-            tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
-            axisLine={{ stroke: 'var(--border)' }} tickLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 10, fill: 'var(--text-muted)', fontFamily: 'var(--mono)' }}
-            axisLine={false} tickLine={false}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          {data.series.map(s => (
-            <Line
-              key={s.constructorId}
-              type="monotone"
+              key={s.key}
+              type="linear"
               dataKey={s.name}
               stroke={s.color}
-              strokeWidth={2.5}
+              strokeWidth={2}
+              strokeDasharray={s.dashed ? DASH : undefined}
               dot={false}
               activeDot={{ r: 4, fill: s.color }}
+              isAnimationActive={false}
             />
           ))}
         </LineChart>
@@ -173,52 +150,29 @@ export default function StandingsChartPage({ season }) {
   const [searchParams] = useSearchParams()
   const [view, setView] = useState(searchParams.get('view') === 'constructors' ? 'constructors' : 'drivers')
 
-  const tabs = [
-    { id: 'drivers',      label: '🏎 Driver Championship'      },
-    { id: 'constructors', label: '🏭 Constructor Championship'  },
-  ]
-
   return (
     <div>
-      <SectionHeader title="Championship" count={`${season} season arc`} />
+      <SectionHeader title="Points through the season" count={season} />
 
-      {/* Info banner */}
-      <div style={{
-        background: '#3671C620', border: '1px solid #3671C640',
-        borderRadius: 8, padding: '10px 14px', marginBottom: 20,
-        fontSize: 12, color: '#a0c4ff', fontFamily: 'var(--mono)'
-      }}>
-        ℹ Points progression fetches standings after each completed round.
-        Large seasons (20+ rounds) may take a few seconds.
-      </div>
-
-      {/* Tab toggle */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24 }}>
-        {tabs.map(t => (
+      <div className={styles.tabs}>
+        {Object.entries(VIEWS).map(([id, v]) => (
           <button
-            key={t.id}
-            onClick={() => setView(t.id)}
-            style={{
-              padding: '7px 16px', borderRadius: 7,
-              background: view === t.id ? 'var(--bg-elevated)' : 'transparent',
-              border: `1px solid ${view === t.id ? 'var(--border)' : 'transparent'}`,
-              color: view === t.id ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: 13, fontFamily: 'var(--body)',
-              borderBottom: view === t.id ? '2px solid var(--red)' : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.12s'
-            }}
+            key={id}
+            type="button"
+            className={styles.tab}
+            aria-pressed={view === id}
+            onClick={() => setView(id)}
           >
-            {t.label}
+            {v.label}
           </button>
         ))}
       </div>
 
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '20px 16px'
+        borderRadius: 8, padding: '20px 16px'
       }}>
-        {view === 'drivers'      && <DriverProgressionChart season={season} />}
-        {view === 'constructors' && <ConstructorProgressionChart season={season} />}
+        <ProgressionChart key={view} season={season} view={view} />
       </div>
     </div>
   )

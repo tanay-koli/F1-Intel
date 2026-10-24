@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { DriverImage, ConstructorImage } from '../../components/F1Image'
 import SectionHeading from '../../components/SectionHeading'
 import Skeleton from '../../components/Skeleton'
+import StandingsRow, { StandingsList } from '../../components/StandingsRow'
 import { withSeason } from '../../hooks/useSeason'
 import { surname, points } from '../../lib/format'
 import styles from './Home.module.css'
@@ -17,30 +18,22 @@ function ProgressionLink({ season, view }) {
   )
 }
 
-function Row({ position, color, image, name, subline, pts, leaderPts }) {
-  const gap = leaderPts - pts
+/** Gap to the leader, as the detail line under a row's points. */
+function GapToLeader({ position, pts, leaderPts }) {
+  if (position === 1) return 'Leader'
+  return <>−{points(leaderPts - pts)}<span className={styles.srOnly}> points behind the leader</span></>
+}
+
+function Row({ position, pts, leaderPts, ...rest }) {
   return (
-    <li className={styles.standRow} style={{ '--team': color }}>
-      <span className={styles.standPos}>
-        <span className={styles.srOnly}>Position </span>{position}
-      </span>
-      {image}
-      <div className={styles.standMain}>
-        <span className={styles.standName}>{name}</span>
-        <span className={styles.bar} aria-hidden="true">
-          <span className={styles.barFill} style={{ width: `${leaderPts ? (pts / leaderPts) * 100 : 0}%` }} />
-        </span>
-        <span className={styles.standSub}>{subline}</span>
-      </div>
-      <div className={styles.standPts}>
-        <span className={styles.ptsValue}>
-          {points(pts)}<span className={styles.ptsUnit}> pts</span>
-        </span>
-        <span className={styles.ptsGap}>
-          {position === 1 ? 'Leader' : <>−{points(gap)}<span className={styles.srOnly}> points behind the leader</span></>}
-        </span>
-      </div>
-    </li>
+    <StandingsRow
+      {...rest}
+      position={position}
+      share={leaderPts ? pts / leaderPts : 0}
+      figure={points(pts)}
+      unit="pts"
+      detail={<GapToLeader position={position} pts={pts} leaderPts={leaderPts} />}
+    />
   )
 }
 
@@ -68,7 +61,7 @@ export function DriversPanel({ season, drivers }) {
         <p className={styles.panelMessage}>Driver standings aren't available for {season} yet.</p>
       )}
       {rows.length > 0 && (
-        <ol className={styles.standList}>
+        <StandingsList>
           {rows.map(d => (
             <Row
               key={d.driverId}
@@ -90,7 +83,7 @@ export function DriversPanel({ season, drivers }) {
               leaderPts={leaderPts}
             />
           ))}
-        </ol>
+        </StandingsList>
       )}
       {rows.length > 0 && <ProgressionLink season={season} />}
     </section>
@@ -118,7 +111,7 @@ export function ConstructorsPanel({ season, constructors, drivers }) {
         <p className={styles.panelMessage}>Constructor standings aren't available for {season} yet.</p>
       )}
       {rows.length > 0 && (
-        <ol className={styles.standList}>
+        <StandingsList>
           {rows.map(c => (
             <Row
               key={c.constructorId}
@@ -141,7 +134,7 @@ export function ConstructorsPanel({ season, constructors, drivers }) {
               leaderPts={leaderPts}
             />
           ))}
-        </ol>
+        </StandingsList>
       )}
       {rows.length > 0 && <ProgressionLink season={season} view="constructors" />}
     </section>

@@ -1,0 +1,94 @@
+.podium {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+/* P2 left, P1 centre (one step higher), P3 right */
+.step[data-pos="1"] { order: 2; }
+.step[data-pos="2"] { order: 1; }
+.step[data-pos="3"] { order: 3; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--team);
+  border-radius: 8px;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+}
+.step[data-pos="1"] .card { padding-top: 32px; }
+
+button.card { transition: border-color 0.15s ease, background 0.15s ease; }
+button.card:hover { border-color: var(--border-strong); border-top-color: var(--team); }
+.card[data-selected] { background: var(--pill-active); border-color: var(--border-strong); border-top-color: var(--team); }
+
+.pos {
+  font-family: var(--display);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.image { display: flex; }
+
+.who { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: 100%; }
+
+.name {
+  font-family: var(--display);
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sub {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figures { display: flex; flex-direction: column; align-items: center; }
+
+.value {
+  font-family: var(--display);
+  font-size: 28px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.unit { font-family: var(--body); font-size: 12px; color: var(--text-muted); }
+
+.detail { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+
+/* Phone: three rows in finishing order */
+@media (max-width: 640px) {
+  .podium { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .step[data-pos] { order: 0; }
+  .card,
+  .step[data-pos="1"] .card {
+    display: grid;
+    grid-template-columns: 28px auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    text-align: left;
+  }
+  .image > * { max-width: 48px; max-height: 48px; }
+  .figures { align-items: flex-end; }
+  .value { font-size: 24px; }
+}

@@ -18,7 +18,6 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  align-items: start;
 }
 
 .stack { display: flex; flex-direction: column; gap: 10px; }
@@ -220,7 +219,7 @@
 .podiumWinner .podiumName { font-size: 22px; }
 
 .podiumGap {
-  font-family: var(--mono);
+  font-family: var(--body);
   font-size: 11px;
   color: var(--text-muted);
 }
@@ -277,79 +276,6 @@
   transition: background 0.15s ease;
 }
 .button:hover { background: var(--pill-active); }
-
-/* ── Standings rows ─────────────────────────────────────────────────────── */
-
-.standList { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-
-.standRow {
-  display: grid;
-  grid-template-columns: 24px 40px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--team);
-  border-radius: 8px;
-}
-
-.standPos {
-  font-family: var(--display);
-  font-size: 22px;
-  line-height: 1;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.standMain { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-
-.standName {
-  font-family: var(--display);
-  font-size: 18px;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bar {
-  display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border);
-  overflow: hidden;
-}
-.barFill { display: block; height: 100%; background: var(--team); border-radius: 2px; }
-
-.standSub {
-  font-size: 12px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.standPts { display: flex; flex-direction: column; align-items: flex-end; }
-
-.ptsValue {
-  font-family: var(--display);
-  font-size: 24px;
-  line-height: 1;
-}
-
-.ptsUnit {
-  font-family: var(--body);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-.ptsGap {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-muted);
-}
 
 .panelFooterLink {
   display: flex;
