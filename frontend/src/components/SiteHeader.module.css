@@ -2,16 +2,15 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: var(--frame);
+  border-bottom: 3px solid var(--red);
   padding: 0 24px;
 }
 
 .inner {
   max-width: 1200px;
   margin: 0 auto;
-  min-height: 64px;
+  min-height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -20,29 +19,21 @@
 
 .brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 6px;
   flex-shrink: 0;
   min-height: 44px;
-  border-radius: 6px;
-}
-
-.badge {
-  background: var(--red);
-  border-radius: 6px;
-  padding: 4px 10px;
+  align-self: center;
+  padding-top: 6px;
+  border-radius: 4px;
   font-family: var(--display);
-  font-size: 18px;
-  letter-spacing: 0.1em;
+  font-size: 34px;
   line-height: 1;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
-
-.wordmark {
-  font-family: var(--display);
-  font-size: 18px;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-}
+.wordPit { color: #fff; }
+.wordWall { color: var(--frame-text); }
 
 .nav {
   display: flex;
@@ -57,28 +48,27 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 18px;
   border-radius: 999px;
   font-size: 14px;
-  font-weight: 500;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--frame-text);
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.pill:hover { color: var(--text); background: var(--bg-elevated); }
+.pill:hover { color: #fff; background: rgb(0 0 0 / 0.28); }
 
 .active,
 .active:hover {
-  color: var(--text);
-  background: var(--pill-active);
-  font-weight: 600;
+  color: #fff;
+  background: var(--bg);
 }
 
 .divider {
   width: 1px;
   height: 20px;
   margin: 0 6px;
-  background: var(--border-strong);
+  background: rgb(255 255 255 / 0.22);
 }
 
 .season {
@@ -90,31 +80,36 @@
 
 .seasonLabel {
   font-size: 13px;
-  color: var(--text-muted);
+  font-weight: 600;
+  color: var(--frame-text);
 }
 
 .select {
   min-height: 44px;
-  padding: 0 32px 0 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border-strong);
-  background-color: var(--bg-elevated);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E");
+  padding: 0 34px 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.18);
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A9A9B0'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
+  background-position: right 14px center;
   appearance: none;
   color: var(--text);
   font: inherit;
-  font-size: 15px;
+  font-family: var(--display);
+  font-size: 20px;
+  letter-spacing: 0.04em;
   cursor: pointer;
 }
+.select:hover { border-color: rgb(255 255 255 / 0.4); }
 
-/* Mobile: brand + season on the first row, nav wraps onto its own rows below */
+/* Mobile: brand + season on the first row, nav wraps onto its own row below */
 @media (max-width: 900px) {
-  .header { padding: 8px 16px; }
-  .inner { flex-wrap: wrap; row-gap: 4px; }
-  .nav { order: 3; flex-basis: 100%; justify-content: flex-start; gap: 2px; }
+  .header { padding: 6px 16px 4px; }
+  .inner { flex-wrap: wrap; row-gap: 2px; }
+  .nav { order: 3; flex-basis: 100%; justify-content: flex-start; gap: 2px; margin: 0 -8px; }
   .pill { padding: 0 12px; }
+  .brand { font-size: 30px; }
 }
 
 @media (max-width: 420px) {

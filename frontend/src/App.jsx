@@ -33,7 +33,11 @@ export default function App() {
       </main>
 
       <footer className={styles.footer}>
-        Data: Jolpica F1 · OpenF1 · FastF1
+        <div className={styles.footerInner}>
+          <span className={styles.footerName}>Pit Wall</span>
+          <p>Data: Jolpica F1 · OpenF1 · FastF1</p>
+          <p>Unofficial fan project. Not affiliated with Formula 1 or any team. Logos are trademarks of their owners.</p>
+        </div>
       </footer>
     </div>
   )

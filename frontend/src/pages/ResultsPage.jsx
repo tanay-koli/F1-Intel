@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg } from '../components/ui'
-import { DriverImage } from '../components/F1Image'
+import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
@@ -166,8 +166,7 @@ export default function ResultsPage({ season }) {
   ]
 
   const image = (r, size) => (
-    <DriverImage key={r.driverId} driverId={r.driverId} size={size} color={r.teamColor}
-      initials={r.code || r.fullName?.slice(0, 3).toUpperCase()} alt={r.fullName} />
+    <DriverMark driver={r} size={size} />
   )
 
   return (

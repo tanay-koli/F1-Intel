@@ -1,0 +1,16 @@
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--size);
+  height: var(--size);
+  border-radius: calc(var(--size) * 0.18);
+  background: var(--team);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: calc(var(--size) * 0.42);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  user-select: none;
+}

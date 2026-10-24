@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../../api'
-import { DriverImage } from '../../components/F1Image'
+import DriverMark from '../../components/DriverMark'
 import SectionHeading from '../../components/SectionHeading'
 import Skeleton from '../../components/Skeleton'
 import { withSeason } from '../../hooks/useSeason'
@@ -69,14 +69,7 @@ export default function LastRacePanel({ season, results }) {
               if (!r) return null
               return (
                 <li key={pos} className={`${styles.podiumCol} ${pos === 1 ? styles.podiumWinner : ''}`}>
-                  <DriverImage
-                    key={r.driverId}
-                    driverId={r.driverId}
-                    size={pos === 1 ? 72 : 52}
-                    color={r.teamColor}
-                    initials={r.code}
-                    alt={r.fullName}
-                  />
+                  <DriverMark driver={r} size={pos === 1 ? 64 : 48} />
                   <span className={styles.podiumName}>{surname(r)}</span>
                   <span className={styles.podiumGap}>{gapToWinner(r)}</span>
                   <span

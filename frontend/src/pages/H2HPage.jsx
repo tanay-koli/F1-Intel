@@ -3,7 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, useIsMobile } from '../components/ui'
-import { DriverImage, ConstructorImage } from '../components/F1Image'
+import { ConstructorImage } from '../components/F1Image'
+import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import { shortGpName, surname } from '../lib/format'
 
@@ -229,8 +230,7 @@ function DriverHero({ driver, color, side, isMobile, isTeams }) {
         <ConstructorImage constructorId={driver.constructorId} width={isMobile ? 40 : 72} height={isMobile ? 40 : 48}
           color={driver.teamColor} name={driver.fullName} alt={`${driver.fullName} logo`} />
       ) : (
-        <DriverImage driverId={driver.driverId} size={isMobile ? 40 : 64} color={driver.teamColor}
-          initials={driver.code} alt={driver.fullName} />
+        <DriverMark driver={driver} size={isMobile ? 40 : 64} />
       )}
       <div style={{ minWidth: 0, textAlign: right ? 'right' : 'left' }}>
         <div style={{

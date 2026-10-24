@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, StatCard, useIsMobile } from '../components/ui'
-import { DriverImage } from '../components/F1Image'
+import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
@@ -28,13 +28,7 @@ function DriverProfile({ standing, season, onClose }) {
       {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
 
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
-        <DriverImage
-          driverId={standing.driverId}
-          size={80}
-          color={color}
-          initials={standing.code || standing.fullName?.slice(0, 3).toUpperCase()}
-          alt={standing.fullName}
-        />
+        <DriverMark driver={standing} color={color} size={72} />
         <div style={{ minWidth: 0 }}>
           <h2 style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 28, lineHeight: 1.05, letterSpacing: '0.02em' }}>
             {standing.fullName}
@@ -93,14 +87,7 @@ export default function DriversPage({ season }) {
     position: s.position,
     color: s.teamColor,
     image: (
-      <DriverImage
-        key={s.driverId}
-        driverId={s.driverId}
-        size={s.position <= 3 ? 72 : 40}
-        color={s.teamColor}
-        initials={s.code || s.fullName?.slice(0, 3).toUpperCase()}
-        alt={s.fullName}
-      />
+      <DriverMark driver={s} size={s.position <= 3 ? 64 : 40} />
     ),
     subline: s.constructorName,
     figure: points(s.points),

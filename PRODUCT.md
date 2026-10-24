@@ -39,7 +39,7 @@ What sets it apart from the official F1 app and timing sites:
 - A cold telemetry load can take 20 s to over a minute. Precomputed races load in milliseconds.
 - Recent races may not be published by OpenF1 yet; the UI treats that as "not available yet".
 - Team colours always come from the API, never hardcoded in the frontend.
-- Driver and constructor images are optional local files keyed by Jolpica ID, with a placeholder fallback.
+- No driver photos: drivers appear as their 3-letter code on the team colour. Constructor logos are optional local files keyed by Jolpica ID, with a placeholder fallback.
 - Terminology follows F1 conventions: round, GP, sprint, constructor, grid, stint, undercut, safety car / VSC / red flag.
 
 ## Brand Commitments

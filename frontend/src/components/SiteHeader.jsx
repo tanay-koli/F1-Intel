@@ -26,8 +26,8 @@ export default function SiteHeader({ season, onSeasonChange }) {
     <header className={styles.header}>
       <div className={styles.inner}>
         <Link to={withSeason('/', season)} className={styles.brand} aria-label="Pit Wall home">
-          <span className={styles.badge}>Pit</span>
-          <span className={styles.wordmark}>Wall</span>
+          <span className={styles.wordPit}>Pit</span>
+          <span className={styles.wordWall}>Wall</span>
         </Link>
 
         <nav className={styles.nav} aria-label="Main">
