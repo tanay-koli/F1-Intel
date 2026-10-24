@@ -1,0 +1,33 @@
+/* Shared chart chrome: the dark card a chart sits in, its tooltip and legend */
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 16px;
+  min-width: 0;
+}
+
+.tooltip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.tooltipLabel { color: var(--text-muted); margin-bottom: 6px; }
+.tooltipRow { display: flex; justify-content: space-between; gap: 16px; }
+.tooltipValue { font-weight: 700; }
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-bottom: 16px;
+}
+.legendItem { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.legendName { font-family: var(--display); font-size: 17px; line-height: 1; letter-spacing: 0.02em; }
+.legendValue { color: var(--text-muted); }

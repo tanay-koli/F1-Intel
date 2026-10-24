@@ -1,20 +1,11 @@
 .row {
   display: flex;
-  font-size: 30px;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 16px;
 }
 
-.bar {
-  width: 4px;
-  height: 0.9em;
-  align-self: center;
-  background: var(--red);
-  border-radius: 1px;
-  flex-shrink: 0;
-}
 
 .title {
   font-family: var(--display);
@@ -23,6 +14,17 @@
   line-height: 1;
   letter-spacing: 0.03em;
   text-transform: uppercase;
+}
+/* Red bar, inline so it stays with the first line when the title wraps */
+.title::before {
+  content: '';
+  display: inline-block;
+  width: 0.13em;
+  height: 0.8em;
+  margin-right: 0.3em;
+  vertical-align: -0.04em;
+  background: var(--red);
+  border-radius: 1px;
 }
 .page { font-size: clamp(40px, 6vw, 64px); letter-spacing: 0.01em; }
 
@@ -50,4 +52,3 @@
   text-underline-offset: 4px;
 }
 .link:hover { color: var(--text); text-decoration-color: currentColor; }
-.row:has(h1) { font-size: clamp(40px, 6vw, 64px); }

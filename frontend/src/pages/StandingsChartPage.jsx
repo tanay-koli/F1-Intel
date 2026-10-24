@@ -8,7 +8,9 @@ import {
   ResponsiveContainer, CartesianGrid
 } from 'recharts'
 import { points } from '../lib/format'
+import { GRID, AXIS, tick } from '../lib/chartTheme'
 import styles from './ranked.module.css'
+import chart from '../components/chart.module.css'
 
 const DASH = '6 4'
 
@@ -42,16 +44,12 @@ function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   const sorted = [...payload].sort((a, b) => b.value - a.value)
   return (
-    <div style={{
-      background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
-      borderRadius: 8, padding: '10px 14px', fontSize: 13,
-      maxHeight: 280, overflowY: 'auto'
-    }}>
-      <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</div>
+    <div className={chart.tooltip}>
+      <div className={chart.tooltipLabel}>{label}</div>
       {sorted.map(p => (
-        <div key={p.dataKey} style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+        <div key={p.dataKey} className={chart.tooltipRow}>
           <span>{p.dataKey}</span>
-          <span style={{ fontWeight: 600 }}>{points(p.value)} pts</span>
+          <span className={chart.tooltipValue}>{points(p.value)} pts</span>
         </div>
       ))}
     </div>
@@ -99,30 +97,30 @@ function ProgressionChart({ season, view }) {
 
   return (
     <div>
-      <ul style={{ listStyle: 'none', display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginBottom: 16 }}>
+      <ul className={chart.legend}>
         {series.map(s => (
-          <li key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+          <li key={s.key} className={chart.legendItem}>
             <Swatch color={s.color} dashed={s.dashed} />
-            <span>{s.name}</span>
-            <span style={{ color: 'var(--text-muted)' }}>{points(s.points[s.points.length - 1] ?? 0)} pts</span>
+            <span className={chart.legendName}>{s.name}</span>
+            <span className={chart.legendValue}>{points(s.points[s.points.length - 1] ?? 0)} pts</span>
           </li>
         ))}
       </ul>
 
       <ResponsiveContainer width="100%" height={380}>
         <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -10 }}>
-          <CartesianGrid stroke="#2A2D34" vertical={false} />
+          <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis
             dataKey="round"
-            tick={{ fontSize: 12, fill: '#A3ABB6' }}
-            axisLine={{ stroke: '#343842' }}
+            tick={tick}
+            axisLine={{ stroke: AXIS }}
             tickLine={false}
             minTickGap={16}
           />
           <YAxis
             ticks={ticks}
             domain={[0, ticks[ticks.length - 1]]}
-            tick={{ fontSize: 12, fill: '#A3ABB6' }}
+            tick={tick}
             axisLine={false} tickLine={false}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -168,10 +166,7 @@ export default function StandingsChartPage({ season }) {
         ))}
       </div>
 
-      <div style={{
-        background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 8, padding: '20px 16px'
-      }}>
+      <div className={chart.card}>
         <ProgressionChart key={view} season={season} view={view} />
       </div>
     </div>

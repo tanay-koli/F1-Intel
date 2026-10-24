@@ -6,7 +6,9 @@ import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
+import { ExternalLink } from 'lucide-react'
 import { points, surname } from '../lib/format'
+import { inkOn } from '../lib/color'
 import styles from './ranked.module.css'
 
 function gapToLeader(standing, leaderPts) {
@@ -21,25 +23,27 @@ function DriverProfile({ standing, season, onClose }) {
     queryFn: () => f1Api.getDriver(standing.driverId, season)
   })
 
-  const color = standing.teamColor || '#e10600'
+  const color = standing.teamColor
 
   return (
-    <section className={styles.panel} style={{ '--team': color }} aria-label={`${standing.fullName} profile`}>
-      {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
-
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
-        <DriverMark driver={standing} color={color} size={72} />
-        <div style={{ minWidth: 0 }}>
-          <h2 style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 28, lineHeight: 1.05, letterSpacing: '0.02em' }}>
-            {standing.fullName}
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+    <section
+      className={styles.panel}
+      style={color ? { '--team': color, '--ink': inkOn(color) } : undefined}
+      aria-label={`${standing.fullName} profile`}
+    >
+      <div className={styles.panelHead}>
+        {standing.number && <span className={styles.panelNumber} aria-hidden="true">{standing.number}</span>}
+        <div className={styles.panelText}>
+          <h2 className={styles.panelName}>{standing.fullName}</h2>
+          <p className={styles.panelMeta}>
             {standing.constructorName}{standing.number ? ` · #${standing.number}` : ''}
           </p>
         </div>
+        {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+      <div className={styles.panelBody}>
+      <div className={styles.stats}>
         <StatCard label="Points" value={points(standing.points)} />
         <StatCard label="Wins" value={standing.wins} />
         <StatCard label="Position" value={`P${standing.position}`} />
@@ -49,13 +53,11 @@ function DriverProfile({ standing, season, onClose }) {
       </div>
 
       {data?.driver?.url && (
-        <a href={data.driver.url} target="_blank" rel="noopener noreferrer" style={{
-          fontSize: 13, color: 'var(--text-muted)',
-          textDecoration: 'underline', textUnderlineOffset: 4,
-        }}>
-          Wikipedia ↗
+        <a href={data.driver.url} target="_blank" rel="noopener noreferrer" className={styles.extLink}>
+          Wikipedia <ExternalLink size={14} aria-hidden="true" />
         </a>
       )}
+      </div>
     </section>
   )
 }
@@ -86,9 +88,6 @@ export default function DriversPage({ season }) {
   const props = (s) => ({
     position: s.position,
     color: s.teamColor,
-    image: (
-      <DriverMark driver={s} size={s.position <= 3 ? 64 : 40} />
-    ),
     subline: s.constructorName,
     figure: points(s.points),
     unit: 'pts',
@@ -114,16 +113,19 @@ export default function DriversPage({ season }) {
               items={podium.map(s => ({ key: s.driverId, name: surname(s), ...props(s) }))}
             />
           )}
+          <div className={styles.table}>
           <StandingsList>
             {rest.map(s => (
               <StandingsRow
                 key={s.driverId}
+                image={<DriverMark driver={s} />}
                 name={s.fullName}
                 share={leaderPts ? s.points / leaderPts : 0}
                 {...props(s)}
               />
             ))}
           </StandingsList>
+          </div>
         </div>
 
         {profile && (

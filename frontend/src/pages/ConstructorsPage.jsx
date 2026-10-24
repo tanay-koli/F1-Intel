@@ -7,8 +7,12 @@ import { ConstructorImage } from '../components/F1Image'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
+import { ExternalLink } from 'lucide-react'
 import { points, surname } from '../lib/format'
+import { inkOn } from '../lib/color'
 import styles from './ranked.module.css'
+import chart from '../components/chart.module.css'
+import { MUTED_SERIES, TICK } from '../lib/chartTheme'
 
 function gapToLeader(standing, leaderPts) {
   return standing.position === 1 ? 'Leader' : `−${points(leaderPts - standing.points)} pts`
@@ -20,10 +24,7 @@ function CustomTooltip({ active, payload }) {
   if (!active || !payload?.length) return null
   const d = payload[0]
   return (
-    <div style={{
-      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-      borderRadius: 6, padding: '8px 12px', fontSize: 13
-    }}>
+    <div className={chart.tooltip}>
       {d.payload.name} · {points(d.value)} pts
     </div>
   )
@@ -35,52 +36,52 @@ function ConstructorProfile({ standing, season, allStandings, onClose }) {
     queryFn: () => f1Api.getConstructor(standing.constructorId, season)
   })
 
-  const color = standing.color || '#e10600'
+  const color = standing.color
 
   return (
-    <section className={styles.panel} style={{ '--team': color }} aria-label={`${standing.name} profile`}>
-      {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
-
-      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 20 }}>
+    <section
+      className={styles.panel}
+      style={color ? { '--team': color, '--ink': inkOn(color) } : undefined}
+      aria-label={`${standing.name} profile`}
+    >
+      <div className={styles.panelHead}>
         <ConstructorImage
           constructorId={standing.constructorId}
-          width={96}
-          height={48}
+          width={56}
+          height={56}
           color={color}
           name={standing.name}
           alt={`${standing.name} logo`}
         />
-        <div style={{ minWidth: 0 }}>
-          <h2 style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 28, lineHeight: 1.05, letterSpacing: '0.02em' }}>
-            {standing.name}
-          </h2>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-            P{standing.position} · {standing.nationality}
-          </p>
+        <div className={styles.panelText}>
+          <h2 className={styles.panelName}>{standing.name}</h2>
+          <p className={styles.panelMeta}>P{standing.position} · {standing.nationality}</p>
         </div>
+        {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
+      <div className={styles.panelBody}>
+      <div className={styles.stats}>
         <StatCard label="Points" value={points(standing.points)} />
         <StatCard label="Wins"   value={standing.wins} />
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <h3 style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-muted)', marginBottom: 8 }}>
+        <h3 className={styles.chartLabel}>
           Points against the other teams
         </h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={allStandings} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: TICK }}
               tickFormatter={n => n.split(' ').map(w => w[0]).join('')}
               axisLine={false} tickLine={false} interval={0} />
-            <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: TICK }} axisLine={false} tickLine={false} />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff08' }} />
             <Bar dataKey="points">
               {allStandings.map(entry => (
                 <Cell
                   key={entry.constructorId}
-                  fill={entry.constructorId === standing.constructorId ? entry.color : '#343842'}
+                  fill={entry.constructorId === standing.constructorId ? entry.color : MUTED_SERIES}
                 />
               ))}
             </Bar>
@@ -89,13 +90,11 @@ function ConstructorProfile({ standing, season, allStandings, onClose }) {
       </div>
 
       {data?.constructor?.url && (
-        <a href={data.constructor.url} target="_blank" rel="noopener noreferrer" style={{
-          fontSize: 13, color: 'var(--text-muted)',
-          textDecoration: 'underline', textUnderlineOffset: 4,
-        }}>
-          Wikipedia ↗
+        <a href={data.constructor.url} target="_blank" rel="noopener noreferrer" className={styles.extLink}>
+          Wikipedia <ExternalLink size={14} aria-hidden="true" />
         </a>
       )}
+      </div>
     </section>
   )
 }
@@ -161,12 +160,13 @@ export default function ConstructorsPage({ season }) {
                 key: s.constructorId,
                 image: (
                   <ConstructorImage key={s.constructorId} constructorId={s.constructorId}
-                    width={96} height={48} color={s.color} name={s.name} alt={`${s.name} logo`} />
+                    width={64} height={64} color={s.color} name={s.name} alt={`${s.name} logo`} />
                 ),
                 ...props(s),
               }))}
             />
           )}
+          <div className={styles.table}>
           <StandingsList>
             {rest.map(s => (
               <StandingsRow
@@ -180,6 +180,7 @@ export default function ConstructorsPage({ season }) {
               />
             ))}
           </StandingsList>
+          </div>
         </div>
 
         {profile && (

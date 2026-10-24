@@ -1,0 +1,60 @@
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--red);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.notice,
+.error {
+  padding: 14px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+/* 503: the data doesn't exist yet, so it reads calm, not broken */
+.notice {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.noticeLead { color: var(--text); font-weight: 700; }
+
+.error {
+  background: #1F0709;
+  border: 1px solid var(--red-dim);
+  color: #FF8A8A;
+}
+
+.teamDot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  min-width: 0;
+}
+.statLabel { font-size: 12px; color: var(--text-muted); }
+.statValue {
+  font-family: var(--display);
+  font-size: 34px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+.statSub { font-size: 12px; color: var(--text-muted); }

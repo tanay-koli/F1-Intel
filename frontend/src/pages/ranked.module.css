@@ -3,7 +3,7 @@
 .header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 12px 24px;
   margin-bottom: 24px;
@@ -18,50 +18,134 @@
   align-items: start;
 }
 
-.aside { position: sticky; top: 80px; }
+.aside { position: sticky; top: 88px; }
 
-.panel {
+/* Rows below the podium bands sit in one dark card */
+.table {
+  padding: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-top: 3px solid var(--team, var(--border-strong));
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 16px;
 }
+
+/* Detail panel: a team-colour head over a dark body */
+.panel {
+  --team: var(--border-strong);
+  --ink: var(--text);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.panelHead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 112px;
+  padding: 20px;
+  background: var(--team);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.panelHead img {
+  background: #F3F3F4;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.panelName {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.panelMeta { margin-top: 6px; font-size: 13px; font-weight: 600; }
+
+/* The car number, oversized and cropped at the right edge */
+.panelNumber {
+  position: absolute;
+  right: -6px;
+  bottom: -0.18em;
+  font-family: var(--display);
+  font-size: 128px;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--ink);
+  pointer-events: none;
+}
+
+.panelText { position: relative; min-width: 0; flex: 1; }
+.panelNumber ~ .panelText { padding-right: 96px; }
+
+.panelBody { padding: 16px 20px 20px; }
 
 .panelTitle { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
 
-.close {
-  float: right;
-  min-height: 32px;
-  padding: 0 12px;
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+
+.chartLabel { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+.extLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
   font-size: 13px;
   color: var(--text-muted);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-elevated);
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 4px;
 }
-.close:hover { color: var(--text); border-color: var(--border-strong); }
+.extLink:hover { color: var(--text); text-decoration-color: currentColor; }
+
+.close {
+  position: relative;
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  border: 1.5px solid currentColor;
+}
+.close:hover { background: rgb(0 0 0 / 0.12); }
 
 /* Label/value pairs in a panel */
 .facts { display: flex; flex-direction: column; gap: 14px; }
 .fact { display: flex; flex-direction: column; gap: 2px; }
 .factLabel { font-size: 12px; color: var(--text-muted); }
-.factValue { font-family: var(--display); font-size: 22px; line-height: 1.1; letter-spacing: 0.02em; }
+.factValue { font-family: var(--display); font-size: 24px; line-height: 1.1; letter-spacing: 0.02em; }
 .factSub { font-size: 13px; color: var(--text-muted); }
 
 .message { font-size: 14px; color: var(--text-muted); padding: 20px 0; }
 
-.tabs { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; }
+/* Pill filter chips */
+.tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
 .tab {
-  min-height: 36px;
-  padding: 0 16px;
-  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
   white-space: nowrap;
   font-size: 14px;
+  font-weight: 600;
   color: var(--text-muted);
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.tab:hover { color: var(--text); }
-.tab[aria-pressed="true"] { background: var(--pill-active); color: var(--text); }
+.tab:hover { color: var(--text); border-color: var(--text-dim); }
+.tab[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--bg); }
 
 @media (max-width: 900px) {
   .layout { grid-template-columns: minmax(0, 1fr); }

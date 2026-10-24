@@ -2,7 +2,8 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  border-radius: 14px;
+  gap: 3px;
+  border-radius: 16px;
   overflow: hidden;
   margin-bottom: 12px;
 }
