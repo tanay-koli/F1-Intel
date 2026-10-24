@@ -382,9 +382,11 @@ function PosChartTooltip({ active, payload, label, drivers }) {
         return (
           <div key={p.dataKey} style={{
             display: 'flex', justifyContent: 'space-between', gap: 16,
-            color: drv?.teamColor ?? 'var(--text)', marginBottom: 2,
+            color: 'var(--text)', marginBottom: 2,
           }}>
-            <span>{p.dataKey}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {drv?.teamColor && <TeamDot color={drv.teamColor} size={7} />}{p.dataKey}
+            </span>
             <span style={{ color: 'var(--text)', fontWeight: 600 }}>P{p.value}</span>
           </div>
         )
