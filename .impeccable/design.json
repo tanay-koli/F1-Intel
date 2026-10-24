@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T00:00:00Z",
+  "title": "Design System: F1 Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "asphalt": { "role": "neutral", "displayName": "Asphalt", "tonalRamp": ["#0b0c0e", "#141519", "#1e2025", "#2a2d34", "#454a55", "#6b717d", "#a3abb6", "#e8ebef"] },
+      "graphite-card": { "role": "neutral", "displayName": "Graphite Card" },
+      "graphite-raised": { "role": "neutral", "displayName": "Graphite Raised" },
+      "pit-lane-grey": { "role": "neutral", "displayName": "Pit-Lane Grey" },
+      "hairline": { "role": "neutral", "displayName": "Hairline" },
+      "hairline-strong": { "role": "neutral", "displayName": "Hairline Strong" },
+      "start-light-red": { "role": "primary", "displayName": "Start-Light Red", "tonalRamp": ["#3d0200", "#6b0400", "#991004", "#c40500", "#e10600", "#ff4a3d", "#ff8a80", "#ffd2cd"] },
+      "start-light-red-dim": { "role": "primary", "displayName": "Start-Light Red Dim" },
+      "safety-amber": { "role": "secondary", "displayName": "Safety Amber", "tonalRamp": ["#3d2c00", "#6b4e00", "#9c7300", "#cc9a12", "#ffc940", "#ffd770", "#ffe6a3", "#fff4d6"] },
+      "amber-ink": { "role": "neutral", "displayName": "Amber Ink" },
+      "grid-white": { "role": "neutral", "displayName": "Grid White" },
+      "telemetry-grey": { "role": "neutral", "displayName": "Telemetry Grey" },
+      "telemetry-grey-dim": { "role": "neutral", "displayName": "Telemetry Grey Dim" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Section headings beside the red bar, uppercase." },
+      "headline": { "displayName": "Headline", "purpose": "Hero race name and countdown digits, condensed Archivo 800." },
+      "title": { "displayName": "Title", "purpose": "Names, positions, points and stat values." },
+      "body": { "displayName": "Body", "purpose": "Default text with tabular numerals." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows, panel labels, units, sub-lines." }
+    },
+    "shadows": [
+      { "name": "header-blur", "value": "backdrop-filter: blur(12px)", "purpose": "Sticky header over 85% Asphalt; the only blur in the system." },
+      { "name": "slider-glow", "value": "0 0 6px #e1060060", "purpose": "Race-analyst range thumb only." }
+    ],
+    "motion": [
+      { "name": "state-change", "value": "0.15s ease", "purpose": "Background, border and colour changes on hover and selection." },
+      { "name": "fade-up", "value": "fadeUp 0.4s ease both", "purpose": "Content entering: 16px rise plus fade." },
+      { "name": "shimmer", "value": "shimmer 1.4s ease-in-out infinite", "purpose": "Skeleton loading blocks; disabled under reduced motion." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "640px" },
+      { "name": "small", "value": "720px" },
+      { "name": "tablet", "value": "900px" },
+      { "name": "laptop", "value": "1080px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Section Heading",
+      "kind": "custom",
+      "description": "Red bar, uppercase display title, outlined Round badge and a right-aligned link.",
+      "html": "<div class=\"ds-heading\"><span class=\"ds-heading-bar\"></span><h2 class=\"ds-heading-title\">Driver Standings</h2><span class=\"ds-heading-badge\">Round 19</span><a class=\"ds-heading-link\" href=\"#\">Full standings</a></div>",
+      "css": ".ds-heading { display: flex; align-items: center; gap: 10px; } .ds-heading-bar { width: 4px; height: 24px; background: var(--red, #E10600); border-radius: 2px; } .ds-heading-title { font-family: var(--display, 'Bebas Neue', sans-serif); font-weight: 400; font-size: 26px; line-height: 1; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text, #E8EBEF); margin: 0; } .ds-heading-badge { font-size: 12px; color: var(--text-muted, #A3ABB6); background: var(--bg-elevated, #1E2025); border: 1px solid var(--border, #2A2D34); padding: 2px 8px; border-radius: 4px; } .ds-heading-link { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; font-size: 14px; font-weight: 500; color: var(--text-muted, #A3ABB6); text-decoration: underline; text-decoration-color: var(--border-strong, #343842); text-underline-offset: 4px; } .ds-heading-link:hover { color: var(--text, #E8EBEF); text-decoration-color: currentColor; } .ds-heading-link:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ranked Row",
+      "kind": "custom",
+      "refersTo": "ranked-row",
+      "description": "Timing-tower row for standings and results, with a team-colour left edge.",
+      "html": "<button class=\"ds-row\" style=\"--team:#FF8000\"><span class=\"ds-row-pos\">1</span><span class=\"ds-row-main\"><span class=\"ds-row-name\">Lando Norris</span><span class=\"ds-row-bar\"><span class=\"ds-row-fill\" style=\"width:100%\"></span></span><span class=\"ds-row-sub\">McLaren</span></span><span class=\"ds-row-fig\"><span class=\"ds-row-value\">390</span><span class=\"ds-row-unit\">pts</span></span></button>",
+      "css": ".ds-row { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; background: var(--bg-elevated, #1E2025); border: 1px solid var(--border, #2A2D34); border-left: 3px solid var(--team); border-radius: 8px; color: var(--text, #E8EBEF); font-family: var(--body, Archivo, sans-serif); text-align: left; cursor: pointer; transition: border-color 0.15s ease, background 0.15s ease; } .ds-row:hover { border-color: var(--border-strong, #343842); border-left-color: var(--team); } .ds-row:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-row-pos { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 22px; line-height: 1; color: var(--text-muted, #A3ABB6); text-align: center; } .ds-row-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-row-name { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 18px; letter-spacing: 0.04em; line-height: 1; } .ds-row-bar { display: block; height: 4px; border-radius: 2px; background: var(--border, #2A2D34); overflow: hidden; } .ds-row-fill { display: block; height: 100%; background: var(--team); } .ds-row-sub { font-size: 12px; color: var(--text-muted, #A3ABB6); } .ds-row-fig { display: flex; flex-direction: column; align-items: flex-end; } .ds-row-value { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 24px; line-height: 1; } .ds-row-unit { font-size: 12px; color: var(--text-muted, #A3ABB6); }"
+    },
+    {
+      "name": "Nav Pill",
+      "kind": "nav",
+      "refersTo": "nav-pill",
+      "description": "Header navigation pill; active state uses Pit-Lane Grey.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-pill ds-pill-active\" href=\"#\">Home</a><a class=\"ds-pill\" href=\"#\">Results</a><a class=\"ds-pill\" href=\"#\">Head to Head</a><a class=\"ds-pill\" href=\"#\">Telemetry</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 4px; } .ds-pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 500; color: var(--text-muted, #A3ABB6); text-decoration: none; transition: background 0.15s ease, color 0.15s ease; } .ds-pill:hover { color: var(--text, #E8EBEF); background: var(--bg-elevated, #1E2025); } .ds-pill:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-pill-active, .ds-pill-active:hover { color: var(--text, #E8EBEF); background: var(--pill-active, #262A31); font-weight: 600; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default (and only) button style: quiet, tonal hover.",
+      "html": "<a class=\"ds-btn\" href=\"#\">Open race analysis</a>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; border-radius: 10px; border: 1px solid var(--border-strong, #343842); background: var(--bg-elevated, #1E2025); color: var(--text, #E8EBEF); font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.15s ease; } .ds-btn:hover { background: var(--pill-active, #262A31); } .ds-btn:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; }"
+    },
+    {
+      "name": "Season Select",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "Season picker in the header.",
+      "html": "<select class=\"ds-select\"><option>2026</option><option>2025</option></select>",
+      "css": ".ds-select { min-height: 44px; padding: 0 32px 0 12px; border-radius: 8px; border: 1px solid var(--border-strong, #343842); background-color: var(--bg-elevated, #1E2025); background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 12px center; appearance: none; color: var(--text, #E8EBEF); font-family: var(--body, Archivo, sans-serif); font-size: 15px; cursor: pointer; } .ds-select:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-next",
+      "description": "Next (amber fill) and Done (outlined) session badges.",
+      "html": "<span class=\"ds-badge ds-badge-next\">Next</span> <span class=\"ds-badge ds-badge-done\">Done</span>",
+      "css": ".ds-badge { display: inline-block; font-family: var(--body, Archivo, sans-serif); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; } .ds-badge-next { color: #14130D; background: var(--accent, #FFC940); } .ds-badge-done { color: var(--text-muted, #A3ABB6); border: 1px solid var(--border-strong, #343842); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Home panel container with an optional team-colour top edge.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-card-label\">Points lead</p><p class=\"ds-card-value\">+24 <span>pts</span></p></div>",
+      "css": ".ds-card { background: var(--bg-card, #1A1C21); border: 1px solid var(--border, #2A2D34); border-radius: 14px; padding: 24px; color: var(--text, #E8EBEF); } .ds-card-label { margin: 0 0 4px; font-family: var(--body, Archivo, sans-serif); font-size: 12px; font-weight: 600; color: var(--text-muted, #A3ABB6); } .ds-card-value { margin: 0; font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 28px; line-height: 1; } .ds-card-value span { font-family: var(--body, Archivo, sans-serif); font-size: 12px; color: var(--text-muted, #A3ABB6); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Pit Wall",
+    "overview": "The strategists' wall of timing screens: dark, dense, and calm under pressure. Everything sits in near-black graphite layers so the information carries the colour: a team's livery on the edge of its row, amber on whatever comes next, red only to sign the page. Numbers are set big in a condensed display face and read first; prose is short and secondary.\n\nComponents are precise and quiet. Surfaces are flat, borders are hairlines, and hover is a small shift in tone, not a lift. The display face (Bebas Neue) gives the race-poster energy; Archivo, squeezed on its width axis for the hero race name and countdown, adds speed without decoration. Density follows the job: Home's hero breathes, while the standings, results and telemetry views pack rows tightly for scanning.",
+    "keyCharacteristics": [
+      "Near-black tonal layering instead of shadows.",
+      "Team colour as a 3px edge (left on rows, top on cards and podium steps), always from the API.",
+      "Condensed display type for positions, names, points and countdown digits; tabular numerals everywhere.",
+      "One amber accent for \"next\" states and the focus ring; red only for heading bars and the logo badge.",
+      "44px minimum hit targets on every control."
+    ],
+    "rules": [
+      { "name": "The Livery Rule", "body": "Team colour is data, never decoration. It comes from the API (`teamColor` / `color`), is never hardcoded in the frontend, and appears as a 3px edge or a fill tied to that team's own row, card or chart series.", "section": "colors" },
+      { "name": "The One Next Rule", "body": "Safety Amber marks exactly one thing per view as \"next\" (plus the focus ring). If two things are amber, one of them is wrong.", "section": "colors" },
+      { "name": "The Dim-by-Colour Rule", "body": "De-emphasise with Telemetry Grey, not `opacity`, so dimmed text keeps its contrast.", "section": "colors" },
+      { "name": "The Tabular Rule", "body": "`tabular-nums` is global; numbers never jitter as they update.", "section": "typography" },
+      { "name": "The Numbers-in-Display Rule", "body": "A position, points total or countdown is set in the display face (Bebas Neue, or condensed Archivo 800). Its unit (\"pts\", \"days\") drops to body size in Telemetry Grey.", "section": "typography" },
+      { "name": "The Flat-Wall Rule", "body": "Hover and selection change tone or border, never lift. If something needs to feel raised, move it one step up the tonal ladder.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do take team colours from the API and use them as 3px edges, bars or chart series for that team's own data.",
+      "Do set positions, points and countdowns in Bebas Neue or condensed Archivo 800, with units at 12px in Telemetry Grey.",
+      "Do keep every interactive element at least 44px tall (tabs inside panels: 36px).",
+      "Do show missing data as a calm notice in Telemetry Grey (`ErrorMsg`'s \"Not available yet\"), not a red error box.",
+      "Do build new components as CSS Modules using the `:root` tokens."
+    ],
+    "donts": [
+      "Don't use Start-Light Red for anything but heading bars, the logo badge and the analyst slider.",
+      "Don't use Safety Amber for anything but \"next\" and focus.",
+      "Don't dim with `opacity`; use Telemetry Grey.",
+      "Don't add box shadows to surfaces; step up the tonal ladder instead.",
+      "Don't hardcode a team colour in React.",
+      "Don't use official Formula 1 logos, wordmarks or marks; the product is an unofficial fan project."
+    ]
+  }
+}
