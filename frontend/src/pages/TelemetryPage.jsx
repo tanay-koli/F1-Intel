@@ -4,6 +4,14 @@ import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { CURRENT_SEASON } from '../hooks/useSeason'
 import { Loader, ErrorMsg, SectionHeader, TeamDot, useIsMobile } from '../components/ui'
+import DriverMark from '../components/DriverMark'
+import SectionHeading from '../components/SectionHeading'
+import RaceHeader from './RaceHeader'
+import { Play, Pause } from 'lucide-react'
+import { inkOn } from '../lib/color'
+import { GRID } from '../lib/chartTheme'
+import ranked from './ranked.module.css'
+import tstyles from './telemetry.module.css'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, ReferenceLine,
@@ -85,57 +93,26 @@ function buildChartData(tel) {
 
 function SelectBox({ label, value, onChange, children, disabled }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <span style={{ fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)' }}>
-        {label}
-      </span>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        disabled={disabled}
-        style={{
-          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: 7, color: disabled ? 'var(--text-dim)' : 'var(--text)',
-          padding: '7px 12px', fontFamily: 'var(--body)', fontSize: 13,
-          cursor: disabled ? 'not-allowed' : 'pointer', outline: 'none',
-          minWidth: 130, appearance: 'none',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b7a'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center',
-          paddingRight: 28,
-          transition: 'border-color 0.15s',
-        }}
-      >
+    <label className="field">
+      {label}
+      <select className="select" value={value} onChange={e => onChange(e.target.value)} disabled={disabled}>
         {children}
       </select>
-    </div>
+    </label>
   )
 }
 
 function DriverCard({ driver, label, extra }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      background: 'var(--bg-elevated)', border: `1px solid ${driver.teamColor}40`,
-      borderLeft: `3px solid ${driver.teamColor}`,
-      borderRadius: 8, padding: '10px 14px',
+      display: 'flex', alignItems: 'center', gap: 12,
+      background: 'var(--bg-elevated)', borderRadius: 16, padding: '10px 14px',
     }}>
-      <div style={{
-        width: 36, height: 36, borderRadius: '50%',
-        background: `${driver.teamColor}20`,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'var(--display)', fontSize: 13, color: driver.teamColor,
-        flexShrink: 0,
-      }}>
-        {driver.code}
-      </div>
+      <DriverMark driver={driver} size={40} />
       <div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--body)' }}>{label}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
         <div style={{ fontWeight: 600, fontSize: 14 }}>{driver.fullName}</div>
-        {driver.lapTime && (
-          <div style={{ fontFamily: 'var(--body)', fontSize: 11, color: driver.teamColor }}>
-            ⏱ {driver.lapTime}
-          </div>
-        )}
+        {driver.lapTime && <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Lap {driver.lapTime}</div>}
         {extra}
       </div>
     </div>
@@ -172,7 +149,7 @@ function TyreBand({ laps, pitLaps, color, height = 10, maxLap }) {
   if (!maxLap || maxLap === 0) return null
 
   return (
-    <div style={{ position: 'relative', height, borderRadius: 4, overflow: 'hidden', background: '#1a1a20' }}>
+    <div style={{ position: 'relative', height, borderRadius: 4, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
       {stints.map((s, i) => {
         const left  = ((s.start - 1) / maxLap) * 100
         const width = ((s.end - s.start + 1) / maxLap) * 100
@@ -209,7 +186,7 @@ function RaceEventsBanner({ events, totalLaps }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+      borderRadius: 16, padding: '12px 16px', marginBottom: 16,
     }}>
       <div style={{
         fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
@@ -372,16 +349,16 @@ function PositionChart({ analysis, highlightDriver, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 12, padding: '16px', marginBottom: 20,
+      borderRadius: 16, padding: '16px', marginBottom: 20,
     }}>
       <div style={{
         fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
       }}>
-        Position Chart · All Drivers · Lap by Lap →
+        Positions, lap by lap
       </div>
       <ResponsiveContainer width="100%" height={isMobile ? 280 : 380}>
         <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
-          <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+          <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
           <XAxis
             dataKey="lap"
             tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
@@ -414,7 +391,7 @@ function PositionChart({ analysis, highlightDriver, isMobile }) {
         </LineChart>
       </ResponsiveContainer>
       <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)', marginTop: 6, textAlign: 'center' }}>
-        ↑ P1 (leader) is at top. Click a row in the table above to highlight a driver.
+        P1 is at the top. Pick a row in the table above to highlight a driver.
       </div>
     </div>
   )
@@ -476,16 +453,16 @@ function LapTimeScatter({ analysis, highlightDriver, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 12, padding: '16px', marginBottom: 20,
+      borderRadius: 16, padding: '16px', marginBottom: 20,
     }}>
       <div style={{
         fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
       }}>
-        ⏱ Lap Times · All Drivers →
+        Lap times, all drivers
       </div>
       <ResponsiveContainer width="100%" height={isMobile ? 260 : 340}>
         <ScatterChart margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
-          <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+          <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
           <XAxis
             dataKey="lap" type="number" name="Lap"
             domain={[1, analysis.totalLaps]}
@@ -554,7 +531,7 @@ function AllDriversTyreStrategy({ analysis, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 10, padding: '14px 16px', marginBottom: 20,
+      borderRadius: 16, padding: '14px 16px', marginBottom: 20,
     }}>
       <div style={{
         fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
@@ -693,17 +670,13 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
               id="analyst-play-btn"
+              type="button"
+              className={tstyles.play}
+              aria-pressed={isPlaying}
               onClick={() => setIsPlaying(p => !p)}
-              style={{
-                background: isPlaying ? '#e1060020' : 'var(--bg-elevated)',
-                border: `1px solid ${isPlaying ? '#e1060060' : 'var(--border)'}`,
-                borderRadius: 6, padding: '4px 12px',
-                color: isPlaying ? 'var(--red)' : 'var(--text-muted)',
-                fontFamily: 'var(--body)', fontSize: 11,
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? <Pause size={14} aria-hidden="true" /> : <Play size={14} aria-hidden="true" />}
+              {isPlaying ? 'Pause' : 'Play'}
             </button>
             <div style={{
               fontFamily: 'var(--display)', fontSize: 22, color: 'var(--text)',
@@ -834,32 +807,9 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
 }
 
 function FullRaceOverview({ analysis, analystInsights, selectedDriver, onSelectDriver, isMobile }) {
-  const fl = analysis.overallFastestLap
-
   return (
     <div style={{ animation: 'fadeUp 0.3s ease' }}>
-      {/* Race Banner */}
-      <div style={{
-        background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 10, padding: '14px 18px', marginBottom: 16,
-        display: 'flex', alignItems: 'center', gap: 12,
-      }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontFamily: 'var(--display)', fontSize: 22 }}>{analysis.raceName}</div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--body)' }}>
-            {analysis.year} · Round {analysis.round} · Race · {analysis.totalLaps} Laps
-          </div>
-        </div>
-        {fl.driver && (
-          <div style={{
-            background: '#FFD70012', border: '1px solid #FFD70030', borderRadius: 8,
-            padding: '6px 12px', fontSize: 12, fontFamily: 'var(--body)', color: '#FFD700',
-            display: 'flex', alignItems: 'center', gap: 6,
-          }}>
-            <span><strong>{fl.driver}</strong> · {fl.timeStr} · L{fl.lap} · {fl.compound}</span>
-          </div>
-        )}
-      </div>
+      <RaceHeader analysis={analysis} eventColors={EVENT_COLORS} />
 
       {/* Race Events */}
       <RaceEventsBanner events={analysis.raceEvents} totalLaps={analysis.totalLaps} />
@@ -869,18 +819,7 @@ function FullRaceOverview({ analysis, analystInsights, selectedDriver, onSelectD
         <RaceAnalystPanel insights={analystInsights} totalLaps={analysis.totalLaps} isMobile={isMobile} />
       )}
 
-      {/* Section Header */}
-      <div style={{
-        fontFamily: 'var(--display)', fontSize: 18, letterSpacing: '0.04em',
-        color: 'var(--text)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8,
-      }}>
-        Full Race Overview
-        <span style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-dim)',
-          background: 'var(--bg-elevated)', padding: '2px 8px', borderRadius: 4,
-          border: '1px solid var(--border)',
-        }}>{analysis.drivers.length} drivers</span>
-      </div>
+      <SectionHeading title="Full race overview" badge={`${analysis.drivers.length} drivers`} />
 
       {/* All Drivers Table */}
       <AllDriversSummaryTable analysis={analysis} onSelectDriver={onSelectDriver} selectedDriver={selectedDriver} />
@@ -929,55 +868,29 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
 
   return (
     <div style={{ animation: 'fadeUp 0.3s ease', marginTop: 32 }}>
-      {/* Section Header */}
-      <div style={{
-        fontFamily: 'var(--display)', fontSize: 18, letterSpacing: '0.04em',
-        color: 'var(--text)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8,
-      }}>
-        Driver Deep Dive
-      </div>
+      <SectionHeading title="Driver deep dive" />
 
       {/* Driver Header Card */}
-      <div style={{
-        background: 'var(--bg-elevated)', border: `1px solid ${driver.teamColor}40`,
-        borderLeft: `4px solid ${driver.teamColor}`,
-        borderRadius: 10, padding: '16px 20px', marginBottom: 16,
-        display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16,
-      }}>
-        <div style={{
-          width: 50, height: 50, borderRadius: '50%',
-          background: `${driver.teamColor}20`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontFamily: 'var(--display)', fontSize: 16, color: driver.teamColor,
-        }}>
-          {driver.code}
-        </div>
+      <div className={tstyles.diveHead} style={{ '--team': driver.teamColor, '--ink': inkOn(driver.teamColor) }}>
         <div style={{ flex: 1, minWidth: 150 }}>
-          <div style={{ fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text)' }}>{driver.fullName}</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--body)' }}>{driver.team}</div>
+          <div className={tstyles.diveName}>{driver.fullName}</div>
+          <div className={tstyles.diveTeam}>{driver.team}</div>
         </div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-dim)' }}>Grid</div>
-            <div style={{ fontFamily: 'var(--display)', fontSize: 22, color: 'var(--text-muted)' }}>P{driver.gridPosition ?? '—'}</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Grid</div>
+            <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>P{driver.gridPosition ?? '—'}</div>
           </div>
-          <div style={{ color: 'var(--text-dim)', fontSize: 16 }}>→</div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-dim)' }}>Finish</div>
-            <div style={{
-              fontFamily: 'var(--display)', fontSize: 22,
-              color: driver.finishPosition <= 3 ? '#FFD700' : 'var(--text)',
-            }}>P{driver.finishPosition ?? '—'}</div>
+            <div style={{ fontSize: 12, fontWeight: 700 }}>Finish</div>
+            <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>P{driver.finishPosition ?? '—'}</div>
           </div>
           {driver.positionsGained != null && (
-            <div style={{
-              fontFamily: 'var(--body)', fontSize: 14, fontWeight: 700,
-              color: driver.positionsGained > 0 ? '#39B54A' : driver.positionsGained < 0 ? '#E8002D' : 'var(--text-dim)',
-              background: driver.positionsGained > 0 ? '#39B54A15' : driver.positionsGained < 0 ? '#E8002D15' : 'transparent',
-              border: `1px solid ${driver.positionsGained > 0 ? '#39B54A40' : driver.positionsGained < 0 ? '#E8002D40' : 'var(--border)'}`,
-              borderRadius: 6, padding: '4px 10px',
-            }}>
-              {driver.positionsGained > 0 ? `▲ ${driver.positionsGained}` : driver.positionsGained < 0 ? `▼ ${Math.abs(driver.positionsGained)}` : '—'}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 700 }}>Places</div>
+              <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>
+                {driver.positionsGained > 0 ? `+${driver.positionsGained}` : driver.positionsGained < 0 ? driver.positionsGained : '0'}
+              </div>
             </div>
           )}
         </div>
@@ -996,7 +909,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       <div style={{
         background: isRaceFL ? '#FFD70008' : 'var(--bg-card)',
         border: `1px solid ${isRaceFL ? '#FFD70030' : 'var(--border)'}`,
-        borderRadius: 10, padding: '14px 18px', marginBottom: 20,
+        borderRadius: 16, padding: '14px 18px', marginBottom: 20,
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
@@ -1045,7 +958,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Tyre Strategy Band */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 10, padding: '14px 16px', marginBottom: 20,
+        borderRadius: 16, padding: '14px 16px', marginBottom: 20,
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
@@ -1081,16 +994,16 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Lap Time Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '16px', marginBottom: 20,
+        borderRadius: 16, padding: '16px', marginBottom: 20,
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
         }}>
-          ⏱ Lap Times · {driver.code} →
+          Lap times, {driver.code}
         </div>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={lapChartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
-            <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+            <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
               tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
@@ -1154,12 +1067,12 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Position Progression Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '16px', marginBottom: 20,
+        borderRadius: 16, padding: '16px', marginBottom: 20,
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
         }}>
-          Position Progression · {driver.code} →
+          Position by lap, {driver.code}
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={driver.laps.filter(l => l.lap && l.position)} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
@@ -1169,7 +1082,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
                 <stop offset="95%" stopColor={driver.teamColor} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+            <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
               tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
@@ -1390,7 +1303,7 @@ function SpeedChart({ data, tel, metric }) {
             <stop offset="95%" stopColor={tel.driver2.teamColor} stopOpacity={0}   />
           </linearGradient>
         </defs>
-        <CartesianGrid stroke="#2a2a30" strokeDasharray="3 3" />
+        <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis
           dataKey="dist"
           tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
@@ -1441,7 +1354,7 @@ function FastestLapView({ tel, isMobile }) {
       {/* Race banner */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 10, padding: '12px 18px', marginBottom: 20,
+        borderRadius: 16, padding: '12px 18px', marginBottom: 20,
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div>
@@ -1486,13 +1399,13 @@ function FastestLapView({ tel, isMobile }) {
       {/* Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 12, padding: '16px',
+        borderRadius: 16, padding: '16px',
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12,
           color: 'var(--text-muted)', marginBottom: 12,
         }}>
-          {METRIC_TABS.find(t => t.id === metric)?.label} · Distance →
+          {METRIC_TABS.find(t => t.id === metric)?.label} over the lap
         </div>
 
         {/* Legend */}
@@ -1524,7 +1437,7 @@ function FastestLapView({ tel, isMobile }) {
               key={t.id}
               style={{
                 background: 'var(--bg-card)', border: 'var(--border)',
-                borderRadius: 10, padding: '12px',
+                borderRadius: 16, padding: '12px',
                 cursor: 'pointer',
                 outline: metric === t.id ? '2px solid var(--red)' : 'none',
                 transition: 'outline 0.15s',
@@ -1667,36 +1580,21 @@ export default function TelemetryPage({ season }) {
         count={viewTab === 'analysis' ? 'full race analysis' : 'fastest lap comparison'}
       />
 
-      {/* Info banner */}
-      <div style={{
-        background: '#3671C615', border: '1px solid #3671C640',
-        borderRadius: 8, padding: '10px 14px', marginBottom: 20,
-        fontSize: 12, color: '#a0c4ff', fontFamily: 'var(--body)',
-        display: 'flex', alignItems: 'flex-start', gap: 8,
-      }}>
-        <span>
-          Powered by <strong>OpenF1</strong> (2023 on) and <strong>FastF1</strong> (2021–22).
-          First load for a session may take 10–60s while the data is downloaded. Subsequent loads are instant.
-        </span>
-      </div>
+      <p className={tstyles.notice}>
+        Timing data from <strong>OpenF1</strong> (2023 on) and <strong>FastF1</strong> (2021–22).
+        The first load of a session can take 10–60 s while the data downloads; after that it's instant.
+      </p>
 
       {/* View tabs */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 20, borderBottom: '1px solid var(--border)' }}>
+      <div className={ranked.tabs}>
         {VIEW_TABS.map(t => (
           <button
             key={t.id}
+            type="button"
             id={`view-tab-${t.id}`}
+            className={ranked.tab}
+            aria-pressed={viewTab === t.id}
             onClick={() => setViewTab(t.id)}
-            style={{
-              padding: '8px 18px', borderRadius: '8px 8px 0 0',
-              background: viewTab === t.id ? 'var(--bg-card)' : 'transparent',
-              border: viewTab === t.id ? '1px solid var(--border)' : '1px solid transparent',
-              borderBottom: viewTab === t.id ? '1px solid var(--bg-card)' : '1px solid transparent',
-              marginBottom: -1,
-              color: viewTab === t.id ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: 13, fontFamily: 'var(--body)', fontWeight: viewTab === t.id ? 600 : 400,
-              cursor: 'pointer', transition: 'all 0.12s',
-            }}
           >
             {t.label}
           </button>
@@ -1705,11 +1603,7 @@ export default function TelemetryPage({ season }) {
 
       {/* ── RACE ANALYSIS SELECTOR ── */}
       {viewTab === 'analysis' && (
-        <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 12, padding: '16px 20px', marginBottom: 24,
-          display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
-        }}>
+        <div className={tstyles.controls}>
           <SelectBox label="Year" value={year} onChange={v => { setYear(v); setRound(null); setSelectedDriver(''); setAnalysisQueryKey(null) }}>
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -1725,30 +1619,22 @@ export default function TelemetryPage({ season }) {
 
           <button
             id="load-analysis-btn"
+            type="button"
+            className={tstyles.primary}
             onClick={handleLoadAnalysis}
             disabled={analysisLoading}
-            style={{
-              padding: '8px 20px', borderRadius: 8,
-              background: !analysisLoading ? 'var(--red)' : 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              color: !analysisLoading ? '#fff' : 'var(--text-dim)',
-              fontFamily: 'var(--body)', fontWeight: 600, fontSize: 13,
-              cursor: !analysisLoading ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s', alignSelf: 'flex-end',
-              minWidth: 140,
-            }}
           >
-            {analysisLoading ? '⏳ Loading…' : '▶ Load Analysis'}
+            {analysisLoading ? 'Loading…' : 'Load analysis'}
           </button>
 
           {/* Deep Dive driver selector — only shows after data loads */}
           {analysisData && !analysisLoading && (
             <SelectBox
-              label="DEEP DIVE DRIVER"
+              label="Deep dive driver"
               value={selectedDriver}
               onChange={setSelectedDriver}
             >
-              <option value="">— select driver —</option>
+              <option value="">Pick a driver</option>
               {analysisData.drivers.map(d => (
                 <option key={d.code} value={d.code}>P{d.finishPosition ?? '?'} · {d.code} — {d.fullName}</option>
               ))}
@@ -1759,11 +1645,7 @@ export default function TelemetryPage({ season }) {
 
       {/* ── FASTEST LAP TRACE SELECTOR ── */}
       {viewTab === 'fastlap' && (
-        <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border)',
-          borderRadius: 12, padding: '16px 20px', marginBottom: 24,
-          display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end',
-        }}>
+        <div className={tstyles.controls}>
           <SelectBox label="Year" value={year} onChange={v => { setYear(v); setRound(null); setDriver1(''); setDriver2('') }}>
             {years.map(y => (
               <option key={y} value={y}>{y}</option>
@@ -1784,24 +1666,24 @@ export default function TelemetryPage({ season }) {
           </SelectBox>
 
           <SelectBox
-            label="DRIVER 1"
+            label="First driver"
             value={driver1}
             onChange={setDriver1}
             disabled={driversLoading || driverList.length === 0}
           >
-            <option value="">— pick driver —</option>
+            <option value="">Pick a driver</option>
             {driverList.filter(d => d.driverId !== driver2).map(d => (
               <option key={d.driverId} value={d.driverId}>{d.code} — {d.fullName}</option>
             ))}
           </SelectBox>
 
           <SelectBox
-            label="DRIVER 2"
+            label="Second driver"
             value={driver2}
             onChange={setDriver2}
             disabled={driversLoading || driverList.length === 0}
           >
-            <option value="">— pick driver —</option>
+            <option value="">Pick a driver</option>
             {driverList.filter(d => d.driverId !== driver1).map(d => (
               <option key={d.driverId} value={d.driverId}>{d.code} — {d.fullName}</option>
             ))}
@@ -1809,20 +1691,12 @@ export default function TelemetryPage({ season }) {
 
           <button
             id="load-telemetry-btn"
+            type="button"
+            className={tstyles.primary}
             onClick={handleLoadFastlap}
             disabled={!canLoadFastlap || telLoading}
-            style={{
-              padding: '8px 20px', borderRadius: 8,
-              background: canLoadFastlap && !telLoading ? 'var(--red)' : 'var(--bg-elevated)',
-              border: '1px solid var(--border)',
-              color: canLoadFastlap && !telLoading ? '#fff' : 'var(--text-dim)',
-              fontFamily: 'var(--body)', fontWeight: 600, fontSize: 13,
-              cursor: canLoadFastlap && !telLoading ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s', alignSelf: 'flex-end',
-              minWidth: 100,
-            }}
           >
-            {telLoading ? '⏳ Loading…' : '▶ Load'}
+            {telLoading ? 'Loading…' : 'Compare laps'}
           </button>
         </div>
       )}
@@ -1873,26 +1747,17 @@ export default function TelemetryPage({ season }) {
 
       {/* Empty state */}
       {!hasData && !isLoading && !(viewTab === 'analysis' ? analysisError : telError) && (
-        <div style={{
-          textAlign: 'center', padding: '60px 20px',
-          color: 'var(--text-muted)', fontFamily: 'var(--body)', fontSize: 13,
-        }}>
-          <div>
+        <div className={tstyles.empty}>
+          <p>
             {viewTab === 'analysis'
-              ? <>Select a year and round, then click <strong style={{ color: 'var(--text)' }}>▶ Load Analysis</strong> for full race breakdown</>
-              : <>Select two drivers and click <strong style={{ color: 'var(--text)' }}>▶ Load</strong> to compare fastest lap telemetry</>
-            }
-          </div>
-          {viewTab === 'analysis' && (
-            <div style={{ fontSize: 11, marginTop: 8, color: 'var(--text-dim)' }}>
-              All Drivers · Positions · Lap Times · Tyre Strategy · Pit Stops · Safety Cars · Deep Dive Analysis
-            </div>
-          )}
-          {viewTab === 'fastlap' && (
-            <div style={{ fontSize: 11, marginTop: 8, color: 'var(--text-dim)' }}>
-              Speed · Throttle · Brake · Gear — all channels from official F1 timing data
-            </div>
-          )}
+              ? 'Pick a year and round, then load the analysis for the full race breakdown.'
+              : 'Pick two drivers, then compare their fastest laps.'}
+          </p>
+          <p className={tstyles.emptySub}>
+            {viewTab === 'analysis'
+              ? 'Positions, lap times, tyre strategy, pit stops, safety cars and a deep dive per driver'
+              : 'Speed, throttle, brake and gear along the lap'}
+          </p>
         </div>
       )}
     </div>

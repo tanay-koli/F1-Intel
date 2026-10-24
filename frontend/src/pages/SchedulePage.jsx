@@ -4,7 +4,9 @@ import { f1Api } from '../api'
 import { Loader, ErrorMsg, useIsMobile } from '../components/ui'
 import SectionHeading from '../components/SectionHeading'
 import { weekendRange } from '../lib/format'
+import { ExternalLink } from 'lucide-react'
 import styles from './ranked.module.css'
+import cal from './calendar.module.css'
 
 /* ── Status helpers ────────────────────────────────────────────────────────── */
 
@@ -25,19 +27,12 @@ function MapPanel({ lat, lng, name }) {
   const osmLink = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=14/${lat}/${lng}`
 
   return (
-    <div style={{ margin: '-20px -20px 16px' }}>
-      <div style={{ height: 180, background: '#0d1117', overflow: 'hidden' }}>
-        <iframe
-          src={mapUrl}
-          style={{ width: '100%', height: '100%', border: 'none', filter: 'invert(0.9) hue-rotate(180deg) contrast(0.85)' }}
-          title={`Map of ${name}`}
-        />
+    <div>
+      <div className={cal.map}>
+        <iframe src={mapUrl} className={cal.mapFrame} title={`Map of ${name}`} />
       </div>
-      <a href={osmLink} target="_blank" rel="noopener noreferrer" style={{
-        display: 'block', padding: '8px 20px', fontSize: 13, color: 'var(--text-muted)',
-        textDecoration: 'underline', textUnderlineOffset: 4,
-      }}>
-        Open in OpenStreetMap ↗
+      <a href={osmLink} target="_blank" rel="noopener noreferrer" className={`${styles.extLink} ${cal.mapLink}`}>
+        Open in OpenStreetMap <ExternalLink size={14} aria-hidden="true" />
       </a>
     </div>
   )
@@ -53,40 +48,22 @@ function RaceRow({ race, status, onClick, selected }) {
         type="button"
         onClick={onClick}
         aria-pressed={selected}
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '36px minmax(0, 1fr) auto',
-          alignItems: 'center', gap: 14,
-          width: '100%', padding: '12px 16px',
-          textAlign: 'left', color: 'inherit', font: 'inherit',
-          background: selected ? 'var(--pill-active)' : 'var(--bg-elevated)',
-          border: `1px solid ${selected ? 'var(--border-strong)' : 'var(--border)'}`,
-          borderLeft: `3px solid ${next ? 'var(--accent)' : 'var(--border-strong)'}`,
-          borderRadius: 8,
-        }}
+        className={cal.row}
+        data-status={status}
       >
-        <span style={{ fontFamily: 'var(--display)', fontSize: 20, lineHeight: 1, color: 'var(--text-muted)', textAlign: 'center' }}>
-          <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>Round </span>
+        <span className={cal.round}>
+          <span className={cal.srOnly}>Round </span>
           {race.round}
         </span>
-        <span style={{ minWidth: 0 }}>
-          <span style={{ display: 'block', fontWeight: 600, fontSize: 15, color: status === 'past' ? 'var(--text-muted)' : 'var(--text)' }}>
-            {race.raceName}
-          </span>
-          <span style={{ display: 'block', fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
-            {race.circuitName} · {race.locality}, {race.country}
-          </span>
+        <span className={cal.main}>
+          <span className={cal.name}>{race.raceName}</span>
+          <span className={cal.place}>{race.circuitName} · {race.locality}, {race.country}</span>
         </span>
-        <span style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-          <span style={{ display: 'block', fontSize: 14 }}>{weekendRange(race.fp1 || race.date, race.date)}</span>
-          {next ? (
-            <span style={{
-              display: 'inline-block', marginTop: 4, padding: '1px 8px', borderRadius: 999,
-              background: 'var(--accent)', color: '#141519', fontSize: 12, fontWeight: 600,
-            }}>Next race</span>
-          ) : (
-            <span style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--text-muted)' }}>{STATUS_LABEL[status]}</span>
-          )}
+        <span className={cal.when}>
+          <span className={cal.dates}>{weekendRange(race.fp1 || race.date, race.date)}</span>
+          {next
+            ? <span className={cal.badgeNext}>Next race</span>
+            : <span className={cal.status}>{STATUS_LABEL[status]}</span>}
         </span>
       </button>
     </li>
@@ -108,23 +85,25 @@ function RaceDetail({ race, onClose }) {
   return (
     <section className={styles.panel} aria-label={`${race.raceName} details`}>
       {race.lat && race.lng && <MapPanel lat={race.lat} lng={race.lng} name={race.circuitName} />}
-      {onClose && <button type="button" className={styles.close} onClick={onClose}>Close</button>}
-
-      <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Round {race.round}</p>
-      <h2 style={{ fontFamily: 'var(--display)', fontWeight: 400, fontSize: 28, lineHeight: 1.1, letterSpacing: '0.02em' }}>
-        {race.raceName}
-      </h2>
-      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>{race.circuitName}</p>
-
-      <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Sessions</h3>
-      <dl style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 14 }}>
-        {sessions.map(([label, date]) => (
-          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-            <dt style={{ color: label === 'Race' ? 'var(--text)' : 'var(--text-muted)', fontWeight: label === 'Race' ? 600 : 400 }}>{label}</dt>
-            <dd style={{ fontWeight: label === 'Race' ? 600 : 400 }}>{date}</dd>
+      <div className={styles.panelBody}>
+        <div className={cal.detailHead}>
+          <div>
+            <h2 className={styles.panelName}>{race.raceName}</h2>
+            <p className={cal.detailMeta}>Round {race.round} · {race.circuitName}</p>
           </div>
-        ))}
-      </dl>
+          {onClose && <button type="button" className={cal.close} onClick={onClose}>Close</button>}
+        </div>
+
+        <h3 className={cal.sessionsTitle}>Sessions</h3>
+        <dl className={cal.sessions}>
+          {sessions.map(([label, date]) => (
+            <div key={label} className={cal.session} data-race={label === 'Race' || undefined}>
+              <dt>{label}</dt>
+              <dd>{date}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </section>
   )
 }
@@ -156,7 +135,7 @@ export default function SchedulePage({ season }) {
       </header>
 
       <div className={styles.layout}>
-        <ol style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <ol className={`${styles.table} ${cal.list}`}>
           {races.map((race, idx) => (
             <RaceRow
               key={race.round}

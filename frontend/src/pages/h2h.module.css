@@ -1,0 +1,202 @@
+.pickers {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.picker { flex: 1; }
+.picker select { width: 100%; }
+
+.vs {
+  padding-bottom: 8px;
+  font-family: var(--display);
+  font-size: 26px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.empty { padding: 40px 0; text-align: center; color: var(--text-muted); font-size: 14px; }
+
+/* Two team-colour bands facing each other */
+.heroes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 4px;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  min-height: 120px;
+  padding: 20px 24px;
+  background: var(--team);
+  color: var(--ink);
+  overflow: hidden;
+}
+.hero[data-side="right"] { flex-direction: row-reverse; text-align: right; }
+
+.hero img {
+  position: relative;
+  background: #F3F3F4;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+/* The driver code, oversized and cropped behind the name */
+.heroCode {
+  position: absolute;
+  bottom: -0.16em;
+  right: 12px;
+  font-family: var(--display);
+  font-size: 132px;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--ink);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.hero[data-side="right"] .heroCode { right: auto; left: 12px; }
+
+.heroText { position: relative; min-width: 0; }
+
+.heroName {
+  font-family: var(--display);
+  font-size: clamp(26px, 3.4vw, 44px);
+  line-height: 0.95;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.heroSub {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Split bars */
+.splits { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+.splitHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.splitCount { font-family: var(--display); font-size: 22px; line-height: 1; letter-spacing: 0.02em; }
+.splitLabel { font-size: 13px; color: var(--text-muted); }
+.splitBar { display: flex; gap: 3px; height: 10px; }
+.splitBar > div { border-radius: 3px; }
+
+/* Season stats table */
+.stats {
+  margin-bottom: 40px;
+  padding: 12px 24px 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.statHead,
+.statRow {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, auto) 1fr;
+  align-items: center;
+  gap: 16px;
+}
+.statHead {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-strong);
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.03em;
+}
+.statRow { padding: 8px 0; }
+.statRow + .statRow { border-top: 1px solid var(--border); }
+
+.statValue {
+  font-family: var(--display);
+  font-size: 32px;
+  line-height: 1;
+  color: var(--text-muted);
+}
+.statValue[data-win] { color: var(--side); }
+
+.statLabel { font-size: 13px; color: var(--text-muted); text-align: center; }
+
+/* Race-by-race log */
+.log {
+  padding: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.logList { list-style: none; display: flex; flex-direction: column; }
+.logList > li + li { border-top: 1px solid var(--border); }
+
+.logRow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1.4fr) 1fr 1fr;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 12px;
+}
+
+.logHead {
+  min-height: 36px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.logRound { font-family: var(--display); font-size: 20px; line-height: 1; color: var(--text-muted); }
+.logHead .logRound { font-family: var(--body); font-size: 12px; }
+
+.logRace {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.cell[data-win] { color: var(--text); font-weight: 700; }
+.cellPts { font-weight: 400; color: var(--text-muted); }
+.winMark { flex: none; width: 8px; height: 8px; border-radius: 2px; }
+
+.tag {
+  flex: none;
+  white-space: nowrap;
+  padding: 0 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.tag[data-strong] { color: var(--text); }
+
+@media (max-width: 768px) {
+  .pickers { flex-direction: column; align-items: stretch; }
+  .vs { display: none; }
+  .hero { min-height: 92px; padding: 14px; gap: 10px; }
+  .heroCode { display: none; }
+  .stats { padding: 8px 14px 2px; }
+  .statHead, .statRow { grid-template-columns: 1fr minmax(96px, auto) 1fr; gap: 8px; }
+  .statValue { font-size: 24px; }
+  .logRow { grid-template-columns: minmax(0, 1fr) 1fr 1fr; padding: 8px; }
+  .logRound { display: none; }
+}

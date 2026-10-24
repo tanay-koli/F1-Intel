@@ -84,7 +84,14 @@
 
 .panelBody { padding: 16px 20px 20px; }
 
-.panelTitle { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.panelTitle {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
 
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 
@@ -117,10 +124,13 @@
 .close:hover { background: rgb(0 0 0 / 0.12); }
 
 /* Label/value pairs in a panel */
-.facts { display: flex; flex-direction: column; gap: 14px; }
+.facts { display: flex; flex-direction: column; }
+.fact + .fact { border-top: 1px solid var(--border); }
+.fact { padding: 12px 0; }
+.fact:first-child { padding-top: 0; }
 .fact { display: flex; flex-direction: column; gap: 2px; }
 .factLabel { font-size: 12px; color: var(--text-muted); }
-.factValue { font-family: var(--display); font-size: 24px; line-height: 1.1; letter-spacing: 0.02em; }
+.factValue { font-family: var(--display); font-size: 28px; text-transform: uppercase; line-height: 1.1; letter-spacing: 0.02em; }
 .factSub { font-size: 13px; color: var(--text-muted); }
 
 .message { font-size: 14px; color: var(--text-muted); padding: 20px 0; }

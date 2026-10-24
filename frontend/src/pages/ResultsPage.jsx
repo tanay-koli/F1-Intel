@@ -18,20 +18,9 @@ function RoundSelector({ schedule, selectedRound, onChange }) {
   const completed = schedule.races.filter(r => r.date <= today)
 
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+    <label className="field field-inline">
       Round
-      <select
-        value={selectedRound}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          background: 'var(--bg-elevated)', border: '1px solid var(--border-strong)',
-          borderRadius: 8, color: 'var(--text)', minHeight: 36, padding: '0 32px 0 12px',
-          fontFamily: 'var(--body)', fontSize: 14, cursor: 'pointer',
-          appearance: 'none', maxWidth: '100%',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3ABB6'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center',
-        }}
-      >
+      <select className="select" value={selectedRound} onChange={e => onChange(e.target.value)}>
         <option value="last">Latest</option>
         {completed.map(r => (
           <option key={r.round} value={r.round}>R{r.round} – {r.raceName}</option>
@@ -108,7 +97,7 @@ function Summary({ results, isQual, isSprint }) {
   }
 
   return (
-    <section className={styles.panel} aria-labelledby="summary-heading">
+    <section className={`${styles.panel} ${styles.panelBody}`} aria-labelledby="summary-heading">
       <h2 id="summary-heading" className={styles.panelTitle}>
         {isQual ? 'Qualifying summary' : isSprint ? 'Sprint summary' : 'Race summary'}
       </h2>
@@ -165,9 +154,6 @@ export default function ResultsPage({ season }) {
     { id: 'qualifying', label: 'Qualifying' },
   ]
 
-  const image = (r, size) => (
-    <DriverMark driver={r} size={size} />
-  )
 
   return (
     <div>
@@ -218,24 +204,25 @@ export default function ResultsPage({ season }) {
                   key: r.driverId,
                   position: r.position,
                   color: r.teamColor,
-                  image: image(r, 72),
                   name: surname(r),
                   ...resultProps(r, isQual),
                 }))}
               />
             )}
+            <div className={styles.table}>
             <StandingsList>
               {rest.map(r => (
                 <StandingsRow
                   key={r.driverId}
                   position={r.position}
                   color={r.teamColor}
-                  image={image(r, 40)}
+                  image={<DriverMark driver={r} />}
                   name={r.fullName}
                   {...resultProps(r, isQual)}
                 />
               ))}
             </StandingsList>
+            </div>
           </div>
           <aside className={styles.aside}>
             <Summary results={results} isQual={isQual} isSprint={isSprint} />

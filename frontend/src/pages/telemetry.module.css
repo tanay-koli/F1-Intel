@@ -1,0 +1,153 @@
+/* ── Controls ─────────────────────────────────────────────────────────── */
+.notice {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.notice strong { color: var(--text); }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.controls .select { min-width: 140px; }
+
+.primary {
+  min-height: 44px;
+  min-width: 140px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.15s ease;
+}
+.primary:hover:not(:disabled) { background: #fff; }
+.primary:disabled { background: var(--bg-elevated); color: var(--text-dim); cursor: not-allowed; }
+
+.empty { padding: 60px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
+.emptySub { margin-top: 8px; font-size: 12px; color: var(--text-dim); }
+
+/* ── Race header + stat tiles ─────────────────────────────────────────── */
+.raceHead { margin-bottom: 20px; }
+
+.raceName {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+.raceMeta { margin: 6px 0 16px; font-size: 14px; color: var(--text-muted); }
+
+.tiles {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+.tileValue { font-family: var(--display); font-size: 44px; line-height: 0.9; }
+.tileLabel { margin: 6px 0 14px; font-size: 13px; color: var(--text-muted); }
+.tileChart { margin-top: auto; }
+
+.lapTrack {
+  position: relative;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+}
+.lapMark {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 4px;
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+.chartNote {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.bars { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.barRow { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.barName { font-family: var(--display); font-size: 16px; line-height: 1; }
+.barTrack { display: block; height: 8px; border-radius: 3px; background: var(--bg-elevated); overflow: hidden; }
+.barFill { display: block; height: 100%; border-radius: 3px; background: var(--team); }
+.barValue { font-size: 12px; color: var(--text-muted); }
+
+.columns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; height: 84px; }
+.column { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; min-height: 0; }
+.columnBar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--text-dim); }
+.columnCount { font-family: var(--display); font-size: 16px; line-height: 1; }
+.columnLabel { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+/* ── Driver deep dive head ────────────────────────────────────────────── */
+.diveHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  background: var(--team);
+  color: var(--ink);
+}
+.diveName {
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+.diveTeam { margin-top: 4px; font-size: 13px; font-weight: 700; }
+
+@media (max-width: 1080px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .tiles { grid-template-columns: 1fr; }
+  .controls { padding: 14px; }
+  .controls > * { flex: 1 1 140px; }
+}
+
+.play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.play:hover { border-color: var(--text-dim); }
+.play[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
