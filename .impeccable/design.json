@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-24T00:00:00Z",
-  "title": "Design System: F1 Dashboard",
+  "title": "Design System: Pit Wall",
   "extensions": {
     "colorMeta": {
       "asphalt": { "role": "neutral", "displayName": "Asphalt", "tonalRamp": ["#0b0c0e", "#141519", "#1e2025", "#2a2d34", "#454a55", "#6b717d", "#a3abb6", "#e8ebef"] },

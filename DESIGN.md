@@ -1,5 +1,5 @@
 ---
-name: F1 Dashboard
+name: Pit Wall
 description: Season context, results and race analysis for F1, from 1950 to now.
 colors:
   asphalt: "#141519"
@@ -107,7 +107,7 @@ components:
     height: "44px"
 ---
 
-# Design System: F1 Dashboard
+# Design System: Pit Wall
 
 ## Overview
 

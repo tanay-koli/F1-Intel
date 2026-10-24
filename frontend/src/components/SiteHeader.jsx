@@ -25,9 +25,9 @@ export default function SiteHeader({ season, onSeasonChange }) {
   return (
     <header className={styles.header}>
       <div className={styles.inner}>
-        <Link to={withSeason('/', season)} className={styles.brand} aria-label="F1 Dashboard home">
-          <span className={styles.badge}>F1</span>
-          <span className={styles.wordmark}>Dashboard</span>
+        <Link to={withSeason('/', season)} className={styles.brand} aria-label="Pit Wall home">
+          <span className={styles.badge}>Pit</span>
+          <span className={styles.wordmark}>Wall</span>
         </Link>
 
         <nav className={styles.nav} aria-label="Main">

@@ -15,7 +15,7 @@ Two audiences, both confirmed:
 
 ## Product Purpose
 
-F1 Dashboard brings season context, results, and race analysis together in one place, from 1950 to the current season. Success means a fan can answer "what's happening this season and why did that race go the way it did" without leaving the app. It also means a reviewer comes away convinced the data is real, correct, and handled honestly at its edges.
+Pit Wall brings season context, results, and race analysis together in one place, from 1950 to the current season. Success means a fan can answer "what's happening this season and why did that race go the way it did" without leaving the app. It also means a reviewer comes away convinced the data is real, correct, and handled honestly at its edges.
 
 ## Positioning
 
@@ -44,7 +44,7 @@ What sets it apart from the official F1 app and timing sites:
 
 ## Brand Commitments
 
-- Name: **F1 Dashboard**.
+- Name: **Pit Wall**.
 - An unofficial fan project. It must not imitate official Formula 1 branding or present itself as an official product.
 
 ## Evidence on Hand

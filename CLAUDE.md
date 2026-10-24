@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+The product is called **Pit Wall** (formerly "F1 Dashboard"). The repo folder, GitHub repo and backend module names keep their old names.
+
 ## Commands
 
 **CI** (`.github/workflows/ci.yml`, every push and PR): backend `ruff check`, `ruff format --check`, `pytest` (Python 3.13); frontend `npm ci && npm run build`.

@@ -5,7 +5,7 @@
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 
-Write-Host "Starting F1 Dashboard..."
+Write-Host "Starting Pit Wall..."
 
 # ── Backend ──────────────────────────────────────────────────────────────────
 $backendDir = Join-Path $root 'backend'
@@ -33,7 +33,7 @@ $frontend = Start-Process -PassThru -NoNewWindow -WorkingDirectory $frontendDir 
     -FilePath 'npm.cmd' -ArgumentList 'run', 'dev'
 
 Write-Host ""
-Write-Host "F1 Dashboard ready"
+Write-Host "Pit Wall ready"
 Write-Host "  Frontend -> http://localhost:5173"
 Write-Host "  API docs -> http://127.0.0.1:8000/docs"
 Write-Host "Press Ctrl+C to stop both servers"

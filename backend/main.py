@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     store.close()
 
 
-app = FastAPI(title="F1 Dashboard API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Pit Wall API", version="1.0.0", lifespan=lifespan)
 
 DEFAULT_SEASON = settings.default_season
 # Telemetry takes a numeric year; "current" means this calendar year
@@ -119,7 +119,7 @@ def route(path: str, model, method: str = "get"):
 
 @route("/", s.RootResponse)
 def root():
-    return {"message": "F1 Dashboard API", "version": "1.0.0"}
+    return {"message": "Pit Wall API", "version": "1.0.0"}
 
 
 # ── Drivers ───────────────────────────────────────────────────────────────────

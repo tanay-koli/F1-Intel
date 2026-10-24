@@ -1,4 +1,4 @@
-# 🏎 F1 Dashboard — MVP
+# 🏎 Pit Wall
 
 A full-stack F1 data dashboard built with **React + FastAPI**, powered by the **[Jolpica F1 API](https://github.com/jolpica/jolpica-f1)** (the Ergast-compatible successor to the retired Ergast API) and **FastF1**.
 
@@ -7,7 +7,7 @@ A full-stack F1 data dashboard built with **React + FastAPI**, powered by the **
 ## Project Structure
 
 ```
-f1-dashboard/
+F1-Intel/
 ├── backend/
 │   ├── main.py           # FastAPI app & routes
 │   ├── ergast.py         # Jolpica API wrapper (historical module name)

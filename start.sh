@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run both backend and frontend concurrently
 
-echo "🏎  Starting F1 Dashboard..."
+echo "🏎  Starting Pit Wall..."
 
 # Backend
 cd backend
@@ -26,7 +26,7 @@ FRONTEND_PID=$!
 echo "✅ Frontend running at http://localhost:5173"
 
 echo ""
-echo "🏁 F1 Dashboard ready!"
+echo "🏁 Pit Wall ready!"
 echo "   Frontend → http://localhost:5173"
 echo "   API docs → http://localhost:8000/docs"
 echo ""
