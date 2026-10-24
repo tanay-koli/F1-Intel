@@ -18,8 +18,8 @@ function normalize(points) {
   return points.map(([x, y]) => [offX + (x - minX) * scale, BOX - (offY + (y - minY) * scale)])
 }
 
-/** Circuit outline from the warehouse export; renders nothing if none exists. */
-export default function TrackOutline({ circuitId, locality, label }) {
+/** Circuit outline from the warehouse export; renders `fallback` if none exists. */
+export default function TrackOutline({ circuitId, locality, label, fallback = null }) {
   const { data } = useQuery({
     queryKey: ['circuit-outline', circuitId],
     queryFn: () => f1Api.getCircuitOutline(circuitId, locality),
@@ -27,7 +27,7 @@ export default function TrackOutline({ circuitId, locality, label }) {
     retry: false,
     staleTime: Infinity,
   })
-  if (!data?.points?.length) return null
+  if (!data?.points?.length) return fallback
 
   const pts = normalize(data.points)
   const [sx, sy] = pts[0]

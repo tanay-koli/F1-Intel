@@ -40,3 +40,6 @@ logs/
 Thumbs.db
 Desktop.ini
 *.log
+
+# Impeccable review screenshots
+.impeccable/review/

@@ -1,40 +1,52 @@
-.list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+/* Dark table: rows divided by hairlines inside the parent card */
+.list { list-style: none; display: flex; flex-direction: column; }
+.list > li + li .row { border-top: 1px solid var(--border); }
 
 .row {
   display: grid;
-  grid-template-columns: 24px 40px minmax(0, 1fr) auto;
+  grid-template-columns: 44px auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  padding: 10px 12px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--team);
-  border-radius: 8px;
+  min-height: 60px;
+  padding: 8px 12px 8px 4px;
   color: inherit;
   text-align: left;
   font: inherit;
+  border-radius: 8px;
 }
 
-button.row { transition: border-color 0.15s ease, background 0.15s ease; }
-button.row:hover { border-color: var(--border-strong); border-left-color: var(--team); }
-.row[data-selected] { background: var(--pill-active); border-color: var(--border-strong); border-left-color: var(--team); }
+button.row { cursor: pointer; transition: background 0.15s ease; }
+button.row:hover { background: var(--bg-elevated); }
+.row[data-selected],
+.row[data-selected]:hover { background: var(--pill-active); }
+.list > li:has([data-selected]) + li .row,
+.row[data-selected] { border-top-color: transparent; }
 
+/* Outlined position number */
 .pos {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 34px;
   line-height: 1;
-  color: var(--text-muted);
   text-align: center;
+  color: transparent;
+  -webkit-text-stroke: 1.2px var(--text-muted);
+}
+
+.row img {
+  background: #F3F3F4;
+  border-radius: 8px;
+  padding: 4px;
 }
 
 .main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 
 .name {
   font-family: var(--display);
-  font-size: 18px;
-  letter-spacing: 0.04em;
+  font-size: 22px;
+  letter-spacing: 0.02em;
   line-height: 1;
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -42,7 +54,7 @@ button.row:hover { border-color: var(--border-strong); border-left-color: var(--
 
 .bar {
   display: block;
-  height: 4px;
+  height: 3px;
   border-radius: 2px;
   background: var(--border);
   overflow: hidden;
@@ -61,7 +73,7 @@ button.row:hover { border-color: var(--border-strong); border-left-color: var(--
 
 .value {
   font-family: var(--display);
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
   white-space: nowrap;
 }

@@ -1,8 +1,9 @@
+import { inkOn } from '../lib/color'
 import styles from './Podium.module.css'
 
 /**
- * Top three as flat cards, P1 in the middle on wide screens and as rows on a
- * phone. Each item: { key, position, color, image, name, subline, figure,
+ * Top three as full-width bands in each team's colour, in finishing order,
+ * with the position set huge. Each item: { key, position, color, image, name, subline, figure,
  * unit, detail, onClick, selected }.
  */
 export default function Podium({ items, label }) {
@@ -12,9 +13,9 @@ export default function Podium({ items, label }) {
         const Inner = onClick ? 'button' : 'div'
         const buttonProps = onClick ? { type: 'button', onClick, 'aria-pressed': !!selected } : {}
         return (
-          <li key={key} className={styles.step} data-pos={position} style={{ '--team': color }}>
+          <li key={key} className={styles.step} data-pos={position} style={{ '--team': color, '--ink': inkOn(color) }}>
             <Inner className={styles.card} data-selected={selected || undefined} {...buttonProps}>
-              <span className={styles.pos}>P{position}</span>
+              <span className={styles.pos}><span className={styles.srOnly}>Position </span>{position}</span>
               <span className={styles.image}>{image}</span>
               <span className={styles.who}>
                 <span className={styles.name}>{name}</span>

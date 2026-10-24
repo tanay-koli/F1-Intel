@@ -2,50 +2,30 @@ import TrackOutline from '../../components/TrackOutline'
 import Skeleton from '../../components/Skeleton'
 import Countdown from './Countdown'
 import WeekendSchedule from './WeekendSchedule'
-import { endMs } from './weekend'
-import { titleContext } from '../../lib/titleMath'
 import { countWord, surname, points } from '../../lib/format'
 import styles from './Home.module.css'
-
-function TitleLine({ context, city }) {
-  if (!context) return null
-  const { leader, second, gap, racesLeft, clinched, canClinchThisWeekend } = context
-  if (clinched) {
-    return (
-      <p className={styles.context}>
-        {surname(leader)} has won the title, {points(gap)} points clear of {surname(second)}.
-      </p>
-    )
-  }
-  return (
-    <p className={styles.context}>
-      {surname(leader)} leads {surname(second)} by {points(gap)} {gap === 1 ? 'point' : 'points'} with{' '}
-      {countWord(racesLeft, 'race')} left{canClinchThisWeekend ? ` and can seal the title in ${city}.` : '.'}
-    </p>
-  )
-}
 
 /** Hero for a season with no race left: show how it finished instead of a countdown. */
 function SeasonComplete({ season, standings }) {
   const [champ, second] = standings ?? []
   return (
-    <section className={`${styles.card} ${styles.hero}`} aria-labelledby="season-result">
+    <section className={styles.hero} aria-labelledby="season-result">
       <div className={styles.heroMain}>
-        <p className={styles.eyebrow}>{season} season complete</p>
         {champ ? (
           <>
             <h1 id="season-result" className={styles.raceName}>{surname(champ)} won the {season} title</h1>
             {second && (
               <p className={styles.circuit}>
-                {points(champ.points - second.points)} points ahead of {surname(second)},
+                {season} season complete. {points(champ.points - second.points)} points ahead of {surname(second)},
                 with {countWord(champ.wins, 'win')}.
               </p>
             )}
           </>
         ) : (
-          <p id="season-result" className={styles.panelMessage}>
-            Final standings aren't available for {season}.
-          </p>
+          <>
+            <h1 id="season-result" className={styles.raceName}>{season} season complete</h1>
+            <p className={styles.circuit}>Final standings aren't available for {season}.</p>
+          </>
         )}
       </div>
     </section>
@@ -54,25 +34,24 @@ function SeasonComplete({ season, standings }) {
 
 function HeroSkeleton() {
   return (
-    <div className={`${styles.card} ${styles.hero}`} aria-busy="true" aria-label="Loading next race">
+    <div className={styles.hero} aria-busy="true" aria-label="Loading next race">
       <div className={styles.heroMain}>
-        <Skeleton width={160} height={14} />
-        <Skeleton width="70%" height={52} />
+        <Skeleton width="80%" height={88} />
         <Skeleton width="45%" height={16} />
-        <Skeleton width="80%" height={72} />
+        <Skeleton width="70%" height={96} />
       </div>
       <div className={styles.heroAside}>
-        {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} height={40} />)}
+        {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} height={44} />)}
       </div>
     </div>
   )
 }
 
-export default function NextRaceHero({ season, nextRace, standings, schedule }) {
+export default function NextRaceHero({ season, nextRace, standings }) {
   if (nextRace.isLoading) return <HeroSkeleton />
   if (nextRace.isError) {
     return (
-      <div className={`${styles.card} ${styles.hero}`}>
+      <div className={styles.hero}>
         <p className={styles.panelMessage}>The next race isn't available right now.</p>
       </div>
     )
@@ -81,35 +60,25 @@ export default function NextRaceHero({ season, nextRace, standings, schedule }) 
   const race = nextRace.data?.race
   if (!race) return <SeasonComplete season={season} standings={standings.data?.standings} />
 
-  // Once this weekend's sprint is over its points are in the standings, not still to play for
-  const sprint = race.sessions.find(s => s.key === 'sprint')
-  const sprintDone = sprint && Date.now() > endMs(sprint)
-  const remaining = (schedule.data?.races ?? [])
-    .filter(r => r.round >= race.round)
-    .map(r => (sprintDone && r.round === race.round ? { ...r, sprint: '' } : r))
-  const context = standings.data?.standings?.length && remaining.length
-    ? titleContext(standings.data.standings, remaining)
-    : null
-
   return (
-    <section className={`${styles.card} ${styles.hero}`} aria-labelledby="next-race-name">
+    <section className={styles.hero} aria-labelledby="next-race-name">
       <div className={styles.heroMain}>
-        <p className={styles.eyebrow}>Next race, round {race.round}</p>
-        <div className={styles.titleRow}>
-          <div>
-            <h1 id="next-race-name" className={styles.raceName}>{race.raceName}</h1>
-            <p className={styles.circuit}>{race.circuitName}, {race.locality}</p>
-          </div>
+        <h1 id="next-race-name" className={styles.raceName}>{race.raceName}</h1>
+        <p className={styles.circuit}>
+          <span className={styles.roundTag}>Round {race.round}</span>
+          {race.circuitName}, {race.locality}
+        </p>
+        <div className={styles.countRow}>
+          <Countdown sessions={race.sessions} />
           <div className={styles.trackBox}>
             <TrackOutline
               circuitId={race.circuitId}
               locality={race.locality}
               label={`${race.circuitName} layout`}
+              fallback={<span className={styles.roundGhost} aria-hidden="true">R{race.round}</span>}
             />
           </div>
         </div>
-        <Countdown sessions={race.sessions} />
-        <TitleLine context={context} city={race.locality} />
       </div>
       <div className={styles.heroAside}>
         <WeekendSchedule sessions={race.sessions} />

@@ -10,7 +10,7 @@ const weekendMax = (race) => MAX_GP_POINTS + (race.sprint ? MAX_SPRINT_POINTS : 
  * @param standings  driver standings, sorted by position (from /api/driver-standings)
  * @param remaining  schedule entries not yet raced, in round order (next race first)
  * @returns null if there's no fight to describe, otherwise
- *   { leader, second, gap, racesLeft, clinched, canClinchThisWeekend }
+ *   { leader, second, gap, maxRemaining, racesLeft, clinched, canClinchThisWeekend }
  *
  * "Can clinch" is the best case for the leader: they take the maximum this
  * weekend while P2 scores nothing, and the resulting lead exceeds everything
@@ -30,6 +30,7 @@ export function titleContext(standings, remaining) {
     leader,
     second,
     gap,
+    maxRemaining,
     racesLeft: remaining.length,
     clinched: gap > maxRemaining,
     canClinchThisWeekend: !!next && gap <= maxRemaining && gap + weekendMax(next) > maxAfterNext,

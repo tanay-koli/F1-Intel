@@ -6,6 +6,7 @@ import SectionHeading from '../../components/SectionHeading'
 import Skeleton from '../../components/Skeleton'
 import { withSeason } from '../../hooks/useSeason'
 import { surname } from '../../lib/format'
+import { inkOn } from '../../lib/color'
 import styles from './Home.module.css'
 
 // Visual order: P2 left, P1 centre, P3 right
@@ -74,7 +75,7 @@ export default function LastRacePanel({ season, results }) {
                   <span className={styles.podiumGap}>{gapToWinner(r)}</span>
                   <span
                     className={`${styles.step} ${styles[`step${pos}`]}`}
-                    style={{ '--team': r.teamColor }}
+                    style={{ '--team': r.teamColor, '--ink': inkOn(r.teamColor) }}
                   >
                     <span className={styles.stepNum} aria-label={`Position ${pos}`}>{pos}</span>
                   </span>
