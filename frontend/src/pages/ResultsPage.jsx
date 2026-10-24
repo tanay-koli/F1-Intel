@@ -35,8 +35,19 @@ function RoundSelector({ schedule, selectedRound, onChange }) {
 const isClassified = r => /^\d+$/.test(r.positionText ?? String(r.position))
 const bestSession  = r => ['q3', 'q2', 'q1'].find(q => r[q] && r[q] !== '—')
 
+/**
+ * A finisher's gap. Jolpica gives lapped cars a time too (not a gap to the
+ * winner), so those read "+N laps" instead.
+ */
+function raceGap(r, leaderLaps) {
+  const lapped = r.status === 'Lapped' || /^\+\d+ Laps?$/.test(r.status ?? '')
+  const down = Number(leaderLaps) - Number(r.laps)
+  if (lapped && down > 0) return `+${down} ${down === 1 ? 'lap' : 'laps'}`
+  return r.time || r.status
+}
+
 /** Props shared by the podium cards and the rows. */
-function resultProps(r, isQual) {
+function resultProps(r, isQual, leaderLaps) {
   const team = r.constructorName
   if (isQual) {
     const best    = bestSession(r)
@@ -56,7 +67,7 @@ function resultProps(r, isQual) {
   return {
     position: isClassified(r) ? r.position : r.positionText,
     subline:  `${team} · ${r.grid > 0 ? `started P${r.grid}` : 'pit lane start'}`,
-    figure:   r.time || r.status,
+    figure:   raceGap(r, leaderLaps),
     detail:   detail || '—',
   }
 }
@@ -147,6 +158,7 @@ export default function ResultsPage({ season }) {
 
   const podium = results.filter(r => r.position <= 3).sort((a, b) => a.position - b.position)
   const rest   = results.filter(r => r.position > 3)
+  const leaderLaps = results.find(r => r.position === 1)?.laps
 
   const SUB_TABS = [
     { id: 'race',       label: 'Race' },
@@ -205,7 +217,7 @@ export default function ResultsPage({ season }) {
                   position: r.position,
                   color: r.teamColor,
                   name: surname(r),
-                  ...resultProps(r, isQual),
+                  ...resultProps(r, isQual, leaderLaps),
                 }))}
               />
             )}
@@ -218,7 +230,7 @@ export default function ResultsPage({ season }) {
                   color={r.teamColor}
                   image={<DriverMark driver={r} />}
                   name={r.fullName}
-                  {...resultProps(r, isQual)}
+                  {...resultProps(r, isQual, leaderLaps)}
                 />
               ))}
             </StandingsList>

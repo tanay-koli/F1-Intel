@@ -1,5 +1,5 @@
 import { endMs } from './weekend'
-import { titleContext } from '../../lib/titleMath'
+import { titleContext, MAX_GP_POINTS, MAX_SPRINT_POINTS } from '../../lib/titleMath'
 import { countWord, surname, points } from '../../lib/format'
 import styles from './Home.module.css'
 
@@ -36,6 +36,8 @@ export default function TitleTiles({ race, standings, schedule }) {
     : canClinchThisWeekend ? `Can seal it in ${race.locality}`
     : null
   const sprints = remaining.filter(r => r.sprint).length
+  // Room past the seal line so both the gap and the line stay on the scale
+  const scale = Math.max(gap, maxRemaining) * 1.15 || 1
   const maxWins = Math.max(leader.wins, second.wins, 1)
 
   return (
@@ -46,13 +48,17 @@ export default function TitleTiles({ race, standings, schedule }) {
         label={`${surname(leader)} leads ${surname(second)}`}
         status={status}
       >
+        {/* Gap against the points still available: past the line, the title is sealed */}
         <div className={styles.gapChart}>
           <span className={styles.gapTrack}>
-            <span className={styles.gapFill} style={{ width: `${Math.min(1, gap / (maxRemaining || 1)) * 100}%` }} />
+            <span className={styles.gapFill} style={{ width: `${(gap / scale) * 100}%` }} />
+            <span className={styles.gapLine} style={{ left: `${(maxRemaining / scale) * 100}%` }} />
           </span>
-          <span className={styles.chartNote}>
-            <span>Gap</span>
-            <span>{maxRemaining} pts still available</span>
+          <span className={styles.gapScale}>
+            <span>{surname(second)} −{points(gap)}</span>
+            <span className={styles.gapLineLabel} style={{ left: `${(maxRemaining / scale) * 100}%` }}>
+              {maxRemaining} left
+            </span>
           </span>
         </div>
       </Tile>
@@ -61,11 +67,17 @@ export default function TitleTiles({ race, standings, schedule }) {
         value={remaining.length}
         label={`${remaining.length === 1 ? 'Race' : 'Races'} left${sprints ? `, ${countWord(sprints, 'sprint')}` : ''}`}
       >
+        {/* One block per round, as wide as the points it offers; sprint weekends carry an S */}
         <ol className={styles.pips}>
           {remaining.map(r => (
-            <li key={r.round} className={styles.pip} data-sprint={r.sprint ? '' : undefined}>
+            <li
+              key={r.round}
+              className={styles.pip}
+              data-sprint={r.sprint ? '' : undefined}
+              style={{ flexGrow: MAX_GP_POINTS + (r.sprint ? MAX_SPRINT_POINTS : 0) }}
+            >
               <span className={styles.pipBar} />
-              <span className={styles.pipLabel}>R{r.round}</span>
+              <span className={styles.pipLabel}>R{r.round}{r.sprint ? ' S' : ''}</span>
               <span className={styles.srOnly}>{r.raceName}{r.sprint ? ', sprint weekend' : ''}</span>
             </li>
           ))}
@@ -74,8 +86,8 @@ export default function TitleTiles({ race, standings, schedule }) {
 
       <Tile value={leader.wins} label={`${leader.wins === 1 ? 'Win' : 'Wins'} for ${surname(leader)}`}>
         <div className={styles.winBars}>
-          {[leader, second].map(d => (
-            <div key={d.driverId} className={styles.winRow} style={{ '--team': d.teamColor }}>
+          {[leader, second].map((d, i) => (
+            <div key={d.driverId} className={styles.winRow} data-second={i === 1 || undefined} style={{ '--team': d.teamColor }}>
               <span className={styles.winName}>{d.code || surname(d)}</span>
               <span className={styles.winTrack}>
                 <span className={styles.winFill} style={{ width: `${(d.wins / maxWins) * 100}%` }} />

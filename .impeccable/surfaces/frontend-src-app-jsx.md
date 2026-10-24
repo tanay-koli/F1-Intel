@@ -18,6 +18,6 @@ STORY: The fan sees what's next and how long until lights out, who leads and by 
 
 FIRST VIEWPORT: Maroon header band with PIT WALL wordmark and pill nav; Home hero: next GP name huge in condensed caps, countdown digits at poster scale beside the circuit outline (or the outlined round number when no outline exists), weekend schedule as a dark table at right; a marquee band of the GP name below; stat tiles (title math, gap, races left) under it.
 
-FORM: brief-pinned (user inspiration set: overall/constructors/analytics/home), position 1 of 1. seed: none (unavailable)
+FORM: brief-pinned (user inspiration set: overall/constructors/analytics/home), position 1 of 1. seed:8796a915edc75396 (brief-pinned direction overrides the roll)
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

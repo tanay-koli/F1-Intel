@@ -84,9 +84,9 @@ function H2HBar({ d1, d2, c1, c2, valueKey, label }) {
   return (
     <div className={styles.split}>
       <div className={styles.splitHead}>
-        <span className={styles.splitCount}>{d1.code} <span style={{ color: c1 }}>{n1}</span></span>
+        <span className={styles.splitCount}>{d1.code} {n1}</span>
         <span className={styles.splitLabel}>{label}</span>
-        <span className={styles.splitCount}><span style={{ color: c2 }}>{n2}</span> {d2.code}</span>
+        <span className={styles.splitCount}>{n2} {d2.code}</span>
       </div>
       <div className={styles.splitBar} role="img" aria-label={`${label}: ${d1.code} ${n1}, ${d2.code} ${n2}`}>
         {n1 > 0 && <div style={{ flex: n1, background: c1 }} />}

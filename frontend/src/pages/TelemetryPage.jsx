@@ -123,13 +123,13 @@ function StatPill({ label, value, color, highlight }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 6,
-      background: highlight ? '#FFD70012' : 'var(--bg-elevated)',
-      border: `1px solid ${highlight ? '#FFD70040' : 'var(--border)'}`,
+      background: 'var(--bg-elevated)',
+      border: `1px solid ${highlight ? 'var(--text-muted)' : 'var(--border)'}`,
       borderRadius: 20, padding: '4px 12px', fontSize: 11,
     }}>
       {color && <TeamDot color={color} size={7} />}
       <span style={{ color: 'var(--text-muted)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--body)', color: highlight ? '#FFD700' : (color ?? 'var(--text)'), fontWeight: 600 }}>{value}</span>
+      <span style={{ fontFamily: 'var(--body)', color: 'var(--text)', fontWeight: 600 }}>{value}</span>
     </div>
   )
 }
@@ -229,23 +229,20 @@ function AllDriversSummaryTable({ analysis, onSelectDriver, selectedDriver }) {
   const fl = analysis.overallFastestLap
 
   return (
-    <div style={{
-      background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 10, overflow: 'auto', marginBottom: 20,
-    }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, fontFamily: 'var(--body)' }}>
+    <div className={tstyles.tableWrap}>
+      <table className={tstyles.table}>
         <thead>
-          <tr style={{ borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}>
-            <th style={thStyle}>Grid</th>
-            <th style={thStyle}>Pos</th>
-            <th style={{ ...thStyle, textAlign: 'left', minWidth: 130 }}>Driver</th>
-            <th style={{ ...thStyle, textAlign: 'left', minWidth: 100 }}>Team</th>
-            <th style={thStyle}>Fastest Lap</th>
-            <th style={thStyle}>Avg Lap</th>
-            <th style={thStyle}>Stops</th>
-            <th style={{ ...thStyle, textAlign: 'left', minWidth: 140 }}>Strategy</th>
-            <th style={thStyle}>Laps</th>
-            <th style={thStyle}>+/-</th>
+          <tr>
+            <th>Grid</th>
+            <th>Pos</th>
+            <th className={tstyles.left}>Driver</th>
+            <th className={tstyles.left}>Team</th>
+            <th>Fastest lap</th>
+            <th>Avg lap</th>
+            <th>Stops</th>
+            <th className={tstyles.left}>Strategy</th>
+            <th>Laps</th>
+            <th>+/-</th>
           </tr>
         </thead>
         <tbody>
@@ -253,66 +250,39 @@ function AllDriversSummaryTable({ analysis, onSelectDriver, selectedDriver }) {
             const isFL = fl.driver === d.code
             const isSelected = selectedDriver === d.code
             return (
-              <tr
-                key={d.code}
-                onClick={() => onSelectDriver(d.code)}
-                style={{
-                  borderBottom: '1px solid #1e1e24',
-                  background: isSelected ? `${d.teamColor}15` : isFL ? '#FFD70008' : 'transparent',
-                  cursor: 'pointer',
-                  transition: 'background 0.12s',
-                }}
-                onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = `${d.teamColor}0a` }}
-                onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = isFL ? '#FFD70008' : 'transparent' }}
-              >
-                <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>{d.gridPosition ?? '—'}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>
-                  <span style={{
-                    fontWeight: 700,
-                    color: d.finishPosition === 1 ? '#FFD700' : d.finishPosition === 2 ? '#C0C0C0' : d.finishPosition === 3 ? '#CD7F32' : 'var(--text)',
-                  }}>
-                    P{d.finishPosition ?? '—'}
-                  </span>
+              <tr key={d.code} data-selected={isSelected || undefined}>
+                <td className={tstyles.muted}>{d.gridPosition ?? '—'}</td>
+                <td className={tstyles.pos}>{d.finishPosition ?? '—'}</td>
+                <td className={tstyles.left}>
+                  <button
+                    type="button"
+                    className={tstyles.driverBtn}
+                    aria-pressed={isSelected}
+                    onClick={() => onSelectDriver(d.code)}
+                  >
+                    <DriverMark driver={d} size={30} />
+                    <span>{d.fullName}</span>
+                  </button>
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'left' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <TeamDot color={d.teamColor} size={7} />
-                    <span style={{ color: d.teamColor, fontWeight: 600 }}>{d.code}</span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{d.fullName}</span>
-                  </div>
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'left', color: 'var(--text-dim)', fontSize: 12 }}>{d.team}</td>
-                <td style={{ ...tdStyle, textAlign: 'center', color: isFL ? '#FFD700' : 'var(--text)' }}>
+                <td className={`${tstyles.left} ${tstyles.muted}`}>{d.team}</td>
+                <td>
                   {d.fastestLapTimeStr}
-                  {isFL && <span style={{ marginLeft: 4, fontSize: 12 }}>FL</span>}
+                  {isFL && <span className={tstyles.flTag}>Fastest</span>}
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>{d.avgLapTimeStr}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{d.pitStops}</td>
-                <td style={{ ...tdStyle, textAlign: 'left' }}>
-                  <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                <td className={tstyles.muted}>{d.avgLapTimeStr}</td>
+                <td>{d.pitStops}</td>
+                <td className={tstyles.left}>
+                  <div className={tstyles.stints}>
                     {d.stints.map((s, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 2 }} title={`${s.compound} L${s.startLap}–${s.endLap} (${s.length} laps)`}>
-                        <span style={{
-                          display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                          background: COMPOUND_COLORS[s.compound] ?? '#888',
-                        }} />
-                        <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>{s.length}</span>
-                        {i < d.stints.length - 1 && <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>→</span>}
-                      </div>
+                      <span key={i} className={tstyles.stint} title={`${s.compound} L${s.startLap}–${s.endLap} (${s.length} laps)`}>
+                        <span className={tstyles.compound} style={{ background: COMPOUND_COLORS[s.compound] ?? '#888' }} />
+                        {s.length}
+                      </span>
                     ))}
                   </div>
                 </td>
-                <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>{d.totalLaps}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>
-                  {d.positionsGained != null ? (
-                    <span style={{
-                      color: d.positionsGained > 0 ? '#39B54A' : d.positionsGained < 0 ? '#E8002D' : 'var(--text-dim)',
-                      fontWeight: 600,
-                    }}>
-                      {d.positionsGained > 0 ? `+${d.positionsGained}` : d.positionsGained}
-                    </span>
-                  ) : '—'}
-                </td>
+                <td className={tstyles.muted}>{d.totalLaps}</td>
+                <td>{d.positionsGained == null ? '—' : d.positionsGained > 0 ? `+${d.positionsGained}` : d.positionsGained}</td>
               </tr>
             )
           })}
@@ -512,7 +482,7 @@ function ScatterTooltip({ active, payload }) {
       borderRadius: 8, padding: '10px 14px',
       fontFamily: 'var(--body)', fontSize: 11,
     }}>
-      <div style={{ color: d.teamColor, fontWeight: 600, marginBottom: 4 }}>
+      <div style={{ color: 'var(--text)', fontWeight: 600, marginBottom: 4 }}>
         {d.code} · Lap {d.lap}
       </div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -521,7 +491,7 @@ function ScatterTooltip({ active, payload }) {
           background: COMPOUND_COLORS[d.compound] ?? '#888',
         }} />
         <span style={{ color: 'var(--text)' }}>{fmtSecs(d.lapTime)}</span>
-        {d.isPitLap && <span style={{ color: '#FFA500' }}>Pit</span>}
+        {d.isPitLap && <span style={{ color: 'var(--text-muted)' }}>Pit</span>}
       </div>
     </div>
   )
@@ -555,7 +525,7 @@ function AllDriversTyreStrategy({ analysis, isMobile }) {
           <div key={d.code} style={{ marginBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
               <span style={{
-                fontFamily: 'var(--body)', fontSize: 11, color: d.teamColor,
+                fontFamily: 'var(--body)', fontSize: 11, color: 'var(--text)',
                 minWidth: 30, fontWeight: 600,
               }}>{d.code}</span>
               <span style={{
@@ -651,21 +621,16 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
       <div style={{
         padding: '14px 18px 12px',
         borderBottom: '1px solid var(--border)',
-        background: '#e1060008',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              background: 'var(--red)', borderRadius: 5, padding: '2px 8px',
-              fontFamily: 'var(--display)', fontSize: 12,
-              color: '#fff',
-            }}>Analyst</span>
-            <span style={{
-              fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-            }}>Race Analyst</span>
+            <h2 style={{
+              fontFamily: 'var(--display)', fontWeight: 400, fontSize: 26, lineHeight: 1,
+              textTransform: 'uppercase',
+            }}>Race analyst</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
@@ -682,7 +647,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
               fontFamily: 'var(--display)', fontSize: 22, color: 'var(--text)',
               minWidth: 80, textAlign: 'right',
             }}>
-              <span style={{ color: 'var(--red)' }}>L{currentLap}</span>
+              <span>L{currentLap}</span>
               <span style={{ color: 'var(--text-dim)', fontSize: 14 }}>/{totalLaps}</span>
             </div>
           </div>
@@ -696,7 +661,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
           }} />
           <div style={{
             position: 'absolute', top: 8, left: 0, height: 4,
-            width: `${progress}%`, background: 'var(--red)',
+            width: `${progress}%`, background: 'var(--text)',
             borderRadius: 2, transition: 'width 0.15s ease',
           }} />
           <input
@@ -907,8 +872,8 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
 
       {/* Fastest Lap Analysis Card */}
       <div style={{
-        background: isRaceFL ? '#FFD70008' : 'var(--bg-card)',
-        border: `1px solid ${isRaceFL ? '#FFD70030' : 'var(--border)'}`,
+        background: 'var(--bg-card)',
+        border: `1px solid ${isRaceFL ? 'var(--text-muted)' : 'var(--border)'}`,
         borderRadius: 16, padding: '14px 18px', marginBottom: 20,
       }}>
         <div style={{
@@ -920,11 +885,11 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: 12 }}>
           <div>
             <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>LAP</div>
-            <div style={{ fontFamily: 'var(--display)', fontSize: 20, color: driver.teamColor }}>L{driver.fastestLap ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text)' }}>L{driver.fastestLap ?? '—'}</div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>Time</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 16, color: isRaceFL ? '#FFD700' : 'var(--text)' }}>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 16, color: 'var(--text)' }}>
               {driver.fastestLapTimeStr}
             </div>
           </div>
@@ -942,7 +907,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>vs race fastest lap</div>
             <div style={{
               fontFamily: 'var(--body)', fontSize: 16,
-              color: isRaceFL ? '#FFD700' : flDeltaToRace && Number(flDeltaToRace) > 0 ? '#E8002D' : '#39B54A',
+              color: 'var(--text)',
             }}>
               {isRaceFL ? '— HOLDER' : flDeltaToRace ? `+${flDeltaToRace}s` : 'N/A'}
             </div>
@@ -950,7 +915,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
         </div>
         {flDeltaToAvg && (
           <div style={{ marginTop: 10, fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--body)' }}>
-            Their FL was <strong style={{ color: '#39B54A' }}>{flDeltaToAvg}s faster</strong> than their average lap ({driver.avgLapTimeStr})
+            Their FL was <strong style={{ color: 'var(--text)' }}>{flDeltaToAvg}s faster</strong> than their average lap ({driver.avgLapTimeStr})
           </div>
         )}
       </div>
@@ -1025,11 +990,11 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             )}
             {/* Pit stop reference lines */}
             {driver.pitLaps.map(lap => (
-              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#FFA500" strokeDasharray="3 3" strokeOpacity={0.6} />
+              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#A9A9B0" strokeDasharray="3 3" strokeOpacity={0.6} />
             ))}
             {/* Fastest lap reference */}
             {driver.fastestLap && (
-              <ReferenceLine x={driver.fastestLap} stroke="#FFD700" strokeDasharray="4 2" strokeOpacity={0.8} />
+              <ReferenceLine x={driver.fastestLap} stroke={'#F3F3F4'} strokeDasharray="4 2" strokeOpacity={0.8} />
             )}
             <Line
               type="monotone" dataKey="lapTime"
@@ -1038,7 +1003,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
                 const { cx, cy, payload } = props
                 if (!cx || !cy) return null
                 if (payload.isFastestLap) {
-                  return <circle cx={cx} cy={cy} r={5} fill="#FFD700" stroke="#FFD700" strokeWidth={2} />
+                  return <circle cx={cx} cy={cy} r={5} fill={'#F3F3F4'} stroke={'#F3F3F4'} strokeWidth={2} />
                 }
                 return null
               }}
@@ -1056,10 +1021,10 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <div style={{ width: 16, height: 0, borderTop: `2px dashed ${driver.teamColor}`, opacity: 0.5 }} /> Avg
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>
-            <div style={{ width: 16, height: 0, borderTop: '2px dashed #FFA500', opacity: 0.6 }} /> Pit Stop
+            <div style={{ width: 16, height: 0, borderTop: '2px dashed #A9A9B0', opacity: 0.6 }} /> Pit Stop
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD700' }} /> FL
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F3F3F4' }} /> Fastest lap
           </div>
         </div>
       </div>
@@ -1100,7 +1065,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             />
             <Tooltip content={<PosProgressionTooltip driver={driver} />} />
             {driver.pitLaps.map(lap => (
-              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#FFA500" strokeDasharray="3 3" strokeOpacity={0.5} />
+              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#A9A9B0" strokeDasharray="3 3" strokeOpacity={0.5} />
             ))}
             <Area
               type="stepAfter" dataKey="position"
@@ -1142,10 +1107,10 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
               return (
                 <tr key={l.lap} style={{
                   borderBottom: '1px solid #1e1e24',
-                  background: isFL ? '#FFD70010' : l.isPitLap ? '#FFA50008' : 'transparent',
+                  background: isFL || l.isPitLap ? 'var(--bg-elevated)' : 'transparent',
                 }}>
                   <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>{l.lap}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', color: isFL ? '#FFD700' : 'var(--text)' }}>
+                  <td style={{ ...tdStyle, textAlign: 'right', color: 'var(--text)' }}>
                     {l.lapTimeStr}
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
@@ -1161,9 +1126,9 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
                     {l.gapToLeader != null ? `+${l.gapToLeader}s` : '—'}
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'left', fontSize: 12 }}>
-                    {isFL && <span style={{ color: '#FFD700', marginRight: 4 }}>FL</span>}
-                    {l.isPitLap && <span style={{ color: '#FFA500', marginRight: 4 }}>PIT</span>}
-                    {isSC && <span style={{ color: '#FFA500', marginRight: 4 }}>SC</span>}
+                    {isFL && <span style={{ color: 'var(--text)', fontWeight: 700, marginRight: 4 }}>Fastest</span>}
+                    {l.isPitLap && <span style={{ color: 'var(--text-muted)', marginRight: 4 }}>Pit</span>}
+                    {isSC && <span style={{ color: 'var(--text-muted)', marginRight: 4 }}>SC</span>}
                   </td>
                 </tr>
               )
@@ -1193,7 +1158,7 @@ function DeepDiveTooltip({ active, payload, label, driver }) {
           display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
           background: COMPOUND_COLORS[d.compound] ?? '#888',
         }} />
-        <span style={{ color: d.isFastestLap ? '#FFD700' : driver.teamColor, fontWeight: 600 }}>
+        <span style={{ color: 'var(--text)', fontWeight: 600 }}>
           {d.lapTimeStr}
         </span>
       </div>
@@ -1214,7 +1179,7 @@ function PosProgressionTooltip({ active, payload, label, driver }) {
       fontFamily: 'var(--body)', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>Lap {label}</div>
-      <div style={{ color: driver.teamColor, fontWeight: 600 }}>P{payload[0]?.value ?? '—'}</div>
+      <div style={{ color: 'var(--text)', fontWeight: 600 }}>P{payload[0]?.value ?? '—'}</div>
     </div>
   )
 }
@@ -1372,21 +1337,15 @@ function FastestLapView({ tel, isMobile }) {
       </div>
 
       {/* Metric tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div className={ranked.tabs}>
         {METRIC_TABS.map(t => (
           <button
             key={t.id}
+            type="button"
             id={`metric-tab-${t.id}`}
+            className={ranked.tab}
+            aria-pressed={metric === t.id}
             onClick={() => setMetric(t.id)}
-            style={{
-              padding: '6px 14px', borderRadius: 7,
-              background: metric === t.id ? 'var(--bg-elevated)' : 'transparent',
-              border: `1px solid ${metric === t.id ? 'var(--border)' : 'transparent'}`,
-              color: metric === t.id ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: 13, fontFamily: 'var(--body)',
-              borderBottom: metric === t.id ? '2px solid var(--red)' : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.12s',
-            }}
           >
             {t.label}
           </button>
@@ -1413,7 +1372,7 @@ function FastestLapView({ tel, isMobile }) {
           {[tel.driver1, tel.driver2].map(d => (
             <div key={d.code} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <div style={{ width: 24, height: 2, background: d.teamColor, borderRadius: 1 }} />
-              <span style={{ fontFamily: 'var(--body)', fontSize: 11, color: d.teamColor }}>
+              <span style={{ fontFamily: 'var(--body)', fontSize: 11, color: 'var(--text)' }}>
                 {d.code}
               </span>
             </div>
@@ -1436,10 +1395,10 @@ function FastestLapView({ tel, isMobile }) {
             <div
               key={t.id}
               style={{
-                background: 'var(--bg-card)', border: 'var(--border)',
+                background: 'var(--bg-card)', border: '1px solid var(--border)',
                 borderRadius: 16, padding: '12px',
                 cursor: 'pointer',
-                outline: metric === t.id ? '2px solid var(--red)' : 'none',
+                outline: metric === t.id ? '2px solid var(--text-muted)' : 'none',
                 transition: 'outline 0.15s',
               }}
               onClick={() => setMetric(t.id)}

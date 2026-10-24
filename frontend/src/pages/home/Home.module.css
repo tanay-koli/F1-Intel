@@ -281,28 +281,35 @@
 /* Gap against everything still available */
 .gapChart { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
 .gapTrack {
+  position: relative;
   display: block;
   height: 14px;
   border-radius: 4px;
   background: var(--bg-elevated);
-  overflow: hidden;
 }
+.gapLine {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 2px;
+  background: var(--text);
+}
+.gapScale { position: relative; display: block; height: 16px; font-size: 12px; color: var(--text-muted); }
+.gapLineLabel { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; color: var(--text); }
 .gapFill { display: block; height: 100%; background: var(--red); border-radius: 4px; }
-.chartNote { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--text-muted); }
 
 /* One pip per round left; sprint weekends stand taller */
 .pips {
   list-style: none;
   margin-top: auto;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 6px;
+  display: flex;
+  gap: 4px;
   align-items: end;
 }
-.pip { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pip { flex-basis: 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .pipBar { display: block; width: 100%; height: 18px; border-radius: 3px; background: var(--border-strong); }
 .pip[data-sprint] .pipBar { height: 30px; background: var(--text-dim); }
+.pip[data-sprint] .pipLabel { color: var(--text); font-weight: 700; }
 .pip:first-child .pipBar { background: var(--text); }
 .pipLabel { font-size: 11px; color: var(--text-muted); }
 
@@ -310,8 +317,10 @@
 .winBars { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
 .winRow { display: grid; grid-template-columns: 40px minmax(0, 1fr) 24px; align-items: center; gap: 10px; }
 .winName { font-family: var(--display); font-size: 18px; line-height: 1; }
-.winTrack { display: block; height: 10px; border-radius: 3px; background: var(--bg-elevated); overflow: hidden; }
+.winTrack { display: block; height: 12px; border-radius: 3px; background: var(--bg-elevated); overflow: hidden; }
 .winFill { display: block; height: 100%; background: var(--team); border-radius: 3px; }
+/* Teammates share one API colour, so P2's bar is drawn outlined */
+.winRow[data-second] .winFill { background: transparent; box-shadow: inset 0 0 0 2px var(--team); }
 .winCount { font-family: var(--display); font-size: 20px; line-height: 1; text-align: right; }
 
 /* ── Panels ───────────────────────────────────────────────────────────── */
@@ -421,7 +430,7 @@
 }
 .roundCity { font-size: 12px; color: var(--text-muted); }
 
-.roundNext { background: var(--bg-elevated); box-shadow: inset 0 3px 0 var(--accent); }
+.roundNext { background: var(--bg-elevated); }
 .roundNext .roundNum { color: var(--accent); -webkit-text-stroke: 0; }
 
 .footnote { font-size: 12px; color: var(--text-muted); text-align: center; }
