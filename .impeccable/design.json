@@ -1,378 +1,432 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-24T00:00:00Z",
+  "generatedAt": "2026-10-25T10:58:06+00:00",
   "title": "Design System: Pit Wall",
   "extensions": {
     "colorMeta": {
-      "night-ground": {
+      "pit-black": {
         "role": "neutral",
-        "displayName": "Night Ground",
+        "displayName": "Pit Black",
         "tonalRamp": [
-          "#050506",
-          "#0a0a0b",
-          "#141416",
-          "#1c1c1f",
-          "#2e2e33",
-          "#3b3b40",
-          "#8f8f97",
-          "#f3f3f4"
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
         ]
       },
-      "data-card": {
+      "instrument-card": {
         "role": "neutral",
-        "displayName": "Data Card"
+        "displayName": "Instrument Card",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
       },
-      "data-raised": {
+      "raised-graphite": {
         "role": "neutral",
-        "displayName": "Data Raised"
+        "displayName": "Raised Graphite",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
       },
-      "selected-grey": {
+      "dial-face": {
         "role": "neutral",
-        "displayName": "Selected Grey"
+        "displayName": "Dial Face",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
       },
       "hairline": {
         "role": "neutral",
-        "displayName": "Hairline"
+        "displayName": "Hairline",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
       },
       "hairline-strong": {
         "role": "neutral",
-        "displayName": "Hairline Strong"
-      },
-      "maroon-frame": {
-        "role": "primary",
-        "displayName": "Maroon Frame",
+        "displayName": "Hairline Strong",
         "tonalRamp": [
-          "#1a0204",
-          "#2c0306",
-          "#4a060b",
-          "#6e0a10",
-          "#a3101a",
-          "#d0505a",
-          "#e8a3a8",
-          "#f5d7d9"
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
         ]
       },
-      "maroon-deep": {
-        "role": "primary",
-        "displayName": "Maroon Deep"
-      },
-      "frame-line": {
-        "role": "primary",
-        "displayName": "Frame Line"
-      },
-      "frame-text": {
-        "role": "primary",
-        "displayName": "Frame Text"
-      },
-      "start-light-red": {
-        "role": "primary",
-        "displayName": "Start-Light Red",
+      "pressed-graphite": {
+        "role": "neutral",
+        "displayName": "Pressed Graphite",
         "tonalRamp": [
-          "#3d0200",
-          "#6b0400",
-          "#991004",
-          "#c40500",
-          "#e10600",
-          "#ff4a3d",
-          "#ff8a80",
-          "#ffd2cd"
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
         ]
       },
-      "start-light-red-dim": {
+      "signal-orange": {
         "role": "primary",
-        "displayName": "Start-Light Red Dim"
-      },
-      "safety-amber": {
-        "role": "secondary",
-        "displayName": "Safety Amber",
+        "displayName": "Signal Orange",
         "tonalRamp": [
-          "#3d2c00",
-          "#6b4e00",
-          "#9c7300",
-          "#cc9a12",
-          "#ffc940",
-          "#ffd770",
-          "#ffe6a3",
-          "#fff4d6"
+          "#3A1404",
+          "#6B2507",
+          "#A3380B",
+          "#D9500F",
+          "#FF6B1A",
+          "#FF8C4D",
+          "#FFB08A",
+          "#FFD7C2"
         ]
       },
-      "amber-ink": {
-        "role": "secondary",
-        "displayName": "Amber Ink"
-      },
-      "grid-white": {
+      "signal-ink": {
         "role": "neutral",
-        "displayName": "Grid White"
+        "displayName": "Signal Ink",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
       },
-      "telemetry-grey": {
+      "dial-white": {
         "role": "neutral",
-        "displayName": "Telemetry Grey"
+        "displayName": "Dial White",
+        "tonalRamp": [
+          "#5C5C66",
+          "#7A7A84",
+          "#9A9AA2",
+          "#B8B8BF",
+          "#D2D2D8",
+          "#EDEDEF",
+          "#F6F6F7",
+          "#FFFFFF"
+        ]
       },
-      "telemetry-grey-dim": {
+      "bezel-grey": {
         "role": "neutral",
-        "displayName": "Telemetry Grey Dim"
+        "displayName": "Bezel Grey",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
+      },
+      "tick-grey": {
+        "role": "neutral",
+        "displayName": "Tick Grey",
+        "tonalRamp": [
+          "#09090A",
+          "#111113",
+          "#18181B",
+          "#2A2A30",
+          "#3A3A42",
+          "#5C5C66",
+          "#8A8A93",
+          "#C4C4CA"
+        ]
+      },
+      "fault-red": {
+        "role": "status",
+        "displayName": "Fault Red",
+        "tonalRamp": [
+          "#2A0A0B",
+          "#4D1214",
+          "#7A1C20",
+          "#B02A30",
+          "#E5484D",
+          "#EC6F73",
+          "#F39A9D",
+          "#F9C8CA"
+        ]
+      },
+      "pit-board-yellow": {
+        "role": "brand",
+        "displayName": "Pit-Board Yellow",
+        "tonalRamp": [
+          "#3A2805",
+          "#6B4A0B",
+          "#A37115",
+          "#D99A22",
+          "#F5B73B",
+          "#F8C866",
+          "#FBDA96",
+          "#FDEDCB"
+        ]
       }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Next GP name in the Home hero; the marquee at a smaller clamp."
+        "purpose": "Next GP name in the Home hero."
       },
       "numeral": {
         "displayName": "Numeral",
-        "purpose": "Podium positions; outlined car numbers and H2H codes in the same family."
-      },
-      "countdown": {
-        "displayName": "Countdown",
-        "purpose": "Countdown digits, Archivo 800 at 70% width."
+        "purpose": "Podium positions, chronograph digits, car numbers; always whole."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Page titles and the telemetry race name."
+        "purpose": "Page titles."
       },
       "title": {
         "displayName": "Title",
-        "purpose": "Section headings beside the red bar."
+        "purpose": "Section headings with the square marker."
+      },
+      "card-title": {
+        "displayName": "Card Title",
+        "purpose": "Titles inside cards."
       },
       "name": {
         "displayName": "Name",
-        "purpose": "Driver and team names in table rows."
+        "purpose": "Driver and team names in rows."
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Default text with tabular numerals."
+        "purpose": "Default text."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Field and stat labels, units, sublines."
+        "purpose": "Field and stat labels, chart axes."
+      },
+      "nav": {
+        "displayName": "Nav",
+        "purpose": "Uppercase header nav and season label."
       }
     },
-    "shadows": [
-      {
-        "name": "band-selected",
-        "value": "inset 0 0 0 3px var(--ink)",
-        "purpose": "Selected podium band: a ring in the band's own ink."
-      },
-      {
-        "name": "next-ring",
-        "value": "inset 0 0 0 1px rgb(255 201 64 / 0.55)",
-        "purpose": "The next session row in the weekend schedule."
-      },
-      {
-        "name": "outlined-bar",
-        "value": "inset 0 0 0 2px var(--team)",
-        "purpose": "The second driver's win bar when teammates share one API colour."
-      },
-      {
-        "name": "band-hover",
-        "value": "filter: brightness(1.08)",
-        "purpose": "Hover on a team band; no lift."
-      }
-    ],
+    "shadows": [],
     "motion": [
       {
-        "name": "state-change",
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Chronograph tick draw-in, hand extension, season picker opening."
+      },
+      {
+        "name": "state",
         "value": "0.15s ease",
-        "purpose": "Background, border, colour and filter changes on hover and selection."
+        "purpose": "Hover and pressed transitions on rows, chips and pills."
       },
       {
-        "name": "marquee",
-        "value": "marquee 48s linear infinite",
-        "purpose": "GP marquee band; stopped under prefers-reduced-motion."
-      },
-      {
-        "name": "fade-up",
-        "value": "fadeUp 0.4s ease both",
-        "purpose": "Content entering: 16px rise plus fade."
-      },
-      {
-        "name": "spin",
-        "value": "spin 0.8s linear infinite",
-        "purpose": "Loader ring with a red arc."
-      },
-      {
-        "name": "reduced-motion",
-        "value": "animation and transition 0.01ms",
-        "purpose": "Global prefers-reduced-motion override; smooth scroll off."
+        "name": "seconds-hand",
+        "value": "requestAnimationFrame sweep; stepped once a second under reduced motion",
+        "purpose": "The only continuous motion."
       }
     ],
     "breakpoints": [
       {
-        "name": "narrow",
-        "value": "420px"
+        "name": "wide",
+        "value": "1080px"
       },
       {
-        "name": "small",
+        "name": "stack",
+        "value": "900px"
+      },
+      {
+        "name": "tablet",
+        "value": "768px"
+      },
+      {
+        "name": "narrow",
+        "value": "720px"
+      },
+      {
+        "name": "bands",
+        "value": "640px"
+      },
+      {
+        "name": "tiles",
         "value": "560px"
       },
       {
         "name": "phone",
-        "value": "640px"
-      },
-      {
-        "name": "compact",
-        "value": "720px"
-      },
-      {
-        "name": "tablet-portrait",
-        "value": "768px"
-      },
-      {
-        "name": "tablet",
-        "value": "900px"
-      },
-      {
-        "name": "laptop",
-        "value": "1080px"
+        "value": "420px"
       }
     ]
   },
   "components": [
     {
-      "name": "Site Header",
-      "kind": "nav",
-      "refersTo": "site-header",
-      "description": "Maroon frame band with a red edge, wordmark and nav pills.",
-      "html": "<header class=\"ds-head\"><span class=\"ds-brand\"><span class=\"ds-pit\">Pit</span> <span class=\"ds-wall\">Wall</span></span><nav class=\"ds-nav\"><a class=\"ds-pill ds-pill-active\" href=\"#\">Home</a><a class=\"ds-pill\" href=\"#\">Results</a><a class=\"ds-pill\" href=\"#\">Head-to-head</a><a class=\"ds-pill\" href=\"#\">Telemetry</a></nav></header>",
-      "css": ".ds-head { display: flex; align-items: center; gap: 16px; min-height: 68px; padding: 0 24px; background: var(--frame, #6E0A10); border-bottom: 3px solid var(--red, #E10600); } .ds-brand { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 34px; line-height: 1; letter-spacing: 0.03em; text-transform: uppercase; } .ds-pit { color: #fff; } .ds-wall { color: var(--frame-text, #F5D7D9); } .ds-nav { display: flex; gap: 4px; flex: 1; justify-content: center; } .ds-pill { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 600; color: var(--frame-text, #F5D7D9); text-decoration: none; transition: background 0.15s ease, color 0.15s ease; } .ds-pill:hover { color: #fff; background: rgb(0 0 0 / 0.28); } .ds-pill:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-pill-active, .ds-pill-active:hover { color: #fff; background: var(--bg, #0A0A0B); }"
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one white action per context.",
+      "html": "<button class=\"ds-btn-primary\">Open race analysis</button>",
+      "css": ".ds-btn-primary{min-height:44px;padding:0 22px;border:none;border-radius:999px;background:var(--text, #EDEDEF);color:var(--bg, #09090A);font:700 14px Archivo, system-ui, sans-serif;cursor:pointer;transition:background .15s ease}.ds-btn-primary:hover{background:#fff}.ds-btn-primary:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}.ds-btn-primary:disabled{background:var(--bg-elevated, #18181B);color:var(--text-dim, #8A8A93);cursor:not-allowed}"
     },
     {
       "name": "Filter Chips",
       "kind": "chip",
       "refersTo": "chip",
-      "description": "Pill tabs toggled with aria-pressed; pressed fills Grid White.",
-      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Drivers</button><button class=\"ds-chip\" aria-pressed=\"false\">Constructors</button></div>",
-      "css": ".ds-chips { display: flex; gap: 6px; } .ds-chip { min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--border-strong, #3B3B40); background: none; font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 600; color: var(--text-muted, #A9A9B0); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; } .ds-chip:hover { color: var(--text, #F3F3F4); border-color: var(--text-dim, #8F8F97); } .ds-chip:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-chip[aria-pressed='true'] { background: var(--text, #F3F3F4); border-color: var(--text, #F3F3F4); color: var(--bg, #0A0A0B); }"
+      "description": "Pill toggles marked with aria-pressed.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Race</button><button class=\"ds-chip\" aria-pressed=\"false\">Sprint</button><button class=\"ds-chip\" aria-pressed=\"false\">Qualifying</button></div>",
+      "css": ".ds-chips{display:flex;gap:6px}.ds-chip{min-height:44px;padding:0 20px;border-radius:999px;border:1px solid var(--border-strong, #34343A);background:transparent;color:var(--text-muted, #A3A3AB);font:600 14px Archivo, system-ui, sans-serif;cursor:pointer;transition:background .15s,color .15s}.ds-chip:hover{color:var(--text, #EDEDEF);border-color:var(--text-dim, #8A8A93)}.ds-chip[aria-pressed=true]{background:var(--text, #EDEDEF);border-color:var(--text, #EDEDEF);color:var(--bg, #09090A)}.ds-chip:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}"
     },
     {
-      "name": "Pill Select",
+      "name": "Select",
       "kind": "input",
       "refersTo": "select",
-      "description": "Labelled pill select used on the tool pages.",
-      "html": "<label class=\"ds-field\">Season<select class=\"ds-select\"><option>2026</option><option>2025</option></select></label>",
-      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--body, Archivo, sans-serif); font-size: 12px; font-weight: 600; color: var(--text-muted, #A9A9B0); } .ds-select { min-height: 44px; padding: 0 36px 0 16px; border-radius: 999px; border: 1px solid var(--border-strong, #3B3B40); background-color: var(--bg-elevated, #1C1C1F); background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A9A9B0'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 14px center; appearance: none; color: var(--text, #F3F3F4); font: 500 14px var(--body, Archivo, sans-serif); cursor: pointer; } .ds-select:hover { border-color: var(--text-dim, #8F8F97); } .ds-select:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; }"
+      "description": "Pill select with a grey chevron.",
+      "html": "<select class=\"ds-select\"><option>R16 — Italian Grand Prix</option></select>",
+      "css": ".ds-select{min-height:44px;padding:0 36px 0 16px;border-radius:999px;border:1px solid var(--border-strong, #34343A);background:var(--bg-elevated, #18181B) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A3A3AB'/%3E%3C/svg%3E\") no-repeat right 14px center;appearance:none;color:var(--text, #EDEDEF);font:500 14px Archivo, system-ui, sans-serif}.ds-select:hover{border-color:var(--text-dim, #8A8A93)}.ds-select:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}"
     },
     {
-      "name": "Primary Button",
-      "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The one white pill action per context.",
-      "html": "<button class=\"ds-btn\">Open race analysis</button>",
-      "css": ".ds-btn { min-height: 44px; padding: 0 22px; border: none; border-radius: 999px; background: var(--text, #F3F3F4); color: var(--bg, #0A0A0B); font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s ease; } .ds-btn:hover { background: #fff; } .ds-btn:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-btn:disabled { background: var(--bg-elevated, #1C1C1F); color: var(--text-dim, #8F8F97); cursor: not-allowed; }"
+      "name": "Header Nav",
+      "kind": "nav",
+      "refersTo": "nav-pill",
+      "description": "Uppercase tracked nav pills on black.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-pill ds-active\" href=\"#\">Home</a><a class=\"ds-nav-pill\" href=\"#\">Results</a><a class=\"ds-nav-pill\" href=\"#\">Head-to-head</a><a class=\"ds-nav-pill\" href=\"#\">Telemetry</a></nav>",
+      "css": ".ds-nav{display:flex;gap:4px;padding:12px;background:var(--bg, #09090A);border-bottom:1px solid var(--border, #232327)}.ds-nav-pill{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;color:var(--text-muted, #A3A3AB);font:600 13px Archivo, system-ui, sans-serif;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:background .15s,color .15s}.ds-nav-pill:hover{color:var(--text, #EDEDEF);background:var(--bg-elevated, #18181B)}.ds-active,.ds-active:hover{color:var(--text, #EDEDEF);background:var(--pill-active, #2A2A30)}.ds-nav-pill:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}"
+    },
+    {
+      "name": "Standings Row",
+      "kind": "custom",
+      "refersTo": "table-row",
+      "description": "Outlined position, name over a team share bar, figure with its gap.",
+      "html": "<button class=\"ds-row\" style=\"--team:#27F4D2\"><span class=\"ds-pos\">1</span><span class=\"ds-main\"><span class=\"ds-name\">Antonelli</span><span class=\"ds-bar\"><span class=\"ds-fill\" style=\"width:100%\"></span></span><span class=\"ds-sub\">Mercedes</span></span><span class=\"ds-fig\"><span class=\"ds-val\">340<small> pts</small></span><span class=\"ds-sub\">Leader</span></span></button>",
+      "css": ".ds-row{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:14px;width:360px;min-height:60px;padding:8px 12px 8px 4px;border:none;border-radius:8px;background:var(--bg-card, #111113);color:var(--text, #EDEDEF);text-align:left;cursor:pointer;transition:background .15s}.ds-row:hover{background:var(--bg-elevated, #18181B)}.ds-row:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}.ds-pos{font:400 34px/1 'Barlow Condensed', Archivo, sans-serif;text-align:center;color:transparent;-webkit-text-stroke:1.2px var(--text-muted, #A3A3AB)}.ds-main{display:flex;flex-direction:column;gap:4px;min-width:0}.ds-name{font:400 22px/1 'Barlow Condensed', Archivo, sans-serif;letter-spacing:.02em;text-transform:uppercase}.ds-bar{display:block;height:3px;border-radius:2px;background:var(--border, #232327)}.ds-fill{display:block;height:100%;border-radius:2px;background:var(--team)}.ds-sub{font:12px Archivo, system-ui, sans-serif;color:var(--text-muted, #A3A3AB)}.ds-fig{display:flex;flex-direction:column;align-items:flex-end}.ds-val{font:400 28px/1 'Barlow Condensed', Archivo, sans-serif}.ds-val small{font:12px Archivo, system-ui, sans-serif;color:var(--text-muted, #A3A3AB)}"
     },
     {
       "name": "Podium Band",
       "kind": "custom",
-      "description": "Top-three bands in the team colour, ink chosen by inkOn, position at numeral scale cropped by the edge.",
-      "html": "<ol class=\"ds-podium\"><li><button class=\"ds-band\" style=\"--team:#27F4D2;--ink:#0A0A0B\"><span class=\"ds-band-pos\">1</span><span class=\"ds-band-who\"><span class=\"ds-band-name\">Antonelli</span><span class=\"ds-band-sub\">Mercedes</span></span><span class=\"ds-band-fig\">340<small> pts</small></span></button></li><li><button class=\"ds-band\" style=\"--team:#E8002D;--ink:#FFFFFF\"><span class=\"ds-band-pos\">2</span><span class=\"ds-band-who\"><span class=\"ds-band-name\">Hamilton</span><span class=\"ds-band-sub\">Ferrari</span></span><span class=\"ds-band-fig\">229<small> pts</small></span></button></li></ol>",
-      "css": ".ds-podium { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; border-radius: 16px; overflow: hidden; } .ds-band { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; align-items: center; gap: 16px; width: 100%; min-height: 108px; padding: 12px 24px 12px 0; border: none; background: var(--team); color: var(--ink); text-align: left; overflow: hidden; cursor: pointer; transition: filter 0.15s ease; } .ds-band:hover { filter: brightness(1.08); } .ds-band:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: -5px; } .ds-band-pos { align-self: end; justify-self: center; margin-bottom: -0.2em; font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 128px; line-height: 0.8; } .ds-band-who { display: flex; flex-direction: column; gap: 4px; } .ds-band-name { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 40px; line-height: 0.95; text-transform: uppercase; } .ds-band-sub { font-family: var(--body, Archivo, sans-serif); font-size: 13px; font-weight: 600; } .ds-band-fig { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 48px; line-height: 1; } .ds-band-fig small { font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 700; }"
+      "refersTo": "card",
+      "description": "Identity head: team tint, 2px team edge, whole light numeral.",
+      "html": "<div class=\"ds-band\" style=\"--team:#3671C6\"><span class=\"ds-bpos\">1</span><span><span class=\"ds-bname\">Verstappen</span><span class=\"ds-bsub\">Red Bull · started P1</span></span><span class=\"ds-bval\">1:42:00.785</span></div>",
+      "css": ".ds-band{display:grid;grid-template-columns:96px minmax(0,1fr) auto;align-items:center;gap:16px;width:560px;min-height:132px;padding:12px 24px 12px 0;border-radius:6px;background:color-mix(in srgb,var(--team) 14%,var(--bg-card, #111113));box-shadow:inset 0 2px 0 var(--team);color:var(--text, #EDEDEF)}.ds-bpos{justify-self:center;font:300 88px/1 'Barlow Condensed', Archivo, sans-serif}.ds-bname{display:block;font:400 40px/.95 'Barlow Condensed', Archivo, sans-serif;text-transform:uppercase}.ds-bsub{display:block;margin-top:4px;font:600 13px Archivo, system-ui, sans-serif}.ds-bval{font:400 48px/1 'Barlow Condensed', Archivo, sans-serif}"
     },
     {
-      "name": "Standings Table",
-      "kind": "card",
-      "refersTo": "table-row",
-      "description": "Dark table in a 16px card: outlined position, driver mark, name over a team share bar, figure.",
-      "html": "<ol class=\"ds-table\"><li><button class=\"ds-row\" aria-pressed=\"false\" style=\"--team:#3671C6\"><span class=\"ds-pos\">4</span><span class=\"ds-mark\" style=\"background:#3671C6;color:#fff\">VER</span><span class=\"ds-main\"><span class=\"ds-name\">Verstappen</span><span class=\"ds-bar\"><span style=\"width:65%\"></span></span><span class=\"ds-sub\">Red Bull</span></span><span class=\"ds-fig\">221<small> pts</small></span></button></li><li><button class=\"ds-row\" aria-pressed=\"true\" style=\"--team:#E8002D\"><span class=\"ds-pos\">5</span><span class=\"ds-mark\" style=\"background:#E8002D;color:#fff\">LEC</span><span class=\"ds-main\"><span class=\"ds-name\">Leclerc</span><span class=\"ds-bar\"><span style=\"width:63%\"></span></span><span class=\"ds-sub\">Ferrari</span></span><span class=\"ds-fig\">215<small> pts</small></span></button></li></ol>",
-      "css": ".ds-table { list-style: none; margin: 0; padding: 6px; background: var(--bg-card, #141416); border: 1px solid var(--border, #2A2A2E); border-radius: 16px; } .ds-table li + li .ds-row { border-top: 1px solid var(--border, #2A2A2E); } .ds-row { display: grid; grid-template-columns: 44px auto minmax(0, 1fr) auto; align-items: center; gap: 14px; width: 100%; min-height: 60px; padding: 8px 12px 8px 4px; border: none; border-radius: 8px; background: none; color: var(--text, #F3F3F4); text-align: left; cursor: pointer; transition: background 0.15s ease; } .ds-row:hover { background: var(--bg-elevated, #1C1C1F); } .ds-row:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; } .ds-row[aria-pressed='true'] { background: var(--pill-active, #2E2E33); } .ds-pos { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 34px; line-height: 1; text-align: center; color: transparent; -webkit-text-stroke: 1.2px var(--text-muted, #A9A9B0); } .ds-mark { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 7px; font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 17px; letter-spacing: 0.04em; } .ds-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-name { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 22px; letter-spacing: 0.02em; line-height: 1; text-transform: uppercase; } .ds-bar { display: block; height: 3px; border-radius: 2px; background: var(--border, #2A2A2E); overflow: hidden; } .ds-bar span { display: block; height: 100%; background: var(--team); } .ds-sub { font-family: var(--body, Archivo, sans-serif); font-size: 12px; color: var(--text-muted, #A9A9B0); } .ds-fig { font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 28px; line-height: 1; } .ds-fig small { font-family: var(--body, Archivo, sans-serif); font-size: 12px; color: var(--text-muted, #A9A9B0); }"
-    },
-    {
-      "name": "Stat Tile",
-      "kind": "card",
-      "refersTo": "stat-tile",
-      "description": "One big number, a small label, one small chart that explains it.",
-      "html": "<div class=\"ds-tile\"><p class=\"ds-tile-value\">6</p><p class=\"ds-tile-label\">Races left</p><ol class=\"ds-pips\"><li class=\"ds-pip ds-pip-now\"></li><li class=\"ds-pip ds-pip-sprint\"></li><li class=\"ds-pip\"></li><li class=\"ds-pip\"></li><li class=\"ds-pip ds-pip-sprint\"></li><li class=\"ds-pip\"></li></ol></div>",
-      "css": ".ds-tile { display: flex; flex-direction: column; padding: 20px 22px; border-radius: 16px; background: var(--bg-card, #141416); border: 1px solid var(--border, #2A2A2E); color: var(--text, #F3F3F4); } .ds-tile-value { margin: 0; font-family: var(--display, 'Bebas Neue', sans-serif); font-size: 56px; line-height: 0.9; } .ds-tile-label { margin: 4px 0 16px; font-family: var(--body, Archivo, sans-serif); font-size: 14px; color: var(--text-muted, #A9A9B0); } .ds-pips { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; align-items: end; } .ds-pip { flex: 1; height: 18px; border-radius: 3px; background: var(--border-strong, #3B3B40); } .ds-pip-sprint { height: 30px; background: var(--text-dim, #8F8F97); } .ds-pip-now { background: var(--text, #F3F3F4); }"
-    },
-    {
-      "name": "Section Heading",
-      "kind": "custom",
-      "description": "Display title with an inline red bar, an outlined pill badge and a right-aligned link.",
-      "html": "<div class=\"ds-sh\"><h2 class=\"ds-sh-title\">Last race</h2><span class=\"ds-sh-badge\">Round 17</span><a class=\"ds-sh-link\" href=\"#\">Full standings</a></div>",
-      "css": ".ds-sh { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; } .ds-sh-title { margin: 0; font-family: var(--display, 'Bebas Neue', sans-serif); font-weight: 400; font-size: 30px; line-height: 1; letter-spacing: 0.03em; text-transform: uppercase; color: var(--text, #F3F3F4); } .ds-sh-title::before { content: ''; display: inline-block; width: 0.13em; height: 0.8em; margin-right: 0.3em; vertical-align: -0.04em; background: var(--red, #E10600); border-radius: 1px; } .ds-sh-badge { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border-strong, #3B3B40); font-family: var(--body, Archivo, sans-serif); font-size: 12px; font-weight: 600; color: var(--text-muted, #A9A9B0); } .ds-sh-link { margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; font-family: var(--body, Archivo, sans-serif); font-size: 14px; font-weight: 500; color: var(--text-muted, #A9A9B0); text-decoration: underline; text-decoration-color: var(--border-strong, #3B3B40); text-underline-offset: 4px; } .ds-sh-link:hover { color: var(--text, #F3F3F4); text-decoration-color: currentColor; } .ds-sh-link:focus-visible { outline: 2px solid var(--accent, #FFC940); outline-offset: 2px; }"
-    },
-    {
-      "name": "Status Badges",
+      "name": "Next Badge",
       "kind": "chip",
       "refersTo": "badge-next",
-      "description": "Amber Next pill and outlined Done pill.",
-      "html": "<span class=\"ds-badge ds-next\">Next</span> <span class=\"ds-badge ds-done\">Done</span>",
-      "css": ".ds-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-family: var(--body, Archivo, sans-serif); font-size: 11px; font-weight: 700; } .ds-next { background: var(--accent, #FFC940); color: var(--accent-ink, #14130D); } .ds-done { border: 1px solid var(--border-strong, #3B3B40); color: var(--text-dim, #8F8F97); }"
+      "description": "The one signal: what comes next; beside it the quiet Done badge.",
+      "html": "<span class=\"ds-next\">Next</span> <span class=\"ds-done\">Done</span>",
+      "css": ".ds-next{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent, #FF6B1A);color:var(--accent-ink, #09090A);font:700 12px Archivo, system-ui, sans-serif}.ds-done{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid var(--border-strong, #34343A);color:var(--text-dim, #8A8A93);font:600 12px Archivo, system-ui, sans-serif}"
+    },
+    {
+      "name": "Season Picker",
+      "kind": "custom",
+      "refersTo": "season-picker-panel",
+      "description": "Search, decade chips and a year grid.",
+      "html": "<div class=\"ds-sp\"><input class=\"ds-sp-search\" placeholder=\"Search a year, e.g. 1988 or 88\"><div class=\"ds-sp-dec\"><button aria-pressed=\"true\">2020s</button><button>2010s</button><button>2000s</button><button>1990s</button></div><div class=\"ds-sp-years\"><button>2020</button><button>2021</button><button>2022</button><button>2023</button><button>2024</button><button>2025</button><button aria-pressed=\"true\">2026</button></div></div>",
+      "css": ".ds-sp{width:340px;padding:12px;border-radius:6px;border:1px solid var(--border-strong, #34343A);background:var(--bg-card, #111113)}.ds-sp-search{width:100%;box-sizing:border-box;min-height:44px;padding:0 14px;border-radius:4px;border:1px solid var(--border-strong, #34343A);background:var(--bg-elevated, #18181B);color:var(--text, #EDEDEF);font:500 14px Archivo, system-ui, sans-serif}.ds-sp-search:focus-visible{outline:2px solid var(--accent, #FF6B1A);outline-offset:2px}.ds-sp-dec{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0;padding-bottom:12px;border-bottom:1px solid var(--border, #232327)}.ds-sp-dec button{min-height:44px;padding:0 10px;border:none;border-radius:999px;background:none;color:var(--text-muted, #A3A3AB);font:500 16px 'Barlow Condensed', Archivo, sans-serif;letter-spacing:.04em;text-transform:uppercase;cursor:pointer}.ds-sp-dec button:hover{color:var(--text, #EDEDEF);background:var(--bg-elevated, #18181B)}.ds-sp-years{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.ds-sp-years button{min-height:44px;border:none;border-radius:4px;background:none;color:var(--text, #EDEDEF);font:400 20px 'Barlow Condensed', Archivo, sans-serif;cursor:pointer}.ds-sp-years button:hover{background:var(--bg-elevated, #18181B)}.ds-sp [aria-pressed=true]{background:var(--text, #EDEDEF);color:var(--bg, #09090A)}"
     }
   ],
   "narrative": {
-    "northStar": "The Race Programme Wall",
-    "overview": "A race-day programme pinned to a timing wall: red is the frame, black is the data ground. Maroon bands with a bright red edge run across the header, the footer, the Home hero and the GP marquee; everything that holds data sits on near-black, so a team's colour never has to fight the red around it. The page reads like a poster first and a timing sheet second: grand-prix names and positions at poster scale in condensed caps, then dark tables and stat tiles that scan line by line.\n\nTeam colour is the loudest thing on a data surface, and it is earned. The top three in a standing stand in full livery bands with their position set huge; head-to-head sides, the open profile panel and the telemetry driver head take a band too. Everyone else carries their colour as a code chip, a share bar or a dot. Numbers are oversized and often outlined, so a ranked list reads as a column of giant ghost numerals rather than a list of avatars.\n\nControls are pills: nav, filter chips, selects, the one white primary action. Cards are softly rounded (16px) dark slabs divided by hairlines. There are no driver photos; a driver is their three-letter code on their team colour.",
+    "northStar": "The Black Chronometer",
+    "overview": "A precision instrument on a black pit wall. The interface is a set of monochrome instrument faces: charcoal cards on black, divided by hairlines, carrying thin condensed capitals and tabular figures. Weight comes from fine ticks and exact numbers, not from volume. One orange signal marks what is live or next, the way a chronograph has a single coloured seconds hand.\n\nThe Home hero is the literal instrument: a chronograph dial counting down to the next session, its ticks going dark as the minute runs out. The same tick ring is unrolled into straight scales under figures elsewhere (the title-gap track, the lap scale of the race analyst), so the whole product reads as one instrument family. The analysis pages are dense and quiet, and scan like a timing screen.\n\nTeam colour is data, not decoration. It arrives from the API and appears as a dark tint with a 2px edge on identity heads (the top three, head-to-head sides, profile and telemetry heads), and as share bars, chart lines and small dots everywhere else. There are no driver photos, no code chips and no constructor logos. Drivers and teams appear by name.\n\nThis world replaced a poster-loud \"race programme\" look (maroon bands, red frame edges, giant outlined numerals cropped by their bands, a scrolling marquee). None of that returns.",
     "keyCharacteristics": [
-      "Maroon frame bands with a 3px Start-Light Red edge; near-black data ground.",
-      "Team colour as full bands on the top three and on driver-identity heads, as chips, bars and dots everywhere else, always from the API.",
-      "Oversized outlined (text-stroke) position, round and car numbers.",
-      "Pill controls: nav, filter chips (`aria-pressed`), selects, primary button.",
-      "Dark tables inside 16px cards with hairline row dividers.",
-      "Stat tiles: one big number, a small label, one small bespoke chart.",
-      "Amber only for \"next\" and the focus ring."
+      "Black ground, charcoal cards, 1px hairlines, no shadows.",
+      "Barlow Condensed in uppercase for headings, names and figures; Archivo for text.",
+      "One signal orange, used only for \"next\", live, focus and the seconds hand.",
+      "Tick scales borrowed from the chronograph dial, under figures and timelines.",
+      "Team colour as tint plus edge on identity heads, as bars, lines and dots elsewhere.",
+      "Small radii (6px cards, 4px inner panels) and full-pill controls at 44px.",
+      "Names, never codes in boxes; numbers whole, never cropped."
     ],
     "rules": [
       {
-        "name": "The Red Frame Rule",
-        "body": "Maroon and red frame the page; they never hold data. Maroon bands carry the header, footer, Home hero and marquee, each edged in 3px Start-Light Red. Every surface that holds team-coloured data is near-black, so a team colour never sits on red.",
+        "name": "The One Signal Rule",
+        "body": "Signal Orange marks what is next or live, plus focus. If something orange is neither, it is wrong. The logo's yellow is a mark, not a second accent.",
         "section": "colors"
       },
       {
         "name": "The Livery-Is-Data Rule",
-        "body": "Team colour comes from the API (`teamColor` / `color`), never from frontend code. It appears as a full band only on the top three (Podium), the two H2H sides, the profile panel head and the telemetry deep-dive head, with text on it chosen by `inkOn` (near-black or white, whichever contrasts more). Everywhere else it is a code chip, a bar or a dot, never small text.",
-        "section": "colors"
-      },
-      {
-        "name": "The One Next Rule",
-        "body": "Safety Amber marks what comes next (plus the focus ring). If something amber is not \"next\" or focus, it is wrong.",
+        "body": "Team colours come from the API (`teamColor` / `color`), never from frontend code. They appear as a 14% tint with a 2px inset edge on identity heads, and as bars, lines and dots elsewhere. Never as small text and never behind a code.",
         "section": "colors"
       },
       {
         "name": "The Dim-by-Colour Rule",
-        "body": "De-emphasise text with Telemetry Grey or Grey Dim, not `opacity`, so dimmed text keeps its contrast.",
+        "body": "De-emphasise with Bezel Grey or Tick Grey, never `opacity`, so dimmed text keeps its contrast.",
         "section": "colors"
       },
       {
-        "name": "The Outlined Numeral Rule",
-        "body": "Position, round and car numbers are set oversized in the display face and drawn as an outline (`-webkit-text-stroke`): 1.2px Telemetry Grey on dark rows and round cards, 2px ink on a team band. A number fills solid only when it is the band's own position (Podium, Home podium steps) or the next round (Safety Amber).",
+        "name": "The No-Red-Chrome Rule",
+        "body": "Red exists only as Fault Red in an error box and as a team's own colour in its data. The frame of the page is black.",
+        "section": "colors"
+      },
+      {
+        "name": "The Whole-Number Rule",
+        "body": "Numbers are never cropped by their container. A large position or car number sits entirely inside its band or panel.",
         "section": "typography"
       },
       {
         "name": "The Tabular Rule",
-        "body": "`tabular-nums` is global; numbers never jitter as they update.",
+        "body": "`tabular-nums` is global; numbers never jitter as they count.",
         "section": "typography"
       },
       {
-        "name": "The Unit-Drops Rule",
-        "body": "A figure is display type; its unit (\"pts\", \"s\", \"left\") drops to Archivo 12–15px, in Telemetry Grey on dark and in the band's ink on a band.",
+        "name": "The Uppercase Display Rule",
+        "body": "Every use of the display face is uppercase. Body text is never uppercase except the nav and table heads.",
         "section": "typography"
       },
       {
-        "name": "The Ground-and-Band Rule",
-        "body": "A surface is either ground (dark, holds data) or band (maroon frame or team livery). Nothing floats; if something needs emphasis, it becomes a band or moves one step up the ground ladder.",
+        "name": "The Ground-Ladder Rule",
+        "body": "If something needs emphasis it moves one step up the ladder or takes an inset line. Nothing gets a drop shadow.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "Do frame with maroon bands and a 3px Start-Light Red edge, and keep every surface that holds data on the near-black ground.",
-      "Do take team colours from the API and pick text on them with `inkOn`; use full bands only for the top three and driver-identity heads, and chips, bars or dots elsewhere.",
-      "Do set positions, round numbers and car numbers oversized in Bebas Neue, outlined on dark (1.2px Telemetry Grey) and on bands (2px ink).",
-      "Do build controls as 44px pills; mark toggles with `aria-pressed`.",
-      "Do put tables in a 16px Data Card with hairline row dividers.",
-      "Do give each stat tile one number, one label and one small chart that explains it.",
-      "Do show a driver as a DriverMark with their three-letter code, and constructor logos on a Grid White chip.",
-      "Do stop every looping motion (the marquee, spinners) under `prefers-reduced-motion`.",
-      "Do show missing data as a calm notice (`ErrorMsg`'s \"Not available yet\"), not the red error box.",
-      "Do keep the footer disclaimer on every page."
+      "Do keep the page black and every data surface on the ground ladder (Instrument Card, Raised Graphite, Pressed Graphite).",
+      "Do set headings, names and figures in Barlow Condensed uppercase, light (300) at display sizes.",
+      "Do keep large numbers whole inside their container.",
+      "Do use Signal Orange only for next, live, focus and the seconds hand.",
+      "Do take team colours from the API and show them as a tint plus 2px edge on identity heads, and as bars, lines or dots elsewhere.",
+      "Do show drivers and teams by name.",
+      "Do build controls as 44px pills and mark toggles with `aria-pressed`.",
+      "Do borrow the tick scale for any timeline or range under a figure.",
+      "Do show missing data as a calm notice, not the error box.",
+      "Do stop every looping motion under `prefers-reduced-motion`."
     ],
     "donts": [
-      "Don't put team colour on a red or maroon surface.",
-      "Don't set small text in a team colour; it fails contrast against too many liveries.",
-      "Don't hardcode a team colour in React.",
-      "Don't use Safety Amber for anything but \"next\" and focus.",
-      "Don't add drop shadows; use a band, a ground step or an inset ring.",
-      "Don't use driver photos.",
-      "Don't dim text with `opacity`; use Telemetry Grey or Grey Dim.",
+      "Don't bring back maroon bands, red frame edges, the scrolling marquee, or giant outlined numerals cropped by their band.",
+      "Don't use the logo's yellow anywhere but the logo mark.",
+      "Don't put a driver's three-letter code in a coloured box, show driver photos, or show constructor logos.",
+      "Don't hardcode a team colour in React, or set small text in a team colour.",
+      "Don't add drop shadows; step up the ground ladder or use an inset line.",
+      "Don't dim text with `opacity`.",
       "Don't use official Formula 1 logos, wordmarks or marks; the product is an unofficial fan project."
     ]
   }

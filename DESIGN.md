@@ -2,55 +2,52 @@
 name: Pit Wall
 description: Season context, results and race analysis for F1, from 1950 to now.
 colors:
-  night-ground: "#0A0A0B"
-  data-card: "#141416"
-  data-raised: "#1C1C1F"
-  selected-grey: "#2E2E33"
-  hairline: "#2A2A2E"
-  hairline-strong: "#3B3B40"
-  maroon-frame: "#6E0A10"
-  maroon-deep: "#2C0306"
-  frame-line: "#A3101A"
-  frame-text: "#F5D7D9"
-  start-light-red: "#E10600"
-  start-light-red-dim: "#991004"
-  safety-amber: "#FFC940"
-  amber-ink: "#14130D"
-  grid-white: "#F3F3F4"
-  telemetry-grey: "#A9A9B0"
-  telemetry-grey-dim: "#8F8F97"
+  pit-black: "#09090A"
+  instrument-card: "#111113"
+  raised-graphite: "#18181B"
+  dial-face: "#0D0D0F"
+  hairline: "#232327"
+  hairline-strong: "#34343A"
+  pressed-graphite: "#2A2A30"
+  signal-orange: "#FF6B1A"
+  signal-ink: "#09090A"
+  dial-white: "#EDEDEF"
+  bezel-grey: "#A3A3AB"
+  tick-grey: "#8A8A93"
+  fault-red: "#E5484D"
+  pit-board-yellow: "#F5B73B"
 typography:
   display:
-    fontFamily: "Bebas Neue, sans-serif"
-    fontSize: "clamp(56px, 8.4vw, 120px)"
-    fontWeight: 400
-    lineHeight: 0.86
-    letterSpacing: "0.005em"
-  numeral:
-    fontFamily: "Bebas Neue, sans-serif"
-    fontSize: "clamp(96px, 13vw, 168px)"
-    fontWeight: 400
-    lineHeight: 0.8
-  countdown:
-    fontFamily: "Archivo, system-ui, sans-serif"
-    fontSize: "clamp(56px, 8vw, 108px)"
-    fontWeight: 800
-    lineHeight: 0.9
-    fontVariation: "'wdth' 70"
-  headline:
-    fontFamily: "Bebas Neue, sans-serif"
-    fontSize: "clamp(40px, 6vw, 64px)"
-    fontWeight: 400
-    lineHeight: 1
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
+    fontSize: "clamp(40px, 5.2vw, 72px)"
+    fontWeight: 300
+    lineHeight: 0.92
     letterSpacing: "0.01em"
-  title:
-    fontFamily: "Bebas Neue, sans-serif"
-    fontSize: "30px"
+  numeral:
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
+    fontSize: "clamp(64px, 8vw, 96px)"
+    fontWeight: 300
+    lineHeight: 1
+  headline:
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
+    fontSize: "clamp(36px, 4.6vw, 52px)"
     fontWeight: 400
     lineHeight: 1
-    letterSpacing: "0.03em"
+    letterSpacing: "0.02em"
+  title:
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
+    fontSize: "26px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "0.04em"
+  card-title:
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
+    fontSize: "22px"
+    fontWeight: 500
+    lineHeight: 1
+    letterSpacing: "0.04em"
   name:
-    fontFamily: "Bebas Neue, sans-serif"
+    fontFamily: "Barlow Condensed, Archivo, sans-serif"
     fontSize: "22px"
     fontWeight: 400
     lineHeight: 1
@@ -66,13 +63,15 @@ typography:
     fontSize: "12px"
     fontWeight: 600
     lineHeight: 1.4
+  nav:
+    fontFamily: "Archivo, system-ui, sans-serif"
+    fontSize: "13px"
+    fontWeight: 600
+    letterSpacing: "0.08em"
 rounded:
-  xs: "4px"
-  sm: "8px"
-  md: "10px"
-  lg: "12px"
-  card: "16px"
-  hero: "20px"
+  hairline: "2px"
+  inner: "4px"
+  card: "6px"
   pill: "999px"
 spacing:
   xs: "4px"
@@ -83,242 +82,262 @@ spacing:
   xxl: "32px"
 components:
   site-header:
-    backgroundColor: "{colors.maroon-frame}"
-    textColor: "{colors.frame-text}"
+    backgroundColor: "{colors.pit-black}"
+    textColor: "{colors.dial-white}"
     height: "68px"
   nav-pill:
-    textColor: "{colors.frame-text}"
+    textColor: "{colors.bezel-grey}"
+    typography: "{typography.nav}"
     rounded: "{rounded.pill}"
     padding: "0 18px"
     height: "44px"
   nav-pill-active:
-    backgroundColor: "{colors.night-ground}"
-    textColor: "{colors.grid-white}"
+    backgroundColor: "{colors.pressed-graphite}"
+    textColor: "{colors.dial-white}"
   card:
-    backgroundColor: "{colors.data-card}"
-    textColor: "{colors.grid-white}"
+    backgroundColor: "{colors.instrument-card}"
+    textColor: "{colors.dial-white}"
     rounded: "{rounded.card}"
     padding: "24px"
-  table-row:
-    textColor: "{colors.grid-white}"
-    rounded: "{rounded.sm}"
-    padding: "8px 12px 8px 4px"
-    height: "60px"
-  table-row-hover:
-    backgroundColor: "{colors.data-raised}"
-  table-row-selected:
-    backgroundColor: "{colors.selected-grey}"
+  button-primary:
+    backgroundColor: "{colors.dial-white}"
+    textColor: "{colors.pit-black}"
+    rounded: "{rounded.pill}"
+    padding: "0 22px"
+    height: "44px"
+  button-primary-disabled:
+    backgroundColor: "{colors.raised-graphite}"
+    textColor: "{colors.tick-grey}"
   chip:
-    textColor: "{colors.telemetry-grey}"
+    textColor: "{colors.bezel-grey}"
     rounded: "{rounded.pill}"
     padding: "0 20px"
     height: "44px"
   chip-pressed:
-    backgroundColor: "{colors.grid-white}"
-    textColor: "{colors.night-ground}"
+    backgroundColor: "{colors.dial-white}"
+    textColor: "{colors.pit-black}"
   select:
-    backgroundColor: "{colors.data-raised}"
-    textColor: "{colors.grid-white}"
+    backgroundColor: "{colors.raised-graphite}"
+    textColor: "{colors.dial-white}"
     rounded: "{rounded.pill}"
     padding: "0 36px 0 16px"
     height: "44px"
-  button-primary:
-    backgroundColor: "{colors.grid-white}"
-    textColor: "{colors.night-ground}"
-    rounded: "{rounded.pill}"
-    padding: "0 22px"
-    height: "44px"
-  stat-tile:
-    backgroundColor: "{colors.data-card}"
-    textColor: "{colors.grid-white}"
+  season-picker-panel:
+    backgroundColor: "{colors.instrument-card}"
     rounded: "{rounded.card}"
-    padding: "20px 22px"
+    padding: "12px"
+    width: "340px"
+  table-row:
+    textColor: "{colors.dial-white}"
+    rounded: "8px"
+    padding: "8px 12px 8px 4px"
+    height: "60px"
+  table-row-hover:
+    backgroundColor: "{colors.raised-graphite}"
+  table-row-selected:
+    backgroundColor: "{colors.pressed-graphite}"
+  stat-tile:
+    backgroundColor: "{colors.instrument-card}"
+    rounded: "{rounded.card}"
+    padding: "18px 20px"
   stat-chip:
-    backgroundColor: "{colors.data-raised}"
-    textColor: "{colors.grid-white}"
-    rounded: "{rounded.lg}"
+    backgroundColor: "{colors.raised-graphite}"
+    rounded: "{rounded.inner}"
     padding: "14px 16px"
   badge-next:
-    backgroundColor: "{colors.safety-amber}"
-    textColor: "{colors.amber-ink}"
+    backgroundColor: "{colors.signal-orange}"
+    textColor: "{colors.signal-ink}"
     rounded: "{rounded.pill}"
     padding: "2px 8px"
-  site-footer:
-    backgroundColor: "{colors.maroon-frame}"
-    textColor: "{colors.frame-text}"
-    padding: "24px"
+  notice:
+    backgroundColor: "{colors.instrument-card}"
+    textColor: "{colors.bezel-grey}"
+    rounded: "{rounded.inner}"
+    padding: "14px 18px"
 ---
 
 # Design System: Pit Wall
 
 ## Overview
 
-**Creative North Star: "The Race Programme Wall"**
+**Creative North Star: "The Black Chronometer"**
 
-A race-day programme pinned to a timing wall: red is the frame, black is the data ground. Maroon bands with a bright red edge run across the header, the footer, the Home hero and the GP marquee; everything that holds data sits on near-black, so a team's colour never has to fight the red around it. The page reads like a poster first and a timing sheet second: grand-prix names and positions at poster scale in condensed caps, then dark tables and stat tiles that scan line by line.
+A precision instrument on a black pit wall. The interface is a set of monochrome instrument faces: charcoal cards on black, divided by hairlines, carrying thin condensed capitals and tabular figures. Weight comes from fine ticks and exact numbers, not from volume. One orange signal marks what is live or next, the way a chronograph has a single coloured seconds hand.
 
-Team colour is the loudest thing on a data surface, and it is earned. The top three in a standing stand in full livery bands with their position set huge; head-to-head sides, the open profile panel and the telemetry driver head take a band too. Everyone else carries their colour as a code chip, a share bar or a dot. Numbers are oversized and often outlined, so a ranked list reads as a column of giant ghost numerals rather than a list of avatars.
+The Home hero is the literal instrument: a chronograph dial counting down to the next session, its ticks going dark as the minute runs out. The same tick ring is unrolled into straight scales under figures elsewhere (the title-gap track, the lap scale of the race analyst), so the whole product reads as one instrument family. The analysis pages are dense and quiet, and scan like a timing screen.
 
-Controls are pills: nav, filter chips, selects, the one white primary action. Cards are softly rounded (16px) dark slabs divided by hairlines. There are no driver photos; a driver is their three-letter code on their team colour.
+Team colour is data, not decoration. It arrives from the API and appears as a dark tint with a 2px edge on identity heads (the top three, head-to-head sides, profile and telemetry heads), and as share bars, chart lines and small dots everywhere else. There are no driver photos, no code chips and no constructor logos. Drivers and teams appear by name.
+
+This world replaced a poster-loud "race programme" look (maroon bands, red frame edges, giant outlined numerals cropped by their bands, a scrolling marquee). None of that returns.
 
 **Key Characteristics:**
-- Maroon frame bands with a 3px Start-Light Red edge; near-black data ground.
-- Team colour as full bands on the top three and on driver-identity heads, as chips, bars and dots everywhere else, always from the API.
-- Oversized outlined (text-stroke) position, round and car numbers.
-- Pill controls: nav, filter chips (`aria-pressed`), selects, primary button.
-- Dark tables inside 16px cards with hairline row dividers.
-- Stat tiles: one big number, a small label, one small bespoke chart.
-- Amber only for "next" and the focus ring.
+- Black ground, charcoal cards, 1px hairlines, no shadows.
+- Barlow Condensed in uppercase for headings, names and figures; Archivo for text.
+- One signal orange, used only for "next", live, focus and the seconds hand.
+- Tick scales borrowed from the chronograph dial, under figures and timelines.
+- Team colour as tint plus edge on identity heads, as bars, lines and dots elsewhere.
+- Small radii (6px cards, 4px inner panels) and full-pill controls at 44px.
+- Names, never codes in boxes; numbers whole, never cropped.
 
 ## Colors
 
-Near-black ground, a maroon-to-red frame, and colour on data only when it means a team or "next".
+A monochrome instrument with one signal colour, and team colours that only ever come from the data.
 
 ### Primary
-- **Maroon Frame** (#6E0A10): the frame. Header and footer bands, the GP marquee band, the light end of the Home hero gradient, and a faint radial wash at the top of the page background.
-- **Maroon Deep** (#2C0306): the dark end of the Home hero gradient.
-- **Frame Line** (#A3101A): text selection highlight; a brighter maroon for lines on the frame.
-- **Frame Text** (#F5D7D9): secondary text, unit labels and outlined marquee strokes on the frame (at least 4.5:1 on Maroon Frame). Primary text on the frame is pure white.
-- **Start-Light Red** (#E10600): the bright edge. The 3px border where a frame band meets the ground, the section-heading bars, the loading spinner arc, the gap-chart fill on Home, and native control accents (`accent-color`).
-- **Start-Light Red Dim** (#991004): the error box border and scrollbar thumb hover.
-
-### Secondary
-- **Safety Amber** (#FFC940): "next" only: the next session row's inset ring and badge, the next round's filled number in the season strip and calendar, and the global focus ring. Also the text caret.
-- **Amber Ink** (#14130D): text on Safety Amber fills.
+- **Signal Orange** (`signal-orange`): the one signal. The next session's ring and "Next" badge, the next round in the season strip and calendar, the chronograph seconds hand and its seconds readout, the loading spinner arc, the focus ring and text selection. Text on it is **Signal Ink** (`signal-ink`).
 
 ### Neutral
-- **Night Ground** (#0A0A0B): the page ground; also the active nav pill and season select on the header, and the text on white pills.
-- **Data Card** (#141416): every card, table, tile and panel that holds data.
-- **Data Raised** (#1C1C1F): rows on hover, stat chips inside panels, inputs, chart tooltips, chart tracks.
-- **Selected Grey** (#2E2E33): the selected row in a table.
-- **Hairline** (#2A2A2E) and **Hairline Strong** (#3B3B40): row dividers and card borders; Strong for chip, select and table-head borders.
-- **Grid White** (#F3F3F4): primary text, the fill of pressed chips and the primary button, and the light chip behind constructor logos.
-- **Telemetry Grey** (#A9A9B0): secondary text, labels, units, and the stroke of outlined numbers. At least 4.5:1 on every card colour.
-- **Telemetry Grey Dim** (#8F8F97): finished sessions, disabled controls, the quietest text that still clears 4.5:1 on cards.
+- **Pit Black** (`pit-black`): the page ground, the header and the footer. Also the text on white pills.
+- **Instrument Card** (`instrument-card`): every card, table, tile, panel and notice that holds data.
+- **Raised Graphite** (`raised-graphite`): one step up. Row hover, stat chips inside panels, selects, inputs, chart tooltips and tracks.
+- **Pressed Graphite** (`pressed-graphite`): the selected row and the active nav pill.
+- **Dial Face** (`dial-face`): the chronograph's face, a hair darker than a card so the dial reads as glass.
+- **Hairline** (`hairline`) and **Hairline Strong** (`hairline-strong`): row dividers and card borders; Strong for chip, select and table-head borders, unlit ticks and chart axes.
+- **Dial White** (`dial-white`): primary text, lit major ticks, the minute register, pressed chips and the primary button.
+- **Bezel Grey** (`bezel-grey`): secondary text, labels, units, the stroke of outlined position numbers. At least 4.5:1 on every card colour.
+- **Tick Grey** (`tick-grey`): the quietest text that still clears 4.5:1 (finished sessions, disabled controls), lit minor ticks, and the fallback colour for teams outside the colour table.
+
+### Status
+- **Fault Red** (`fault-red`): error states only, as the border of the error box. A missing or unpublished dataset is not an error and never uses it.
+
+### Brand
+- **Pit-Board Yellow** (`pit-board-yellow`): the logo mark only (the pit-board flag in the header and the favicon). It never appears in UI.
 
 ### Named Rules
-**The Red Frame Rule.** Maroon and red frame the page; they never hold data. Maroon bands carry the header, footer, Home hero and marquee, each edged in 3px Start-Light Red. Every surface that holds team-coloured data is near-black, so a team colour never sits on red.
+**The One Signal Rule.** Signal Orange marks what is next or live, plus focus. If something orange is neither, it is wrong. The logo's yellow is a mark, not a second accent.
 
-**The Livery-Is-Data Rule.** Team colour comes from the API (`teamColor` / `color`), never from frontend code. It appears as a full band only on the top three (Podium), the two H2H sides, the profile panel head and the telemetry deep-dive head, with text on it chosen by `inkOn` (near-black or white, whichever contrasts more). Everywhere else it is a code chip, a bar or a dot, never small text.
+**The Livery-Is-Data Rule.** Team colours come from the API (`teamColor` / `color`), never from frontend code. They appear as a 14% tint with a 2px inset edge on identity heads, and as bars, lines and dots elsewhere. Never as small text and never behind a code.
 
-**The One Next Rule.** Safety Amber marks what comes next (plus the focus ring). If something amber is not "next" or focus, it is wrong.
+**The Dim-by-Colour Rule.** De-emphasise with Bezel Grey or Tick Grey, never `opacity`, so dimmed text keeps its contrast.
 
-**The Dim-by-Colour Rule.** De-emphasise text with Telemetry Grey or Grey Dim, not `opacity`, so dimmed text keeps its contrast.
+**The No-Red-Chrome Rule.** Red exists only as Fault Red in an error box and as a team's own colour in its data. The frame of the page is black.
 
 ## Typography
 
-**Display Font:** Bebas Neue (with sans-serif)
-**Body Font:** Archivo, variable width axis (with system-ui, sans-serif)
+**Display Font:** Barlow Condensed (with Archivo, sans-serif), weights 300–600, always uppercase
+**Body Font:** Archivo (with system-ui, sans-serif), variable width and weight
 
-**Character:** Bebas Neue is the race-poster voice for anything you'd read off a programme cover or a timing tower: GP names, headings, driver and team names, positions, points. Archivo explains; at weight 800 squeezed to 70% width it sets the countdown digits.
+**Character:** Barlow Condensed is the instrument's engraving: thin, tall and exact, light (300) at large sizes so big figures stay precise rather than loud. Archivo explains everything the instrument shows, and carries the uppercase tracked nav.
 
 ### Hierarchy
-- **Display** (Bebas Neue 400, clamp(56px, 8.4vw, 120px), 0.86, uppercase): the next GP name in the Home hero. The marquee band uses the same face at clamp(44px, 6vw, 72px), alternating filled white and outlined copies.
-- **Numeral** (Bebas Neue 400, clamp(96px, 13vw, 168px), 0.8): podium position numbers, cropped by the band's bottom edge. Profile car numbers (128px) and H2H driver codes (132px) are the same family, outlined.
-- **Countdown** (Archivo 800 at 70% width, clamp(56px, 8vw, 108px), 0.9): countdown digits, white on the hero, with 12px 700 uppercase unit labels in Frame Text.
-- **Headline** (Bebas Neue 400, clamp(40px, 6vw, 64px), uppercase): page titles (SectionHeading as h1); the telemetry race name at clamp(40px, 6vw, 72px).
-- **Title** (Bebas Neue 400, 30px, 0.03em, uppercase): section headings beside the red bar; panel titles at 26px.
-- **Name** (Bebas Neue 400, 22px, 0.02em, uppercase): names in table rows. Figures beside them run 28px (row values, panel facts) to 34px (stat chips) to 44–56px (stat tiles).
-- **Body** (Archivo 400, 14px, 1.6): default text, sublines at 12–13px.
-- **Label** (Archivo 600, 12px): field labels, stat labels, units, sublines in Telemetry Grey. Table column heads are 12px 700 uppercase at 0.06em.
+- **Display** (300, clamp(40px, 5.2vw, 72px), 0.92): the next GP name in the Home hero, balanced across lines. The telemetry race name uses 400 at clamp(40px, 6vw, 72px).
+- **Numeral** (300, clamp(64px, 8vw, 96px), 1): podium positions, whole inside their band. Chronograph hours and minutes run at 21% of the dial width; profile car numbers at 88px; Home podium steps at 44px.
+- **Headline** (400, clamp(36px, 4.6vw, 52px), 0.02em): page titles (SectionHeading as h1).
+- **Title** (500, 26px, 0.04em): section headings with their square marker.
+- **Card Title** (500, 22px, 0.04em): every title inside a card (weekend schedule, standings panel, telemetry chart cards, race analyst).
+- **Name** (400, 22px, 0.02em): driver and team names in rows; 19px in dense tables (telemetry results, H2H race log); 28–44px on podium bands.
+- **Figures** (display 400): 28px in rows and facts, 34px in stat chips, 44px in stat tiles, 52px on podium bands. Units drop to Archivo 12–14px in Bezel Grey.
+- **Body** (Archivo 400, 14px, 1.6): default text; sublines 12–13px.
+- **Label** (Archivo 600, 12px): field labels, stat labels, chart axes. Table heads are 12px 700 uppercase at 0.06em.
+- **Nav** (Archivo 600, 13px, 0.08em, uppercase): header nav pills and the season label; 12px at 0.05em on phones.
 
 ### Named Rules
-**The Outlined Numeral Rule.** Position, round and car numbers are set oversized in the display face and drawn as an outline (`-webkit-text-stroke`): 1.2px Telemetry Grey on dark rows and round cards, 2px ink on a team band. A number fills solid only when it is the band's own position (Podium, Home podium steps) or the next round (Safety Amber).
+**The Whole-Number Rule.** Numbers are never cropped by their container. A large position or car number sits entirely inside its band or panel.
 
-**The Tabular Rule.** `tabular-nums` is global; numbers never jitter as they update.
+**The Tabular Rule.** `tabular-nums` is global; numbers never jitter as they count.
 
-**The Unit-Drops Rule.** A figure is display type; its unit ("pts", "s", "left") drops to Archivo 12–15px, in Telemetry Grey on dark and in the band's ink on a band.
+**The Uppercase Display Rule.** Every use of the display face is uppercase. Body text is never uppercase except the nav and table heads.
 
 ## Layout
 
-Content sits in a centred 1200px column (32px top, 24px sides, 56px bottom; 20/16/40px on phones) between a sticky 68px maroon header and a maroon footer. The GP marquee breaks out of the column to the full viewport width. Spacing steps are 4 / 8 / 12 / 16 / 24 / 32px: 8–14px inside rows, 16px between tiles and panels, 24px card padding, 32px between Home sections (24px on phones).
+Content sits in a centred 1200px column (32px top, 24px sides, 56px bottom; 20/16/40px on phones) under a sticky 68px header, with a hairline footer. Spacing steps are 4 / 8 / 12 / 16 / 24 / 32px: 8–14px inside rows, 12–16px between tiles and panels, 24px card padding, 32px between Home sections.
 
-- **Home:** the maroon hero (GP name and countdown left, a 380px dark weekend-schedule table right, with the outlined round number standing in for the circuit outline), the marquee band, three stat tiles, three panels (last race, drivers, constructors), then the season strip of round cards joined by 1px hairline gaps.
-- **Ranked pages (standings, results):** the Podium bands, then the rest of the table in one dark card, beside a 340px sticky detail panel.
-- **Tool pages (H2H, Telemetry):** pill controls in a dark card, then team bands or stat tiles, then dark tables.
-- **Breakpoints:** 1080px (Home panels to 2 columns, telemetry tiles to 2), 900px (hero, ranked layout and header nav stack; nav wraps to its own row), 768/720px (single-column panels, H2H hides the oversized codes, tables simplify), 640px (podium bands drop the logo and tighten), 560px (telemetry tiles to 1), 420px (header divider hidden).
+- **Home:** the hero card (GP name, round and circuit, weekend schedule on the left; the 460px chronograph on the right), then three stat tiles, then three panels (last race, drivers, constructors), then the season strip of round cards.
+- **Ranked pages (standings, results):** the podium bands, then the rest in one table card, beside a 340px sticky detail panel.
+- **Tool pages (head-to-head, telemetry):** pill controls in a card, then identity heads or stat tiles, then tables and chart cards.
+- **Breakpoints:** 1080px (Home panels and telemetry tiles to two columns), 900px (hero, ranked layout and header stack; nav wraps to its own row), 768/720px (single-column panels, simpler tables), 640px (tighter podium bands), 560px (telemetry tiles to one column), 420px (header divider hidden).
 - No horizontal scroll at 390px.
 
 ## Elevation & Depth
 
-No drop shadows. Depth is the ground ladder (Night Ground → Data Card → Data Raised → Selected Grey) plus the red frame bands, which sit above everything visually through colour, not lift. State is shown with inset rings: an inset 3px ink ring on a selected podium band, an inset 1px amber ring on the next session. Team bands hover with a slight brightness lift (`filter: brightness(1.08)`); dark rows hover one step up the ladder. The Home hero's schedule table sits on 82% Night Ground over the maroon gradient.
+Flat. Depth is a ladder of grounds, not shadows: Pit Black → Instrument Card → Raised Graphite → Pressed Graphite. State is shown with inset lines: a 2px inset team edge on identity heads, a 1px inset ring on a selected band, a 1px orange ring on the next session. Team bands hover with a brightness lift (`filter: brightness(1.25)`); dark rows hover one step up the ladder. The season picker's panel is the only floating surface, and it is drawn as a card with a strong hairline rather than a shadow.
 
-**The Ground-and-Band Rule.** A surface is either ground (dark, holds data) or band (maroon frame or team livery). Nothing floats; if something needs emphasis, it becomes a band or moves one step up the ground ladder.
+**The Ground-Ladder Rule.** If something needs emphasis it moves one step up the ladder or takes an inset line. Nothing gets a drop shadow.
 
 ## Shapes
 
-Two shapes: soft slabs and pills. Cards, tables, tiles, podium stacks and team-band groups round to 16px (the Home hero 20px) and clip their children, so stacked bands share one rounded outline with 3–4px dark gaps between them. Notices, stat chips and inner panels use 12px; logo chips and tooltips 10px; rows 8px; chart tracks 3–4px. Every control (nav, chips, selects, buttons, badges, round tags) is a full pill. Home podium steps have rounded tops and square bottoms. Borders are 1px hairlines; the only heavy strokes are the 3px red frame edges.
+Small, exact corners. Cards, tables, tiles, the hero and the podium stack round to 6px and clip their children, so stacked bands share one outline with 3px gaps. Inner panels, notices, stat chips, tooltips and the search field use 4px; rows 8px; bars and tracks 2–3px. Every control (nav, chips, selects, buttons, badges, round tags, decade chips) is a full pill. Tick scales are square (radius 0). Borders are 1px hairlines; the heaviest line is a 2px team edge.
 
 ## Components
 
 ### Buttons
-- **Primary:** a Grid White pill with Night Ground 600–700 text, 44px tall; hover goes to pure white. One per context ("Open race analysis", the telemetry run button). Disabled drops to Data Raised with Grey Dim text.
-- **Outline pill:** 1px Hairline Strong border, 13px 700 text, for Close and Play; on a team band the border and text take the band's ink.
-- **Text link:** Telemetry Grey, underlined in Hairline Strong 4px below; hover turns both to Grid White.
+Restrained and certain.
+- **Primary:** a Dial White pill with Pit Black 600–700 text, 44px tall; hover goes to pure white. One per context ("Open race analysis", "Load analysis"). Disabled drops to Raised Graphite with Tick Grey text.
+- **Outline pill:** a 1.5px current-colour border with 13px 700 text (Close, Play).
+- **Text link:** Bezel Grey, underlined in Hairline Strong 4px below; hover turns both Dial White.
 
 ### Chips
-- **Filter chips (tabs):** 44px pills with a Hairline Strong border and Telemetry Grey 600 text, toggled with `aria-pressed`. Pressed fills Grid White with Night Ground text.
-- **Next badge:** Safety Amber pill, Amber Ink 11–12px 700 text. **Done badge:** outlined pill in Grey Dim.
-- **Heading badge:** outlined pill beside a section title ("Round 17"), 12px 600 Telemetry Grey.
-- **Tags:** small outlined pills for fastest lap, sprint and similar flags.
+- **Filter chips:** 44px pills with a Hairline Strong border and Bezel Grey 600 text, toggled with `aria-pressed`; pressed fills Dial White with Pit Black text.
+- **Next badge:** a Signal Orange pill with Signal Ink 11–12px 700 text. **Done badge:** outlined pill in Tick Grey.
+- **Heading badge:** an outlined pill beside a section title ("Round 17"), 12px 600 Bezel Grey.
 
-### Cards and Containers
-- **Corner Style:** 16px.
-- **Background:** Data Card with a 1px Hairline border.
-- **Internal Padding:** 24px (18px on phones); tables 6px so rows run nearly edge to edge.
-- **Detail panel:** a team-colour head (112px+, name in display type, an oversized outlined car number cropped at the right edge) over a dark body of stat chips and hairline-divided facts.
+### Cards / Containers
+- **Corner Style:** 6px.
+- **Background:** Instrument Card with a 1px Hairline border.
+- **Internal Padding:** 24px (40px for the Home hero); tables 6px so rows run nearly edge to edge.
+- **Identity head:** a 14% team tint over the card colour with a 2px inset team edge and Dial White text: the name in display type, a 13px 600 subline, and an optional car number in 88px light outline, whole and vertically centred at the right.
 
-### Inputs and Fields
-- **Pill select:** Data Raised, Hairline Strong border, full pill, 44px, custom grey chevron, 14px 500 text. On the header it sits on Night Ground in 20px display type. Hover lifts the border to Grey Dim.
-- **Field:** a 12px 600 Telemetry Grey label stacked 6px above the control.
-- **Focus:** the global 2px Safety Amber outline at a 2px offset (inset 5px on podium bands).
+### Inputs / Fields
+- **Select:** a Raised Graphite pill, Hairline Strong border, 44px, custom grey chevron, 14px 500 text; hover lifts the border to Tick Grey.
+- **Field:** a 12px 600 Bezel Grey label stacked 6px above the control.
+- **Focus:** the global 2px Signal Orange outline at a 2px offset. The caret is orange; text selection is orange with Signal Ink.
 
 ### Navigation
-- **Header:** a sticky Maroon Frame band with a 3px Start-Light Red bottom edge, the PIT WALL wordmark in 34px display type (PIT white, WALL in Frame Text), centred nav pills, and the season select at the right.
-- **Nav pills:** 44px, Frame Text 600. Hover darkens with a 28% black wash; active fills Night Ground with white text.
-- **Mobile (≤900px):** brand and season on the first row, nav pills wrapping underneath.
+- **Header:** Pit Black at 94% with a hairline bottom edge. On the left, the pit-board logo mark (28px) and PIT WALL in 26px display 600 at 0.08em. Centred nav pills, and the season picker on the right (hidden on Telemetry, which has its own year picker).
+- **Nav pills:** 44px, Nav type in Bezel Grey; hover goes Dial White on Raised Graphite; active fills Pressed Graphite.
+- **Mobile (≤900px):** brand and season on the first row, nav pills on one row beneath.
 
-### Footer
-A Maroon Frame band with a 3px red top edge: the PIT WALL name in display type, the data sources, and the disclaimer ("Unofficial fan project. Not affiliated with Formula 1 or any team. Logos are trademarks of their owners.") in 13px Frame Text.
+### Season Picker (signature)
+A pill showing the season in 18px display type. It opens a 340px card holding:
+- a search field (digits only: "1988" or "88" both find 1988, "19" finds the 1900s; Enter picks the top match);
+- a row of decade chips, 1950s to 2020s;
+- that decade's years as a 5-column grid of 44px cells in 20px display type.
 
-### Podium Bands (signature)
-The top three as full-width bands in finishing order inside one 16px-clipped stack, each in its team colour with `inkOn` text: the position at Numeral scale cropped by the band's bottom edge, an optional logo chip, the name in display type, and the figure with its unit and gap. P1's band is taller (132px vs 108px). Bands are buttons when they open the detail panel.
+The current season is pressed (Dial White fill). The card opens with a 160ms exponential ease-out, and closes on Escape or a click outside.
 
-### Standings Table (signature)
-The rest of the order as a dark table inside a 16px card: outlined 34px position, DriverMark or constructor logo chip, the name over a 3px share bar in the team colour, a Telemetry Grey subline, and the figure with its gap. Rows are divided by hairlines; hover steps to Data Raised, selection to Selected Grey (`aria-pressed`). The same table grammar carries the calendar, the H2H log, the telemetry race table and the weekend schedule.
+### Chronograph (signature)
+The Home hero dial:
+- 60 ticks; the seconds still left in the current minute stay lit;
+- an orange seconds hand sweeping from `requestAnimationFrame` (stepped once a second under reduced motion);
+- a minute-register arc draining through the hour;
+- days, hours and minutes as light display digits in the face, with the seconds in orange.
 
-### Stat Tile (signature)
-A 16px Data Card tile holding one big display number (44–56px) with its unit, a small Telemetry Grey label, and one small bespoke chart that explains the number: a gap track against points still available, a pip per round left (sprints taller), two win bars, a lap track with neutralisation marks, fastest-lap or places-gained bars in team colour, a pit-stop column chart.
+On load the ticks draw in around the ring and the hand extends.
 
-### Driver Mark
-No driver photos. A driver is their three-letter code in display type on a square of their team colour (radius 18% of size), text chosen by `inkOn`. Constructor logos sit on a Grid White chip (8–10px radius, 4–6px padding) so every logo reads on dark and on bands.
+### Tick Scale (signature)
+The dial's tick ring unrolled into a straight rule (`.tick-scale`, `--ticks` = units): 1px Tick Grey ticks over a Hairline Strong baseline. It runs under the title-gap track, the lap track tile and the race analyst's lap slider.
 
-### GP Marquee
-A full-bleed Maroon Frame band with 3px red edges above and below, scrolling the GP name and year in display type (48s loop), alternating filled white and Frame Text outline copies. It stops under `prefers-reduced-motion`.
+### Podium Bands
+The top three as stacked identity heads in finishing order inside one 6px-clipped stack: the position in Numeral type, whole and centred; the name; the subline; and the figure with its unit and detail. P1's band is taller (132px vs 108px). Bands are buttons when they open the detail panel.
 
-### Section Heading
-A display-font title with an inline red bar (0.13em by 0.8em, so it stays with the first line when the title wraps), an optional outlined pill badge, and a right-aligned text link. As an h1 it sets at page-title scale.
+### Standings Row
+The dark-table row: an outlined 34px position (1.2px Bezel Grey stroke), the name over a 3px share bar in the team colour (or a team dot before the subline when there is no bar), a 12px subline, and the figure with its detail. Rows are divided by hairlines; hover steps to Raised Graphite and selection to Pressed Graphite (`aria-pressed`).
+
+### Stat Tile
+A card with one display number, a small label and one small chart that explains it: a gap track against points still available, a pip per round left, two win bars, a lap track with neutralisation marks, team-colour bars, a pit-stop column chart.
+
+### Notices
+A missing dataset (a 503) is an Instrument Card notice in Bezel Grey with a bold lead ("Not available yet"). Only real failures use the error box with its Fault Red border.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** frame with maroon bands and a 3px Start-Light Red edge, and keep every surface that holds data on the near-black ground.
-- **Do** take team colours from the API and pick text on them with `inkOn`; use full bands only for the top three and driver-identity heads, and chips, bars or dots elsewhere.
-- **Do** set positions, round numbers and car numbers oversized in Bebas Neue, outlined on dark (1.2px Telemetry Grey) and on bands (2px ink).
-- **Do** build controls as 44px pills; mark toggles with `aria-pressed`.
-- **Do** put tables in a 16px Data Card with hairline row dividers.
-- **Do** give each stat tile one number, one label and one small chart that explains it.
-- **Do** show a driver as a DriverMark with their three-letter code, and constructor logos on a Grid White chip.
-- **Do** stop every looping motion (the marquee, spinners) under `prefers-reduced-motion`.
-- **Do** show missing data as a calm notice (`ErrorMsg`'s "Not available yet"), not the red error box.
-- **Do** keep the footer disclaimer on every page.
+- **Do** keep the page black and every data surface on the ground ladder (Instrument Card, Raised Graphite, Pressed Graphite).
+- **Do** set headings, names and figures in Barlow Condensed uppercase, light (300) at display sizes.
+- **Do** keep large numbers whole inside their container.
+- **Do** use Signal Orange only for next, live, focus and the seconds hand.
+- **Do** take team colours from the API and show them as a tint plus 2px edge on identity heads, and as bars, lines or dots elsewhere.
+- **Do** show drivers and teams by name.
+- **Do** build controls as 44px pills and mark toggles with `aria-pressed`.
+- **Do** borrow the tick scale for any timeline or range under a figure.
+- **Do** show missing data as a calm notice, not the error box.
+- **Do** stop every looping motion under `prefers-reduced-motion`.
 
 ### Don't:
-- **Don't** put team colour on a red or maroon surface.
-- **Don't** set small text in a team colour; it fails contrast against too many liveries.
-- **Don't** hardcode a team colour in React.
-- **Don't** use Safety Amber for anything but "next" and focus.
-- **Don't** add drop shadows; use a band, a ground step or an inset ring.
-- **Don't** use driver photos.
-- **Don't** dim text with `opacity`; use Telemetry Grey or Grey Dim.
+- **Don't** bring back maroon bands, red frame edges, the scrolling marquee, or giant outlined numerals cropped by their band.
+- **Don't** use the logo's yellow anywhere but the logo mark.
+- **Don't** put a driver's three-letter code in a coloured box, show driver photos, or show constructor logos.
+- **Don't** hardcode a team colour in React, or set small text in a team colour.
+- **Don't** add drop shadows; step up the ground ladder or use an inset line.
+- **Don't** dim text with `opacity`.
 - **Don't** use official Formula 1 logos, wordmarks or marks; the product is an unofficial fan project.
