@@ -12,6 +12,7 @@ import functools
 import logging
 import threading
 from collections import OrderedDict
+from datetime import date
 
 import fastf1
 import numpy as np
@@ -27,6 +28,7 @@ from fastf1.exceptions import (
 import openf1
 from ergast import TEAM_COLORS
 from errors import AppError, DataNotAvailable, InvalidInput, NotFound, RateLimited
+from params import FIRST_TELEMETRY_YEAR
 from settings import settings
 
 logger = logging.getLogger(__name__)
@@ -49,6 +51,16 @@ _key_locks_guard = threading.Lock()
 def _lock_for(key: tuple) -> threading.Lock:
     with _key_locks_guard:
         return _key_locks.setdefault(key, threading.Lock())
+
+
+def telemetry_years() -> list[str]:
+    """Seasons with reachable timing data, newest first: OpenF1's, then FastF1's allowed ones."""
+    latest = date.today().year
+    fastf1_years = settings.telemetry_seasons or range(FIRST_TELEMETRY_YEAR, openf1.FIRST_YEAR)
+    years = set(range(openf1.FIRST_YEAR, latest + 1)) | {
+        y for y in fastf1_years if y < openf1.FIRST_YEAR
+    }
+    return [str(y) for y in sorted(years, reverse=True)]
 
 
 def _fastf1_errors(fn):

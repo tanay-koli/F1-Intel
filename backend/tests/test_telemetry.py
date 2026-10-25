@@ -54,3 +54,19 @@ def test_empty_setting_disables_fast_path(mocker, monkeypatch):
     with pytest.raises(DataNotAvailable, match="probe"):
         telemetry.get_session_drivers(2019, 16)
     load.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("setting", "fastf1_years"),
+    [
+        ([2021, 2022], ["2022", "2021"]),
+        ([2019], ["2019"]),
+        ([], ["2022", "2021", "2020", "2019", "2018"]),  # empty = always try
+    ],
+)
+def test_telemetry_years_follow_the_setting(monkeypatch, setting, fastf1_years):
+    monkeypatch.setattr(settings, "telemetry_seasons", setting)
+    years = telemetry.telemetry_years()
+    assert years[-len(fastf1_years) :] == fastf1_years
+    assert years[: -len(fastf1_years)][-1] == "2023"  # OpenF1 from 2023, newest first
+    assert years == sorted(years, reverse=True)

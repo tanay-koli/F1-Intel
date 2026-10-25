@@ -94,9 +94,6 @@ html { scrollbar-color: var(--border-strong) var(--bg); }
 .select:hover { border-color: var(--text-dim); }
 .select:disabled { cursor: not-allowed; color: var(--text-dim); }
 
-/* Utility */
-.font-display { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
-
 /* Animations */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -104,29 +101,6 @@ html { scrollbar-color: var(--border-strong) var(--bg); }
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.animate-fade-up {
-  animation: fadeUp 0.4s ease both;
-}
-
-/* ── Mobile responsive ─────────────────────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  /* Podium grids → single column */
-  .podium-grid { grid-template-columns: 1fr !important; }
-
-  /* Profile / detail panels → full width below list */
-  .side-panel-grid { grid-template-columns: 1fr !important; }
-  .side-panel { position: static !important; }
-
-  /* Result rows — simplify columns on mobile */
-  .result-row-race { grid-template-columns: 36px 16px 1fr 60px !important; }
-  .result-row-qual { grid-template-columns: 36px 16px 1fr 70px !important; }
-
-  /* Charts — full width */
-  .charts-2col { grid-template-columns: 1fr !important; }
-
 }
 
 /* Range slider (Race Analyst): white thumb */

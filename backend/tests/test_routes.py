@@ -166,7 +166,6 @@ _DRIVER = {
     "fullName": "Lando Norris",
     "dateOfBirth": "1999-11-13",
     "nationality": "British",
-    "flag": "🇬🇧",
     "url": "",
     "season": "2026",
 }

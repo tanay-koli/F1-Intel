@@ -19,13 +19,11 @@ telemetryApi.interceptors.response.use(r => r, surfaceApiMessage)
 
 export const f1Api = {
   // Drivers
-  getDrivers: (season) => api.get(`/drivers?season=${season}`).then(r => r.data),
   getDriverStandings: (season) => api.get(`/driver-standings?season=${season}`).then(r => r.data),
   getDriver: (id, season) => api.get(`/drivers/${id}?season=${season}`).then(r => r.data),
   getDriverProgression: (season) => api.get(`/driver-progression?season=${season}`).then(r => r.data),
 
   // Constructors
-  getConstructors: (season) => api.get(`/constructors?season=${season}`).then(r => r.data),
   getConstructorStandings: (season) => api.get(`/constructor-standings?season=${season}`).then(r => r.data),
   getConstructor: (id, season) => api.get(`/constructors/${id}?season=${season}`).then(r => r.data),
   getConstructorProgression: (season) => api.get(`/constructor-progression?season=${season}`).then(r => r.data),

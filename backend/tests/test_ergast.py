@@ -169,6 +169,31 @@ def test_get_maps_connection_errors(mocker):
         ergast._get(URL)
 
 
+@pytest.mark.parametrize(
+    "failure",
+    [{"return_value": FakeResponse(429)}, {"side_effect": requests.ConnectionError("down")}],
+)
+def test_get_serves_expired_cache_when_jolpica_fails(mocker, failure):
+    old = {"MRData": {"old": True}}
+    with ergast._db() as con:
+        con.execute("INSERT INTO api_cache VALUES (?, ?, ?)", (URL, json.dumps(old), 0.0))
+        con.commit()
+    mocker.patch("ergast.requests.get", **failure)
+    assert ergast._get(URL) == old
+
+
+def test_get_all_follows_paging(mocker):
+    # Jolpica returns at most 100 rows; 1953 has 108 drivers
+    def page(rows):
+        return {"MRData": {"total": "108", "DriverTable": {"Drivers": rows}}}
+
+    url = f"{ergast.BASE_URL}/1953/drivers.json?limit=100"
+    pages = {url: page(list(range(100))), f"{url}&offset=100": page(list(range(100, 108)))}
+    mocker.patch("ergast._get", side_effect=pages.__getitem__)
+    data = ergast._get_all(url, "DriverTable", "Drivers")
+    assert data["MRData"]["DriverTable"]["Drivers"] == list(range(108))
+
+
 def test_progression_does_not_hide_rate_limits(mocker):
     # A rate-limited round used to be skipped silently, leaving a gap in the chart
     mocker.patch(

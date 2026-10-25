@@ -66,36 +66,6 @@ TEAM_COLORS = {
     "hrt": "#B2945A",
 }
 
-FLAG_MAP = {
-    "British": "🇬🇧",
-    "German": "🇩🇪",
-    "Dutch": "🇳🇱",
-    "Spanish": "🇪🇸",
-    "Mexican": "🇲🇽",
-    "French": "🇫🇷",
-    "Finnish": "🇫🇮",
-    "Australian": "🇦🇺",
-    "Canadian": "🇨🇦",
-    "Japanese": "🇯🇵",
-    "Thai": "🇹🇭",
-    "Chinese": "🇨🇳",
-    "Danish": "🇩🇰",
-    "American": "🇺🇸",
-    "Italian": "🇮🇹",
-    "Brazilian": "🇧🇷",
-    "Austrian": "🇦🇹",
-    "Swiss": "🇨🇭",
-    "Belgian": "🇧🇪",
-    "New Zealander": "🇳🇿",
-    "Polish": "🇵🇱",
-    "Russian": "🇷🇺",
-    "Swedish": "🇸🇪",
-    "Czech": "🇨🇿",
-    "Argentine": "🇦🇷",
-    "Hungarian": "🇭🇺",
-    "Monegasque": "🇲🇨",
-}
-
 
 def _cached_races(con: sqlite3.Connection, season: str, now: datetime) -> list | None:
     """A season's raw schedule from the cache (any age), for the TTL policy."""
@@ -121,14 +91,30 @@ def is_fresh(con: sqlite3.Connection, url: str, body: dict, stored_at: float) ->
 
 
 def _get(url: str) -> dict:
-    """Fetch URL, returning the cached response if still fresh."""
+    """Fetch URL, returning the cached response if still fresh.
+
+    If Jolpica is down or rate-limits us, an expired cached copy beats an error.
+    """
+    stale = None
     with _db() as con:
         row = con.execute("SELECT body, stored_at FROM api_cache WHERE url = ?", (url,)).fetchone()
         if row:
             body = json.loads(row[0])
             if is_fresh(con, url, body, row[1]):
                 return body
+            stale = body
 
+    try:
+        return _fetch(url)
+    except (UpstreamError, RateLimited):
+        if stale is None:
+            raise
+        logger.warning("Serving expired cache for %s", url)
+        return stale
+
+
+def _fetch(url: str) -> dict:
+    """GET from Jolpica and store the response; failures become AppErrors."""
     try:
         resp = requests.get(url, timeout=TIMEOUT)
     except requests.RequestException as e:
@@ -164,15 +150,48 @@ def _get(url: str) -> dict:
     return data
 
 
+PAGE = 100  # Jolpica caps every response at 100 rows, whatever limit is asked for
+
+
+def _get_all(url: str, *path) -> dict:
+    """_get, following Jolpica's paging so the list at `path` under MRData is complete.
+
+    `url` must already carry limit=100. Needed where early seasons pass 100 rows
+    (1952 has 105 drivers, 1953 has 108).
+    """
+    data = _get(url)
+    rows = _dig(data, path)
+    total = int(data["MRData"].get("total", 0))
+    offset = PAGE
+    while rows is not None and offset < total:
+        more = _dig(_get(f"{url}&offset={offset}"), path)
+        if not more:
+            break
+        rows.extend(more)
+        offset += PAGE
+    return data
+
+
+def _dig(data: dict, path: tuple) -> list | None:
+    node = data["MRData"]
+    for key in path:
+        try:
+            node = node[key]
+        except (KeyError, IndexError):
+            return None
+    return node
+
+
 def _team_color(constructor_id: str) -> str:
-    return TEAM_COLORS.get(constructor_id, "#E10600")
+    # Neutral grey for teams outside the table (most historical ones)
+    return TEAM_COLORS.get(constructor_id, "#8A8A93")
 
 
 # ── Drivers ───────────────────────────────────────────────────────────────────
 
 
 def get_drivers(season: str) -> dict:
-    data = _get(f"{BASE_URL}/{season}/drivers.json?limit=100")
+    data = _get_all(f"{BASE_URL}/{season}/drivers.json?limit=100", "DriverTable", "Drivers")
     raw = data["MRData"]["DriverTable"]["Drivers"]
 
     drivers = []
@@ -188,7 +207,6 @@ def get_drivers(season: str) -> dict:
                 "fullName": f"{d['givenName']} {d['familyName']}",
                 "dateOfBirth": d.get("dateOfBirth", ""),
                 "nationality": nationality,
-                "flag": FLAG_MAP.get(nationality, "🏁"),
                 "url": d.get("url", ""),
                 "season": season,
             }
@@ -198,7 +216,10 @@ def get_drivers(season: str) -> dict:
 
 
 def get_driver_standings(season: str) -> dict:
-    data = _get(f"{BASE_URL}/{season}/driverStandings.json?limit=100")
+    data = _get_all(
+        f"{BASE_URL}/{season}/driverStandings.json?limit=100",
+        *("StandingsTable", "StandingsLists", 0, "DriverStandings"),
+    )
     standings_list = data["MRData"]["StandingsTable"]["StandingsLists"]
 
     if not standings_list:
@@ -224,7 +245,6 @@ def get_driver_standings(season: str) -> dict:
                 "fullName": f"{d['givenName']} {d['familyName']}",
                 "familyName": d["familyName"],
                 "nationality": d.get("nationality", ""),
-                "flag": FLAG_MAP.get(d.get("nationality", ""), "🏁"),
                 "constructorId": constructor_id,
                 "constructorName": team.get("name", ""),
                 "teamColor": _team_color(constructor_id),
@@ -254,7 +274,6 @@ def get_constructors(season: str) -> dict:
                 "constructorId": cid,
                 "name": c["name"],
                 "nationality": nat,
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "url": c.get("url", ""),
                 "color": _team_color(cid),
                 "season": season,
@@ -287,7 +306,6 @@ def get_constructor_standings(season: str) -> dict:
                 "constructorId": cid,
                 "name": c["name"],
                 "nationality": nat,
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "color": _team_color(cid),
             }
         )
@@ -316,7 +334,6 @@ def get_circuits(season: str) -> dict:
                 "name": c["circuitName"],
                 "locality": loc.get("locality", ""),
                 "country": country,
-                "flag": FLAG_MAP.get(country, "🏁"),
                 "lat": float(loc.get("lat", 0)),
                 "lng": float(loc.get("long", 0)),
                 "url": c.get("url", ""),
@@ -360,7 +377,6 @@ def get_schedule(season: str) -> dict:
                 "circuitName": circuit.get("circuitName", ""),
                 "locality": loc.get("locality", ""),
                 "country": country,
-                "flag": FLAG_MAP.get(country, "🏁"),
                 "lat": float(loc.get("lat", 0)),
                 "lng": float(loc.get("long", 0)),
                 # nested session times if present
@@ -461,7 +477,6 @@ def get_race_results(season: str, round_num: str = "last") -> dict:
                 "fullName": f"{driver['givenName']} {driver['familyName']}",
                 "familyName": driver["familyName"],
                 "nationality": nat,
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "constructorId": cid,
                 "constructorName": constructor.get("name", ""),
                 "teamColor": _team_color(cid),
@@ -482,7 +497,6 @@ def get_race_results(season: str, round_num: str = "last") -> dict:
         "circuitId": circuit.get("circuitId", ""),
         "circuitName": circuit.get("circuitName", ""),
         "country": loc.get("country", ""),
-        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
         "results": results,
     }
 
@@ -511,7 +525,6 @@ def get_qualifying(season: str, round_num: str = "last") -> dict:
                 "number": driver.get("permanentNumber", ""),
                 "fullName": f"{driver['givenName']} {driver['familyName']}",
                 "nationality": nat,
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "constructorId": cid,
                 "constructorName": constructor.get("name", ""),
                 "teamColor": _team_color(cid),
@@ -530,7 +543,6 @@ def get_qualifying(season: str, round_num: str = "last") -> dict:
         "date": race.get("date", ""),
         "circuitName": circuit.get("circuitName", ""),
         "country": loc.get("country", ""),
-        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
         "results": results,
     }
 
@@ -573,7 +585,10 @@ def _progression(
     rounds_data = []
     for rnd in range(1, len(completed) + 1):
         try:
-            data = _get(f"{BASE_URL}/{season}/{rnd}/{endpoint}.json?limit=100")
+            data = _get_all(
+                f"{BASE_URL}/{season}/{rnd}/{endpoint}.json?limit=100",
+                *("StandingsTable", "StandingsLists", 0, list_key),
+            )
             slist = data["MRData"]["StandingsTable"]["StandingsLists"]
             if slist:
                 rounds_data.append(slist[0])
@@ -649,7 +664,6 @@ def get_sprint_results(season: str, round_num: str = "last") -> dict:
                 "number": driver.get("permanentNumber", ""),
                 "fullName": f"{driver['givenName']} {driver['familyName']}",
                 "nationality": nat,
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "constructorId": cid,
                 "constructorName": constructor.get("name", ""),
                 "teamColor": _team_color(cid),
@@ -669,7 +683,6 @@ def get_sprint_results(season: str, round_num: str = "last") -> dict:
         "circuitId": circuit.get("circuitId", ""),
         "circuitName": circuit.get("circuitName", ""),
         "country": loc.get("country", ""),
-        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
         "results": results,
     }
 
@@ -740,7 +753,6 @@ def get_pit_stops(season: str, round_num: str = "last") -> dict:
         "raceName": race["raceName"],
         "date": race.get("date", ""),
         "country": loc.get("country", ""),
-        "flag": FLAG_MAP.get(loc.get("country", ""), "🏁"),
         "totalLaps": total_laps,
         "pitstops": pitstops,
     }
@@ -762,14 +774,12 @@ def get_driver_season_results(season: str, driver_id: str = "") -> dict:
         d = r["Driver"]
         constructor = r.get("Constructor", {})
         cid = constructor.get("constructorId", "")
-        nat = d.get("nationality", "")
 
         if not driver_meta:
             driver_meta = {
                 "driverId": d["driverId"],
                 "fullName": f"{d['givenName']} {d['familyName']}",
                 "code": d.get("code", ""),
-                "flag": FLAG_MAP.get(nat, "🏁"),
                 "constructorId": cid,
                 "constructorName": constructor.get("name", ""),
                 "teamColor": _team_color(cid),

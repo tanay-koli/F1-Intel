@@ -32,6 +32,7 @@ class RootResponse(Model):
 
 class SeasonsResponse(Model):
     seasons: list[str]
+    telemetrySeasons: list[str]  # seasons the telemetry routes can load
 
 
 class CacheStatsResponse(Model):
@@ -58,7 +59,6 @@ class Driver(Model):
     fullName: str
     dateOfBirth: str
     nationality: str
-    flag: str
     url: str
     season: str
 
@@ -79,7 +79,6 @@ class DriverStanding(Model):
     fullName: str
     familyName: str
     nationality: str
-    flag: str
     constructorId: str
     constructorName: str
     teamColor: str
@@ -103,7 +102,6 @@ class Constructor(Model):
     constructorId: str
     name: str
     nationality: str
-    flag: str
     url: str
     color: str
     season: str
@@ -122,7 +120,6 @@ class ConstructorStanding(Model):
     constructorId: str
     name: str
     nationality: str
-    flag: str
     color: str
 
 
@@ -145,7 +142,6 @@ class Circuit(Model):
     name: str
     locality: str
     country: str
-    flag: str
     lat: float
     lng: float
     url: str
@@ -176,7 +172,6 @@ class ScheduleRace(Model):
     circuitName: str
     locality: str
     country: str
-    flag: str
     lat: float
     lng: float
     fp1: str
@@ -231,7 +226,6 @@ class RaceResult(Model):
     fullName: str
     familyName: str
     nationality: str
-    flag: str
     constructorId: str
     constructorName: str
     teamColor: str
@@ -249,7 +243,6 @@ class RaceResultsResponse(Model):
     circuitId: str | None = None
     circuitName: str | None = None
     country: str | None = None
-    flag: str | None = None
     results: list[RaceResult]
 
 
@@ -260,7 +253,6 @@ class QualifyingResult(Model):
     number: str
     fullName: str
     nationality: str
-    flag: str
     constructorId: str
     constructorName: str
     teamColor: str
@@ -276,7 +268,6 @@ class QualifyingResponse(Model):
     date: str | None = None
     circuitName: str | None = None
     country: str | None = None
-    flag: str | None = None
     results: list[QualifyingResult]
 
 
@@ -292,7 +283,6 @@ class SprintResult(Model):
     number: str
     fullName: str
     nationality: str
-    flag: str
     constructorId: str
     constructorName: str
     teamColor: str
@@ -309,7 +299,6 @@ class SprintResponse(Model):
     circuitId: str | None = None
     circuitName: str | None = None
     country: str | None = None
-    flag: str | None = None
     results: list[SprintResult]
 
 
@@ -333,7 +322,6 @@ class PitStopsResponse(Model):
     raceName: str | None = None
     date: str | None = None
     country: str | None = None
-    flag: str | None = None
     totalLaps: int
     pitstops: list[PitStop]
 
@@ -376,7 +364,6 @@ class H2HDriverSummary(Model):
     driverId: str | None = None
     fullName: str | None = None
     code: str | None = None
-    flag: str | None = None
     constructorId: str | None = None
     constructorName: str | None = None
     teamColor: str | None = None

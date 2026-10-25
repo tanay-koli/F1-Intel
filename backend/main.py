@@ -40,6 +40,7 @@ from settings import settings
 from telemetry import (
     get_session_drivers,
     get_speed_trace,
+    telemetry_years,
 )
 
 
@@ -181,7 +182,7 @@ def circuit_outline_route(circuit_id: str, alt: str = ""):
 
 @route("/api/seasons", s.SeasonsResponse)
 def seasons():
-    return get_seasons()
+    return {**get_seasons(), "telemetrySeasons": telemetry_years()}
 
 
 @route("/api/schedule", s.ScheduleResponse)

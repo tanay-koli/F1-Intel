@@ -17,21 +17,46 @@ import requests
 from tqdm import tqdm
 
 DB_PATH = Path(__file__).parent.parent / "db" / "f1.duckdb"
-RAW_PATH = Path(__file__).parent.parent / "raw" / "jolpica"
 BASE_URL = "https://api.jolpi.ca/ergast/f1"  # Jolpica (Ergast-compatible)
-SLEEP = 0.2  # be polite — Jolpica rate limit is 200 req/hour
+SLEEP = 0.3  # under Jolpica's burst limit (4 req/s); its hourly cap (500) is handled on 429
+RATE_LIMIT_WAIT = 60  # seconds to wait on a 429 that has no usable Retry-After
+PAGE = 100  # Jolpica caps every response at 100 rows
 
 
 def fetch(url: str) -> dict:
-    for attempt in range(3):
+    """GET with retries; on a rate limit, wait and try again instead of failing the season."""
+    failures = 0
+    while True:
         try:
             r = requests.get(url, timeout=15)
-            r.raise_for_status()
-            return r.json()
-        except Exception:
-            if attempt == 2:
+        except requests.RequestException:
+            failures += 1
+            if failures == 3:
                 raise
-            time.sleep(2**attempt)
+            time.sleep(2**failures)
+            continue
+        if r.status_code == 429:
+            retry = r.headers.get("Retry-After", "")
+            wait = int(retry) if retry.isdigit() else RATE_LIMIT_WAIT
+            tqdm.write(f"  rate limited, waiting {wait}s")
+            time.sleep(wait)
+            continue
+        r.raise_for_status()
+        return r.json()
+
+
+def fetch_standings(url: str) -> list:
+    """A round's driver standings, following paging (1953 has 108 drivers)."""
+    rows, offset, total = [], 0, 1
+    while offset < total:
+        data = fetch(f"{url}?limit={PAGE}&offset={offset}")["MRData"]
+        total = int(data.get("total", 0))
+        slist = data["StandingsTable"]["StandingsLists"]
+        if not slist:
+            break
+        rows += slist[0].get("DriverStandings", [])
+        offset += PAGE
+    return rows
 
 
 def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
@@ -94,7 +119,7 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
     total_results = 0
     for race in tqdm(races, desc=f"  results {season}", leave=False):
         rnd = race["round"]
-        data = fetch(f"{BASE_URL}/{season}/{rnd}/results.json?limit=30")
+        data = fetch(f"{BASE_URL}/{season}/{rnd}/results.json?limit=100")
         race_data = data["MRData"]["RaceTable"]["Races"]
         if not race_data:
             continue
@@ -147,7 +172,7 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
     total_qual = 0
     for race in tqdm(races, desc=f"  qualifying {season}", leave=False):
         rnd = race["round"]
-        data = fetch(f"{BASE_URL}/{season}/{rnd}/qualifying.json?limit=30")
+        data = fetch(f"{BASE_URL}/{season}/{rnd}/qualifying.json?limit=100")
         race_data = data["MRData"]["RaceTable"]["Races"]
         if not race_data:
             continue
@@ -225,11 +250,7 @@ def ingest_season(season: int, con: duckdb.DuckDBPyConnection):
 
     for race in tqdm(races, desc=f"  standings  {season}", leave=False):
         rnd = race["round"]
-        data = fetch(f"{BASE_URL}/{season}/{rnd}/driverStandings.json")
-        slist = data["MRData"]["StandingsTable"]["StandingsLists"]
-        if not slist:
-            continue
-        for s in slist[0].get("DriverStandings", []):
+        for s in fetch_standings(f"{BASE_URL}/{season}/{rnd}/driverStandings.json"):
             d = s.get("Driver", {})
             cs = s.get("Constructors", [{}])
             con.execute(

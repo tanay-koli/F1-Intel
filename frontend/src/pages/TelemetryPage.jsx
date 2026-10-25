@@ -2,7 +2,6 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
-import { CURRENT_SEASON } from '../hooks/useSeason'
 import { Loader, ErrorMsg, SectionHeader, TeamDot, useIsMobile } from '../components/ui'
 import SectionHeading from '../components/SectionHeading'
 import RaceHeader from './RaceHeader'
@@ -17,17 +16,6 @@ import {
 } from 'recharts'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-// Seasons with reachable timing data: FastF1's mirror (backend TELEMETRY_SEASONS default) and OpenF1 from 2023
-const FASTF1_YEARS = [2021, 2022]
-const OPENF1_FIRST_YEAR = 2023
-
-/** Years for the year pickers, newest first (the viewed season may be next year's). */
-function telemetryYears(season) {
-  const latest = Math.max(Number(CURRENT_SEASON), Number(season))
-  const openf1 = Array.from({ length: latest - OPENF1_FIRST_YEAR + 1 }, (_, i) => latest - i)
-  return [...openf1, ...FASTF1_YEARS.toReversed()].map(String)
-}
 
 const SESSION_OPTS = [
   { value: 'R',   label: 'Race' },
@@ -1397,13 +1385,22 @@ function FastestLapView({ tel, isMobile }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function TelemetryPage({ season }) {
+  // Which seasons have timing data is the backend's call (TELEMETRY_SEASONS + OpenF1); same query as the header
+  const { data, error } = useQuery({ queryKey: ['seasons'], queryFn: f1Api.getSeasons, staleTime: Infinity })
+  if (error) return <ErrorMsg error={error} context="Season list" />
+  if (!data) return <Loader />
+  return <TelemetryView season={season} years={data.telemetrySeasons} />
+}
+
+function TelemetryView({ season, years }) {
   const isMobile = useIsMobile()
   // `?round=N` (e.g. Home's "Open race analysis") opens that race's analysis directly
   const [searchParams] = useSearchParams()
   const linkedRound = searchParams.get('round')
-  const years = telemetryYears(season)
   // A season without timing data opens on the newest one that has it
   const seasonHasData = years.includes(season)
+  // OpenF1 starts in 2023; anything earlier comes through FastF1
+  const fastf1Years = years.filter(y => Number(y) < 2023).toReversed()
   const [year,     setYear]     = useState(seasonHasData ? season : years[0])
   // null = not picked by hand: follow the latest race (set below once the schedule loads)
   const [roundPick, setRound]   = useState(seasonHasData ? linkedRound : null)
@@ -1516,7 +1513,7 @@ export default function TelemetryPage({ season }) {
       />
 
       <p className={tstyles.notice}>
-        Timing data from <strong>OpenF1</strong> (2023 on) and <strong>FastF1</strong> (2021–22).
+        Timing data from <strong>OpenF1</strong> (2023 on){fastf1Years.length > 0 && <> and <strong>FastF1</strong> ({fastf1Years.join(', ')})</>}.
         The first load of a session can take 10–60 s while the data downloads; after that it's instant.
       </p>
 
