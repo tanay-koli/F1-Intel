@@ -10,7 +10,7 @@ function SeasonComplete({ season, standings }) {
   const [champ, second] = standings ?? []
   return (
     <section className={styles.hero} aria-labelledby="season-result">
-      <div className={styles.heroMain}>
+      <div className={styles.heroTitle}>
         {champ ? (
           <>
             <h1 id="season-result" className={styles.raceName}>{surname(champ)} won the {season} title</h1>
@@ -35,12 +35,14 @@ function SeasonComplete({ season, standings }) {
 function HeroSkeleton() {
   return (
     <div className={styles.hero} aria-busy="true" aria-label="Loading next race">
-      <div className={styles.heroMain}>
-        <Skeleton width="80%" height={88} />
+      <div className={styles.heroTitle}>
+        <Skeleton width="80%" height={72} />
         <Skeleton width="45%" height={16} />
-        <Skeleton width="70%" height={96} />
       </div>
-      <div className={styles.heroAside}>
+      <div className={styles.heroDial}>
+        <Skeleton width="min(100%, 460px)" height="auto" radius="50%" className={styles.dialSkeleton} />
+      </div>
+      <div className={styles.heroSchedule}>
         {Array.from({ length: 5 }, (_, i) => <Skeleton key={i} height={44} />)}
       </div>
     </div>
@@ -62,25 +64,20 @@ export default function NextRaceHero({ season, nextRace, standings }) {
 
   return (
     <section className={styles.hero} aria-labelledby="next-race-name">
-      <div className={styles.heroMain}>
+      <div className={styles.heroTitle}>
         <h1 id="next-race-name" className={styles.raceName}>{race.raceName}</h1>
         <p className={styles.circuit}>
           <span className={styles.roundTag}>Round {race.round}</span>
           {race.circuitName}, {race.locality}
+          <span className={styles.trackMini}>
+            <TrackOutline circuitId={race.circuitId} locality={race.locality} label={`${race.circuitName} layout`} />
+          </span>
         </p>
-        <div className={styles.countRow}>
-          <Countdown sessions={race.sessions} />
-          <div className={styles.trackBox}>
-            <TrackOutline
-              circuitId={race.circuitId}
-              locality={race.locality}
-              label={`${race.circuitName} layout`}
-              fallback={<span className={styles.roundGhost} aria-hidden="true">R{race.round}</span>}
-            />
-          </div>
-        </div>
       </div>
-      <div className={styles.heroAside}>
+      <div className={styles.heroDial}>
+        <Countdown sessions={race.sessions} />
+      </div>
+      <div className={styles.heroSchedule}>
         <WeekendSchedule sessions={race.sessions} />
       </div>
     </section>

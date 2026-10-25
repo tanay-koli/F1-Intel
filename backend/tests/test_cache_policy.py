@@ -54,7 +54,7 @@ DURING_R18 = at("2026-10-24T10:00")
         ("2024/driverStandings.json", BETWEEN_WEEKENDS, WITH_DATA, NEVER),
         ("1985.json?limit=30", BETWEEN_WEEKENDS, WITH_DATA, NEVER),
         # Not season-specific / next season: hourly
-        ("seasons.json?limit=100&offset=65", BETWEEN_WEEKENDS, WITH_DATA, HOUR),
+        ("seasons.json?limit=100", BETWEEN_WEEKENDS, WITH_DATA, HOUR),
         ("2027.json?limit=30", BETWEEN_WEEKENDS, WITH_DATA, HOUR),
         # Finished round with published data: never; still empty: keep retrying hourly
         ("2026/17/results.json?limit=30", BETWEEN_WEEKENDS, WITH_DATA, NEVER),
@@ -171,7 +171,7 @@ def test_is_fresh_uses_cached_schedule():
 def test_clear_expired_keeps_final_entries():
     old = time.time() - 30 * 86400
     store(f"{BASE}/2020/1/results.json", WITH_DATA, old)  # past season: kept
-    store(f"{BASE}/seasons.json?limit=100&offset=65", WITH_DATA, old)  # hourly: expired
+    store(f"{BASE}/seasons.json?limit=100", WITH_DATA, old)  # hourly: expired
     assert clear_cache(expired_only=True) == {"deleted": 1, "mode": "expired_only"}
     with ergast._db() as con:
         urls = [u for (u,) in con.execute("SELECT url FROM api_cache")]

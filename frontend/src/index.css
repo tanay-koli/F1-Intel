@@ -1,22 +1,17 @@
 :root {
-  --bg:            #0A0A0B;   /* page ground: near-black */
-  --bg-card:       #141416;   /* cards that hold data */
-  --bg-elevated:   #1C1C1F;   /* rows and controls on a card */
-  --border:        #2A2A2E;
-  --border-strong: #3B3B40;
-  --pill-active:   #2E2E33;
-  --frame:         #6E0A10;   /* maroon frame: header, footer, title bands */
-  --frame-deep:    #2C0306;
-  --frame-line:    #A3101A;
-  --frame-text:    #F5D7D9;   /* secondary text on the frame, ≥4.5:1 */
-  --red:           #E10600;   /* heading bars and the frame's bright edge */
-  --red-dim:       #991004;
-  --accent:        #FFC940;   /* "next" states + focus ring only */
-  --accent-ink:    #14130D;
-  --text:          #F3F3F4;
-  --text-muted:    #A9A9B0;   /* ≥4.5:1 on every card colour */
-  --text-dim:      #8F8F97;   /* quieter than muted, still ≥4.5:1 on cards */
-  --display:       'Bebas Neue', sans-serif;
+  --bg:            #09090A;   /* page ground: black */
+  --bg-card:       #111113;   /* cards that hold data */
+  --bg-elevated:   #18181B;   /* rows and controls on a card */
+  --border:        #232327;
+  --border-strong: #34343A;
+  --pill-active:   #2A2A30;
+  --accent:        #FF6B1A;   /* signal orange: "next", live, focus, the seconds hand */
+  --accent-ink:    #09090A;
+  --error:         #E5484D;   /* error state only */
+  --text:          #EDEDEF;
+  --text-muted:    #A3A3AB;   /* ≥4.5:1 on every card colour */
+  --text-dim:      #8A8A93;   /* quieter than muted, still ≥4.5:1 on cards */
+  --display:       'Barlow Condensed', 'Archivo', sans-serif;
   --body:          'Archivo', system-ui, sans-serif;
 }
 
@@ -48,8 +43,6 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
-  background-image: radial-gradient(ellipse 90% 40% at 50% 0%, #6e0a1022 0%, transparent 70%);
-  background-repeat: no-repeat;
 }
 
 a { color: inherit; text-decoration: none; }
@@ -65,10 +58,10 @@ button {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--red-dim); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-::selection { background: var(--frame-line); color: #fff; }
-input, select, textarea { caret-color: var(--accent); accent-color: var(--red); }
+::selection { background: var(--accent); color: var(--accent-ink); }
+input, select, textarea { caret-color: var(--accent); accent-color: var(--text); }
 html { scrollbar-color: var(--border-strong) var(--bg); }
 
 /* Form controls shared by the tool pages */
@@ -102,7 +95,7 @@ html { scrollbar-color: var(--border-strong) var(--bg); }
 .select:disabled { cursor: not-allowed; color: var(--text-dim); }
 
 /* Utility */
-.font-display { font-family: var(--display); letter-spacing: 0.02em; }
+.font-display { font-family: var(--display); text-transform: uppercase; letter-spacing: 0.02em; }
 
 /* Animations */
 @keyframes fadeUp {
@@ -136,7 +129,7 @@ html { scrollbar-color: var(--border-strong) var(--bg); }
 
 }
 
-/* Range slider (Race Analyst): white thumb, red stays on the frame */
+/* Range slider (Race Analyst): white thumb */
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
@@ -157,4 +150,15 @@ input[type="range"]::-moz-range-thumb {
   background: var(--text);
   border: 2px solid var(--bg);
   cursor: pointer;
+}
+
+/* The chronograph's tick ring unrolled: one tick per unit (--ticks), on a hairline baseline */
+.tick-scale {
+  background-color: transparent !important;
+  background-image: linear-gradient(90deg, var(--tick-color, var(--text-dim)) 1px, transparent 1px);
+  background-size: calc(100% / var(--ticks, 10)) 100%;
+  background-repeat: repeat-x;
+  border-right: 1px solid var(--text-dim);
+  border-radius: 0 !important;
+  box-shadow: inset 0 -1px 0 var(--border-strong);
 }

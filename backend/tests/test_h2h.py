@@ -7,6 +7,8 @@ import schemas
 from errors import InvalidInput
 from services.h2h import constructor_head_to_head
 
+NAMES = {"RUS": "Russell", "ANT": "Antonelli", "LEC": "Leclerc", "HAM": "Hamilton"}
+
 
 def row(rnd, code, pos, points, team, fl=99):
     return {
@@ -15,6 +17,7 @@ def row(rnd, code, pos, points, team, fl=99):
         "constructorName": team.title(),
         "driverId": code.lower(),
         "code": code,
+        "familyName": NAMES[code],
         "position": pos if isinstance(pos, int) else 99,
         "positionText": str(pos),
         "points": float(points),
@@ -55,7 +58,7 @@ def h2h(mocker):
 
 def test_constructor_aggregates(h2h):
     merc, fer = h2h["constructor1"], h2h["constructor2"]
-    assert (merc["name"], merc["drivers"]) == ("Mercedes", ["RUS", "ANT"])
+    assert (merc["name"], merc["drivers"]) == ("Mercedes", ["Russell", "Antonelli"])
     assert (merc["points"], merc["sprintPoints"], merc["totalPoints"]) == (47.0, 8.0, 55.0)
     assert (merc["wins"], merc["podiums"], merc["fastestLaps"], merc["dnf"]) == (1, 1, 1, 1)
     assert merc["avgPosition"] == round((1 + 5 + 4) / 3, 2)  # the retirement doesn't count

@@ -2,13 +2,11 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, StatCard, useIsMobile } from '../components/ui'
-import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
 import { ExternalLink } from 'lucide-react'
 import { points, surname } from '../lib/format'
-import { inkOn } from '../lib/color'
 import styles from './ranked.module.css'
 
 function gapToLeader(standing, leaderPts) {
@@ -28,7 +26,7 @@ function DriverProfile({ standing, season, onClose }) {
   return (
     <section
       className={styles.panel}
-      style={color ? { '--team': color, '--ink': inkOn(color) } : undefined}
+      style={color ? { '--team': color } : undefined}
       aria-label={`${standing.fullName} profile`}
     >
       <div className={styles.panelHead}>
@@ -118,7 +116,6 @@ export default function DriversPage({ season }) {
             {rest.map(s => (
               <StandingsRow
                 key={s.driverId}
-                image={<DriverMark driver={s} />}
                 name={s.fullName}
                 share={leaderPts ? s.points / leaderPts : 0}
                 {...props(s)}

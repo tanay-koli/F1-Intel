@@ -9,11 +9,11 @@
 }
 
 .footer {
-  background: var(--frame);
-  border-top: 3px solid var(--red);
+  background: var(--bg);
+  border-top: 1px solid var(--border);
   padding: 24px;
   font-size: 13px;
-  color: var(--frame-text);
+  color: var(--text-muted);
 }
 
 .footerInner {
@@ -27,10 +27,11 @@
 
 .footerName {
   font-family: var(--display);
-  font-size: 24px;
+  font-size: 20px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: 0.03em;
-  color: #fff;
+  letter-spacing: 0.08em;
+  color: var(--text);
   text-transform: uppercase;
 }
 

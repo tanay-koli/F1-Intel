@@ -8,4 +8,4 @@
   stroke-linecap: round;
 }
 
-.start { fill: var(--accent); }
+.start { fill: var(--text); }

@@ -2,8 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--frame);
-  border-bottom: 3px solid var(--red);
+  background: rgb(9 9 10 / 0.94);
+  border-bottom: 1px solid var(--border);
   padding: 0 24px;
 }
 
@@ -19,21 +19,21 @@
 
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 6px;
   flex-shrink: 0;
   min-height: 44px;
   align-self: center;
-  padding-top: 6px;
   border-radius: 4px;
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 26px;
+  font-weight: 600;
   line-height: 1;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.wordPit { color: #fff; }
-.wordWall { color: var(--frame-text); }
+.mark { width: 28px; height: 28px; margin-right: 6px; flex-shrink: 0; }
+.wordPit, .wordWall { color: #fff; padding-top: 3px; }
 
 .nav {
   display: flex;
@@ -50,25 +50,27 @@
   min-height: 44px;
   padding: 0 18px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--frame-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.pill:hover { color: #fff; background: rgb(0 0 0 / 0.28); }
+.pill:hover { color: var(--text); background: var(--bg-elevated); }
 
 .active,
 .active:hover {
-  color: #fff;
-  background: var(--bg);
+  color: var(--text);
+  background: var(--pill-active);
 }
 
 .divider {
   width: 1px;
   height: 20px;
   margin: 0 6px;
-  background: rgb(255 255 255 / 0.22);
+  background: var(--border-strong);
 }
 
 .season {
@@ -81,35 +83,18 @@
 .seasonLabel {
   font-size: 13px;
   font-weight: 600;
-  color: var(--frame-text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
-
-.select {
-  min-height: 44px;
-  padding: 0 34px 0 16px;
-  border-radius: 999px;
-  border: 1px solid rgb(255 255 255 / 0.18);
-  background-color: var(--bg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A9A9B0'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  appearance: none;
-  color: var(--text);
-  font: inherit;
-  font-family: var(--display);
-  font-size: 20px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-}
-.select:hover { border-color: rgb(255 255 255 / 0.4); }
 
 /* Mobile: brand + season on the first row, nav wraps onto its own row below */
 @media (max-width: 900px) {
   .header { padding: 6px 16px 4px; }
   .inner { flex-wrap: wrap; row-gap: 2px; }
   .nav { order: 3; flex-basis: 100%; justify-content: flex-start; gap: 2px; margin: 0 -8px; }
-  .pill { padding: 0 12px; }
-  .brand { font-size: 30px; }
+  .pill { padding: 0 9px; font-size: 12px; letter-spacing: 0.05em; }
+  .brand { font-size: 24px; }
 }
 
 @media (max-width: 420px) {

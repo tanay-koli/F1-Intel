@@ -9,7 +9,7 @@
 
 .vs {
   padding-bottom: 8px;
-  font-family: var(--display);
+  font-family: var(--display); text-transform: uppercase;
   font-size: 26px;
   line-height: 1;
   color: var(--text-muted);
@@ -23,7 +23,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 4px;
   margin-bottom: 24px;
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -35,33 +35,13 @@
   min-width: 0;
   min-height: 120px;
   padding: 20px 24px;
-  background: var(--team);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--team) 14%, var(--bg-card));
+  box-shadow: inset 0 2px 0 var(--team);
+  color: var(--text);
   overflow: hidden;
 }
 .hero[data-side="right"] { flex-direction: row-reverse; text-align: right; }
 
-.hero img {
-  position: relative;
-  background: #F3F3F4;
-  border-radius: 10px;
-  padding: 6px;
-}
-
-/* The driver code, oversized and cropped behind the name */
-.heroCode {
-  position: absolute;
-  bottom: -0.16em;
-  right: 12px;
-  font-family: var(--display);
-  font-size: 132px;
-  line-height: 0.8;
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--ink);
-  opacity: 0.45;
-  pointer-events: none;
-}
-.hero[data-side="right"] .heroCode { right: auto; left: 12px; }
 
 .heroText { position: relative; min-width: 0; }
 
@@ -84,7 +64,7 @@
 /* Split bars */
 .splits { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
 .splitHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
-.splitCount { font-family: var(--display); font-size: 22px; line-height: 1; letter-spacing: 0.02em; }
+.splitCount { font-family: var(--display); text-transform: uppercase; font-size: 22px; line-height: 1; letter-spacing: 0.02em; }
 .splitLabel { font-size: 13px; color: var(--text-muted); }
 .splitBar { display: flex; gap: 3px; height: 10px; }
 .splitBar > div { border-radius: 3px; }
@@ -95,7 +75,7 @@
   padding: 12px 24px 4px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .statHead,
@@ -108,7 +88,7 @@
 .statHead {
   padding: 8px 0;
   border-bottom: 1px solid var(--border-strong);
-  font-family: var(--display);
+  font-family: var(--display); text-transform: uppercase;
   font-size: 18px;
   letter-spacing: 0.03em;
 }
@@ -116,7 +96,7 @@
 .statRow + .statRow { border-top: 1px solid var(--border); }
 
 .statValue {
-  font-family: var(--display);
+  font-family: var(--display); text-transform: uppercase;
   font-size: 32px;
   line-height: 1;
   color: var(--text-muted);
@@ -130,7 +110,7 @@
   padding: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 .logList { list-style: none; display: flex; flex-direction: column; }
@@ -154,12 +134,15 @@
   color: var(--text-muted);
 }
 
-.logRound { font-family: var(--display); font-size: 20px; line-height: 1; color: var(--text-muted); }
+.logRound { font-family: var(--display); text-transform: uppercase; font-size: 20px; line-height: 1; color: var(--text-muted); }
 .logHead .logRound { font-family: var(--body); font-size: 12px; }
 
 .logRace {
-  font-size: 14px;
-  font-weight: 600;
+  font-family: var(--display);
+  font-size: 19px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -193,7 +176,6 @@
   .pickers { flex-direction: column; align-items: stretch; }
   .vs { display: none; }
   .hero { min-height: 92px; padding: 14px; gap: 10px; }
-  .heroCode { display: none; }
   .stats { padding: 8px 14px 2px; }
   .statHead, .statRow { grid-template-columns: 1fr minmax(96px, auto) 1fr; gap: 8px; }
   .statValue { font-size: 24px; }

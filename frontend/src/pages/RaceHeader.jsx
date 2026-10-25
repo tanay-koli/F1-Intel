@@ -45,7 +45,7 @@ export default function RaceHeader({ analysis, eventColors }) {
 
       <ul className={styles.tiles} aria-label="Race in numbers">
         <Tile value={totalLaps} label={events.length ? `Laps, ${events.length} neutralised` : 'Laps, all green'}>
-          <div className={styles.lapTrack}>
+          <div className={`${styles.lapTrack} tick-scale`} style={{ '--ticks': totalLaps }}>
             {events.map((e, i) => (
               <span
                 key={i}

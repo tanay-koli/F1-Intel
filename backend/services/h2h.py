@@ -26,12 +26,12 @@ def _avg(positions: list[int]) -> float:
 
 
 def _team_summary(cid: str, results: list, sprint: list, quali: list) -> dict:
-    codes = list(dict.fromkeys(r["code"] for r in results))  # first-seen order
+    names = list(dict.fromkeys(r["familyName"] for r in results))  # first-seen order
     return {
         "constructorId": cid,
         "name": results[0]["constructorName"] if results else cid,
         "color": _team_color(cid),
-        "drivers": codes,
+        "drivers": names,
         "points": sum(r["points"] for r in results),
         "sprintPoints": sum(s["points"] for s in sprint),
         "totalPoints": sum(r["points"] for r in results) + sum(s["points"] for s in sprint),

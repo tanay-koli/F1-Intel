@@ -3,7 +3,7 @@
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   padding: 20px 16px;
   min-width: 0;
 }
@@ -11,7 +11,7 @@
 .tooltip {
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
-  border-radius: 10px;
+  border-radius: 4px;
   padding: 10px 14px;
   font-size: 13px;
   max-height: 280px;
@@ -29,5 +29,5 @@
   margin-bottom: 16px;
 }
 .legendItem { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-.legendName { font-family: var(--display); font-size: 17px; line-height: 1; letter-spacing: 0.02em; }
+.legendName { font-family: var(--display); text-transform: uppercase; font-size: 17px; line-height: 1; letter-spacing: 0.02em; }
 .legendValue { color: var(--text-muted); }

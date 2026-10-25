@@ -12,5 +12,5 @@ export function inkOn(hex) {
   if (!hex?.startsWith('#')) return '#FFFFFF'
   const L = luminance(hex)
   // Contrast vs black (L≈0.003) against contrast vs white (L=1)
-  return (L + 0.05) / 0.053 > 1.05 / (L + 0.05) ? '#0A0A0B' : '#FFFFFF'
+  return (L + 0.05) / 0.053 > 1.05 / (L + 0.05) ? '#09090A' : '#FFFFFF'
 }

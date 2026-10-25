@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import NextRaceHero from './home/NextRaceHero'
-import Marquee from './home/Marquee'
 import TitleTiles from './home/TitleTiles'
 import LastRacePanel from './home/LastRacePanel'
 import { DriversPanel, ConstructorsPanel } from './home/StandingsPanel'
@@ -20,7 +19,6 @@ export default function HomePage({ season }) {
   return (
     <div className={styles.page}>
       <NextRaceHero season={season} nextRace={nextRace} standings={drivers} />
-      {race && <Marquee text={`${race.raceName} ${race.season ?? season}`} />}
       <TitleTiles race={race} standings={drivers} schedule={schedule} />
 
       <div className={styles.panels}>

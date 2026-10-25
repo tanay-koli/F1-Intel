@@ -1,6 +1,4 @@
 import { Link } from 'react-router-dom'
-import { ConstructorImage } from '../../components/F1Image'
-import DriverMark from '../../components/DriverMark'
 import SectionHeading from '../../components/SectionHeading'
 import Skeleton from '../../components/Skeleton'
 import StandingsRow, { StandingsList } from '../../components/StandingsRow'
@@ -68,9 +66,6 @@ export function DriversPanel({ season, drivers }) {
               key={d.driverId}
               position={d.position}
               color={d.teamColor}
-              image={
-<DriverMark driver={d} />
-              }
               name={surname(d)}
               subline={d.constructorName}
               pts={d.points}
@@ -111,17 +106,6 @@ export function ConstructorsPanel({ season, constructors, drivers }) {
               key={c.constructorId}
               position={c.position}
               color={c.color}
-              image={
-                <ConstructorImage
-                  key={c.constructorId}
-                  constructorId={c.constructorId}
-                  width={40}
-                  height={40}
-                  color={c.color}
-                  name={c.name}
-                  alt={`${c.name} logo`}
-                />
-              }
               name={c.name}
               subline={driverNames(c.constructorId)}
               pts={c.points}

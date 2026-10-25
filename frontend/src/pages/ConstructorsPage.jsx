@@ -3,16 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, StatCard, useIsMobile } from '../components/ui'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { ConstructorImage } from '../components/F1Image'
 import SectionHeading from '../components/SectionHeading'
 import Podium from '../components/Podium'
 import StandingsRow, { StandingsList } from '../components/StandingsRow'
 import { ExternalLink } from 'lucide-react'
 import { points, surname } from '../lib/format'
-import { inkOn } from '../lib/color'
 import styles from './ranked.module.css'
 import chart from '../components/chart.module.css'
-import { MUTED_SERIES, TICK } from '../lib/chartTheme'
+import { MUTED_SERIES, tick } from '../lib/chartTheme'
 
 function gapToLeader(standing, leaderPts) {
   return standing.position === 1 ? 'Leader' : `−${points(leaderPts - standing.points)} pts`
@@ -41,18 +39,10 @@ function ConstructorProfile({ standing, season, allStandings, onClose }) {
   return (
     <section
       className={styles.panel}
-      style={color ? { '--team': color, '--ink': inkOn(color) } : undefined}
+      style={color ? { '--team': color } : undefined}
       aria-label={`${standing.name} profile`}
     >
       <div className={styles.panelHead}>
-        <ConstructorImage
-          constructorId={standing.constructorId}
-          width={56}
-          height={56}
-          color={color}
-          name={standing.name}
-          alt={`${standing.name} logo`}
-        />
         <div className={styles.panelText}>
           <h2 className={styles.panelName}>{standing.name}</h2>
           <p className={styles.panelMeta}>P{standing.position} · {standing.nationality}</p>
@@ -72,11 +62,11 @@ function ConstructorProfile({ standing, season, allStandings, onClose }) {
         </h3>
         <ResponsiveContainer width="100%" height={140}>
           <BarChart data={allStandings} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: TICK }}
+            <XAxis dataKey="name" tick={tick}
               tickFormatter={n => n.split(' ').map(w => w[0]).join('')}
               axisLine={false} tickLine={false} interval={0} />
-            <YAxis tick={{ fontSize: 11, fill: TICK }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#ffffff08' }} />
+            <YAxis tick={tick} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#18181B' }} />
             <Bar dataKey="points">
               {allStandings.map(entry => (
                 <Cell
@@ -158,10 +148,6 @@ export default function ConstructorsPage({ season }) {
               label="Top three"
               items={podium.map(s => ({
                 key: s.constructorId,
-                image: (
-                  <ConstructorImage key={s.constructorId} constructorId={s.constructorId}
-                    width={64} height={64} color={s.color} name={s.name} alt={`${s.name} logo`} />
-                ),
                 ...props(s),
               }))}
             />
@@ -171,10 +157,6 @@ export default function ConstructorsPage({ season }) {
             {rest.map(s => (
               <StandingsRow
                 key={s.constructorId}
-                image={
-                  <ConstructorImage key={s.constructorId} constructorId={s.constructorId}
-                    width={40} height={40} color={s.color} name={s.name} alt={`${s.name} logo`} />
-                }
                 share={leaderPts ? s.points / leaderPts : 0}
                 {...props(s)}
               />

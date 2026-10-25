@@ -9,7 +9,7 @@
   width: 100%;
   min-height: 64px;
   padding: 10px 14px 10px 4px;
-  border-radius: 10px;
+  border-radius: 4px;
   color: inherit;
   font: inherit;
   text-align: left;
@@ -22,7 +22,7 @@
 
 /* Outlined round number; filled amber for the next race */
 .round {
-  font-family: var(--display);
+  font-family: var(--display); text-transform: uppercase;
   font-size: 32px;
   line-height: 1;
   text-align: center;

@@ -1,0 +1,105 @@
+.chrono {
+  position: relative;
+  width: min(100%, 460px);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+
+.dial { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.face { fill: #0D0D0F; stroke: var(--border); stroke-width: 1; }
+
+/* Ticks draw in around the ring on load; lit ticks are the seconds left in this minute */
+.tick {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transition: stroke 0.35s ease;
+  animation: tickIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i) * 11ms);
+}
+.major { stroke-width: 3; }
+.lit { stroke: var(--text-dim); }
+.lit.major { stroke: var(--text); }
+
+.numeral {
+  fill: var(--text-dim);
+  font: 500 15px var(--display);
+  letter-spacing: 0.04em;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* Minute register: what's left of the hour, draining toward 12 */
+.registerTrack { fill: none; stroke: var(--border); stroke-width: 2; }
+.register {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  transform: rotate(-90deg);
+  transition: stroke-dasharray 1s linear;
+}
+
+/* Seconds hand: a needle on the tick ring, extending outward on load */
+.hand {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation: handIn 0.9s 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.handTip { fill: var(--accent); animation: tickIn 0.4s 0.55s ease both; }
+
+@keyframes tickIn { from { opacity: 0; } }
+@keyframes handIn { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+.readout {
+  position: absolute;
+  inset: 24%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.label { font-size: clamp(12px, 3.2cqi, 14px); font-weight: 600; color: var(--text-muted); }
+
+.time { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+.days {
+  font-family: var(--display);
+  font-size: clamp(16px, 4.4cqi, 20px);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hm {
+  font-family: var(--display);
+  font-weight: 300;
+  font-size: 21cqi;
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+.colon { color: var(--text-dim); margin: 0 0.04em; }
+
+.secs {
+  font-family: var(--display);
+  font-size: clamp(18px, 6cqi, 28px);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.unit { font-size: 0.6em; color: var(--text-muted); }
+
+.srOnly {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}

@@ -331,7 +331,7 @@ def get_circuits(season: str) -> dict:
 
 
 def get_seasons() -> dict:
-    data = _get(f"{BASE_URL}/seasons.json?limit=100&offset=65")
+    data = _get(f"{BASE_URL}/seasons.json?limit=100")
     raw = data["MRData"]["SeasonTable"]["Seasons"]
     seasons = [s["season"] for s in reversed(raw)]
     return {"seasons": seasons}
@@ -853,6 +853,7 @@ def get_constructor_season(season: str, constructor_id: str, endpoint: str) -> l
                     "constructorName": r.get("Constructor", {}).get("name", ""),
                     "driverId": r["Driver"]["driverId"],
                     "code": r["Driver"].get("code", r["Driver"]["driverId"][:3].upper()),
+                    "familyName": r["Driver"]["familyName"],
                     "position": int(pos_str) if pos_str.isdigit() else 99,
                     "positionText": r.get("positionText", pos_str),
                     "points": float(r.get("points", 0)),

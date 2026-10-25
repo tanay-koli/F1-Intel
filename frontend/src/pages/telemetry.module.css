@@ -2,7 +2,7 @@
 .notice {
   margin-bottom: 20px;
   padding: 12px 16px;
-  border-radius: 12px;
+  border-radius: 4px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   font-size: 13px;
@@ -19,7 +19,7 @@
   padding: 16px 20px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 .controls .select { min-width: 140px; }
 
@@ -39,6 +39,17 @@
 
 .empty { padding: 60px 20px; text-align: center; color: var(--text-muted); font-size: 14px; }
 .emptySub { margin-top: 8px; font-size: 12px; color: var(--text-dim); }
+
+/* Card title: same scale as the ranked panel and weekend-schedule headings */
+.cardTitle {
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
 
 /* ── Race header + stat tiles ─────────────────────────────────────────── */
 .raceHead { margin-bottom: 20px; }
@@ -64,15 +75,16 @@
   flex-direction: column;
   min-width: 0;
   padding: 18px 20px;
-  border-radius: 16px;
+  border-radius: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
 }
-.tileValue { font-family: var(--display); font-size: 44px; line-height: 0.9; }
+.tileValue { font-family: var(--display); text-transform: uppercase; font-size: 44px; line-height: 0.9; }
 .tileLabel { margin: 6px 0 14px; font-size: 13px; color: var(--text-muted); }
 .tileChart { margin-top: auto; }
 
 .lapTrack {
+  --tick-color: var(--border-strong);
   position: relative;
   height: 14px;
   border-radius: 4px;
@@ -97,7 +109,7 @@
 
 .bars { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .barRow { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-.barName { font-family: var(--display); font-size: 16px; line-height: 1; }
+.barName { font-family: var(--display); text-transform: uppercase; font-size: 16px; line-height: 1; }
 .barTrack { display: block; height: 8px; border-radius: 3px; background: var(--bg-elevated); overflow: hidden; }
 .barFill { display: block; height: 100%; border-radius: 3px; background: var(--team); }
 .barValue { font-size: 12px; color: var(--text-muted); }
@@ -105,7 +117,7 @@
 .columns { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; height: 84px; }
 .column { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; min-height: 0; }
 .columnBar { width: 100%; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--text-dim); }
-.columnCount { font-family: var(--display); font-size: 16px; line-height: 1; }
+.columnCount { font-family: var(--display); text-transform: uppercase; font-size: 16px; line-height: 1; }
 .columnLabel { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 
 /* ── Driver deep dive head ────────────────────────────────────────────── */
@@ -116,9 +128,10 @@
   gap: 16px;
   margin-bottom: 16px;
   padding: 18px 22px;
-  border-radius: 16px;
-  background: var(--team);
-  color: var(--ink);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--team) 14%, var(--bg-card));
+  box-shadow: inset 0 2px 0 var(--team);
+  color: var(--text);
 }
 .diveName {
   font-family: var(--display);
@@ -158,7 +171,7 @@
   margin-bottom: 20px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 .table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .table th {
@@ -184,7 +197,7 @@
 .muted { color: var(--text-muted); }
 
 .pos {
-  font-family: var(--display);
+  font-family: var(--display); text-transform: uppercase;
   font-size: 26px;
   line-height: 1;
   color: transparent;
@@ -201,6 +214,7 @@
   font-weight: 600;
   text-align: left;
 }
+.driverBtn span:last-child { font-family: var(--display); font-weight: 400; font-size: 19px; line-height: 1; letter-spacing: 0.02em; text-transform: uppercase; }
 .driverBtn:hover span:last-child { text-decoration: underline; text-underline-offset: 3px; }
 
 .flTag {

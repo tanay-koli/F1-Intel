@@ -3,19 +3,17 @@ import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { f1Api } from '../api'
 import { Loader, ErrorMsg, useIsMobile } from '../components/ui'
-import { ConstructorImage } from '../components/F1Image'
 import SectionHeading from '../components/SectionHeading'
 import { shortGpName, surname } from '../lib/format'
-import { inkOn } from '../lib/color'
 import ranked from './ranked.module.css'
 import styles from './h2h.module.css'
 
 /* ── helpers ───────────────────────────────────────────────────────────────── */
 
-const FALLBACK_1 = '#E10600'
-const FALLBACK_2 = '#3671C6'
+const FALLBACK_1 = '#A3A3AB'
+const FALLBACK_2 = '#5A5A63'
 // Teammates share a team colour, so the second side switches to the ink colour.
-const SECOND_WHEN_SAME = '#F3F3F4'
+const SECOND_WHEN_SAME = '#EDEDEF'
 
 /** One colour per side, never the same twice. */
 function sideColors(d1, d2) {
@@ -178,13 +176,7 @@ function DriverHero({ driver, color, side, isMobile, isTeams }) {
   if (!driver?.fullName) return <div />
 
   return (
-    <div className={styles.hero} data-side={side} style={{ '--team': color, '--ink': inkOn(color) }}>
-      {isTeams ? (
-        <ConstructorImage constructorId={driver.constructorId} width={isMobile ? 36 : 56} height={isMobile ? 36 : 56}
-          color={driver.teamColor} name={driver.fullName} alt={`${driver.fullName} logo`} />
-      ) : (
-        <span className={styles.heroCode} aria-hidden="true">{driver.code}</span>
-      )}
+    <div className={styles.hero} data-side={side} style={{ '--team': color }}>
       <div className={styles.heroText}>
         <div className={styles.heroName}>{isMobile && !isTeams ? surname(driver) : driver.fullName}</div>
         <div className={styles.heroSub}>{driver.constructorName}</div>

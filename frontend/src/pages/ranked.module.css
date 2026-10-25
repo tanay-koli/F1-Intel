@@ -25,16 +25,15 @@
   padding: 6px;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
 }
 
 /* Detail panel: a team-colour head over a dark body */
 .panel {
   --team: var(--border-strong);
-  --ink: var(--text);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -45,14 +44,15 @@
   gap: 14px;
   min-height: 112px;
   padding: 20px;
-  background: var(--team);
-  color: var(--ink);
+  background: color-mix(in srgb, var(--team) 14%, var(--bg-card));
+  box-shadow: inset 0 2px 0 var(--team);
+  color: var(--text);
   overflow: hidden;
 }
 
 .panelHead img {
-  background: #F3F3F4;
-  border-radius: 10px;
+  background: var(--text);
+  border-radius: 4px;
   padding: 6px;
 }
 
@@ -66,29 +66,32 @@
 
 .panelMeta { margin-top: 6px; font-size: 13px; font-weight: 600; }
 
-/* The car number, oversized and cropped at the right edge */
+/* The car number, large and whole at the right edge */
 .panelNumber {
   position: absolute;
-  right: -6px;
-  bottom: -0.18em;
-  font-family: var(--display);
-  font-size: 128px;
-  line-height: 0.8;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--display); text-transform: uppercase;
+  font-weight: 300;
+  font-size: 88px;
+  line-height: 1;
   color: transparent;
-  -webkit-text-stroke: 2px var(--ink);
+  -webkit-text-stroke: 1.5px var(--text-dim);
   pointer-events: none;
 }
 
 .panelText { position: relative; min-width: 0; flex: 1; }
-.panelNumber ~ .panelText { padding-right: 96px; }
+.panelNumber ~ .panelText { padding-right: 104px; }
 
 .panelBody { padding: 16px 20px 20px; }
 
 .panelTitle {
   font-family: var(--display);
-  font-weight: 400;
-  font-size: 26px;
+  font-weight: 500;
+  font-size: 22px;
   line-height: 1;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   margin-bottom: 16px;
 }
@@ -118,10 +121,10 @@
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--text);
   border: 1.5px solid currentColor;
 }
-.close:hover { background: rgb(0 0 0 / 0.12); }
+.close:hover { background: var(--bg-elevated); }
 
 /* Label/value pairs in a panel */
 .facts { display: flex; flex-direction: column; }

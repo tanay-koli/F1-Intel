@@ -50,7 +50,7 @@ export default function TitleTiles({ race, standings, schedule }) {
       >
         {/* Gap against the points still available: past the line, the title is sealed */}
         <div className={styles.gapChart}>
-          <span className={styles.gapTrack}>
+          <span className={`${styles.gapTrack} tick-scale`} style={{ '--ticks': Math.max(1, Math.round(scale / 25)) }}>
             <span className={styles.gapFill} style={{ width: `${(gap / scale) * 100}%` }} />
             <span className={styles.gapLine} style={{ left: `${(maxRemaining / scale) * 100}%` }} />
           </span>

@@ -5,13 +5,13 @@ export function StandingsList({ children }) {
 }
 
 /**
- * One ranked row: position, picture, name over an optional share bar and a
+ * One ranked row: position, name over an optional share bar and a
  * subline, and a figure with a detail line under it. `share` (0–1) draws the
  * bar against the leader. Pass `onClick` to make the row a button; `selected`
  * marks the row whose detail is open.
  */
 export default function StandingsRow({
-  position, color, image, name, subline, share, figure, unit, detail, onClick, selected,
+  position, color, name, subline, share, figure, unit, detail, onClick, selected,
 }) {
   const Inner = onClick ? 'button' : 'div'
   const buttonProps = onClick ? { type: 'button', onClick, 'aria-pressed': !!selected } : {}
@@ -21,7 +21,6 @@ export default function StandingsRow({
         <span className={styles.pos}>
           <span className={styles.srOnly}>Position </span>{position}
         </span>
-        {image}
         <span className={styles.main}>
           <span className={styles.name}>{name}</span>
           {share != null && (

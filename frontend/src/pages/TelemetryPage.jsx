@@ -4,12 +4,10 @@ import { useSearchParams } from 'react-router-dom'
 import { f1Api } from '../api'
 import { CURRENT_SEASON } from '../hooks/useSeason'
 import { Loader, ErrorMsg, SectionHeader, TeamDot, useIsMobile } from '../components/ui'
-import DriverMark from '../components/DriverMark'
 import SectionHeading from '../components/SectionHeading'
 import RaceHeader from './RaceHeader'
 import { Play, Pause } from 'lucide-react'
-import { inkOn } from '../lib/color'
-import { GRID } from '../lib/chartTheme'
+import { GRID, TICK, INK, tick } from '../lib/chartTheme'
 import ranked from './ranked.module.css'
 import tstyles from './telemetry.module.css'
 import {
@@ -20,12 +18,15 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const FIRST_TELEMETRY_YEAR = 2018
+// Seasons with reachable timing data: FastF1's mirror (backend TELEMETRY_SEASONS default) and OpenF1 from 2023
+const FASTF1_YEARS = [2021, 2022]
+const OPENF1_FIRST_YEAR = 2023
 
 /** Years for the year pickers, newest first (the viewed season may be next year's). */
 function telemetryYears(season) {
   const latest = Math.max(Number(CURRENT_SEASON), Number(season))
-  return Array.from({ length: latest - FIRST_TELEMETRY_YEAR + 1 }, (_, i) => String(latest - i))
+  const openf1 = Array.from({ length: latest - OPENF1_FIRST_YEAR + 1 }, (_, i) => latest - i)
+  return [...openf1, ...FASTF1_YEARS.toReversed()].map(String)
 }
 
 const SESSION_OPTS = [
@@ -43,13 +44,14 @@ const METRIC_TABS = [
   { id: 'gear',     label: 'Gear',     unit: ''     },
 ]
 
+// Muted takes on the Pirelli compound colours, so long stint bars stay readable on black
 const COMPOUND_COLORS = {
-  SOFT:    '#E8002D',
-  MEDIUM:  '#FFF200',
-  HARD:    '#FFFFFF',
-  INTER:   '#39B54A',
-  WET:     '#0067FF',
-  UNKNOWN: '#888888',
+  SOFT:    '#D9596B',
+  MEDIUM:  '#E3C35A',
+  HARD:    '#C9C9CF',
+  INTER:   '#5FAE72',
+  WET:     '#5B8ED6',
+  UNKNOWN: '#6E6E76',
 }
 
 const EVENT_COLORS = {
@@ -106,9 +108,9 @@ function DriverCard({ driver, label, extra }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 12,
-      background: 'var(--bg-elevated)', borderRadius: 16, padding: '10px 14px',
+      background: 'var(--bg-elevated)', borderRadius: 6, padding: '10px 14px',
     }}>
-      <DriverMark driver={driver} size={40} />
+      <TeamDot color={driver.teamColor} size={10} />
       <div>
         <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
         <div style={{ fontWeight: 600, fontSize: 14 }}>{driver.fullName}</div>
@@ -125,7 +127,7 @@ function StatPill({ label, value, color, highlight }) {
       display: 'flex', alignItems: 'center', gap: 6,
       background: 'var(--bg-elevated)',
       border: `1px solid ${highlight ? 'var(--text-muted)' : 'var(--border)'}`,
-      borderRadius: 20, padding: '4px 12px', fontSize: 11,
+      borderRadius: 999, padding: '4px 12px', fontSize: 11,
     }}>
       {color && <TeamDot color={color} size={7} />}
       <span style={{ color: 'var(--text-muted)' }}>{label}</span>
@@ -157,7 +159,7 @@ function TyreBand({ laps, pitLaps, color, height = 10, maxLap }) {
           <div key={i} style={{
             position: 'absolute', left: `${left}%`, width: `${width}%`,
             height: '100%',
-            background: COMPOUND_COLORS[s.compound] ?? '#888',
+            background: COMPOUND_COLORS[s.compound] ?? 'var(--text-dim)',
             opacity: 0.85,
           }} title={`${s.compound} (L${s.start}–${s.end})`} />
         )
@@ -186,14 +188,11 @@ function RaceEventsBanner({ events, totalLaps }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: '12px 16px', marginBottom: 16,
+      borderRadius: 6, padding: '12px 16px', marginBottom: 16,
     }}>
-      <div style={{
-        fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-        marginBottom: 10,
-      }}>
+      <h3 className={tstyles.cardTitle}>
         Race Events
-      </div>
+      </h3>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {scEvents.map((ev, i) => (
           <div key={i} style={{
@@ -260,7 +259,7 @@ function AllDriversSummaryTable({ analysis, onSelectDriver, selectedDriver }) {
                     aria-pressed={isSelected}
                     onClick={() => onSelectDriver(d.code)}
                   >
-                    <DriverMark driver={d} size={30} />
+                    <TeamDot color={d.teamColor} size={8} />
                     <span>{d.fullName}</span>
                   </button>
                 </td>
@@ -275,7 +274,7 @@ function AllDriversSummaryTable({ analysis, onSelectDriver, selectedDriver }) {
                   <div className={tstyles.stints}>
                     {d.stints.map((s, i) => (
                       <span key={i} className={tstyles.stint} title={`${s.compound} L${s.startLap}–${s.endLap} (${s.length} laps)`}>
-                        <span className={tstyles.compound} style={{ background: COMPOUND_COLORS[s.compound] ?? '#888' }} />
+                        <span className={tstyles.compound} style={{ background: COMPOUND_COLORS[s.compound] ?? 'var(--text-dim)' }} />
                         {s.length}
                       </span>
                     ))}
@@ -319,19 +318,17 @@ function PositionChart({ analysis, highlightDriver, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: '16px', marginBottom: 20,
+      borderRadius: 6, padding: '16px', marginBottom: 20,
     }}>
-      <div style={{
-        fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
-      }}>
+      <h3 className={tstyles.cardTitle}>
         Positions, lap by lap
-      </div>
+      </h3>
       <ResponsiveContainer width="100%" height={isMobile ? 280 : 380}>
         <LineChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
           <XAxis
             dataKey="lap"
-            tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+            tick={tick}
             axisLine={{ stroke: 'var(--border)' }}
             tickLine={false}
             tickFormatter={v => `L${v}`}
@@ -340,7 +337,7 @@ function PositionChart({ analysis, highlightDriver, isMobile }) {
           <YAxis
             reversed
             domain={[1, drivers.length]}
-            tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+            tick={tick}
             axisLine={false} tickLine={false}
             tickFormatter={v => `P${v}`}
           />
@@ -372,8 +369,8 @@ function PosChartTooltip({ active, payload, label, drivers }) {
   const sorted = [...payload].filter(p => p.value != null).sort((a, b) => a.value - b.value).slice(0, 10)
   return (
     <div style={{
-      background: '#18181cee', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderRadius: 4, padding: '10px 14px',
       fontFamily: 'var(--body)', fontSize: 11, minWidth: 140, maxHeight: 260, overflowY: 'auto',
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>Lap {label}</div>
@@ -425,28 +422,26 @@ function LapTimeScatter({ analysis, highlightDriver, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: '16px', marginBottom: 20,
+      borderRadius: 6, padding: '16px', marginBottom: 20,
     }}>
-      <div style={{
-        fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
-      }}>
+      <h3 className={tstyles.cardTitle}>
         Lap times, all drivers
-      </div>
+      </h3>
       <ResponsiveContainer width="100%" height={isMobile ? 260 : 340}>
         <ScatterChart margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
           <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
           <XAxis
             dataKey="lap" type="number" name="Lap"
             domain={[1, analysis.totalLaps]}
-            tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+            tick={tick}
             axisLine={{ stroke: 'var(--border)' }}
             tickLine={false}
             tickFormatter={v => `L${v}`}
           />
           <YAxis
             dataKey="lapTime" type="number" name="Lap Time"
-            domain={[yMin, yMax]}
-            tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+            domain={[yMin, yMax]} width={64}
+            tick={tick}
             axisLine={false} tickLine={false}
             tickFormatter={v => fmtSecs(v)}
           />
@@ -480,8 +475,8 @@ function ScatterTooltip({ active, payload }) {
   if (!d) return null
   return (
     <div style={{
-      background: '#18181cee', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderRadius: 4, padding: '10px 14px',
       fontFamily: 'var(--body)', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text)', fontWeight: 600, marginBottom: 4 }}>
@@ -490,7 +485,7 @@ function ScatterTooltip({ active, payload }) {
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <span style={{
           display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-          background: COMPOUND_COLORS[d.compound] ?? '#888',
+          background: COMPOUND_COLORS[d.compound] ?? 'var(--text-dim)',
         }} />
         <span style={{ color: 'var(--text)' }}>{fmtSecs(d.lapTime)}</span>
         {d.isPitLap && <span style={{ color: 'var(--text-muted)' }}>Pit</span>}
@@ -503,14 +498,11 @@ function AllDriversTyreStrategy({ analysis, isMobile }) {
   return (
     <div style={{
       background: 'var(--bg-card)', border: '1px solid var(--border)',
-      borderRadius: 16, padding: '14px 16px', marginBottom: 20,
+      borderRadius: 6, padding: '14px 16px', marginBottom: 20,
     }}>
-      <div style={{
-        fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-        marginBottom: 12,
-      }}>
+      <h3 className={tstyles.cardTitle}>
         Tyre Strategy · All Drivers
-      </div>
+      </h3>
 
       {/* Compound Legend */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -613,7 +605,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
       style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border)',
-        borderRadius: 12,
+        borderRadius: 6,
         marginBottom: 20,
         overflow: 'hidden',
         animation: 'fadeUp 0.3s ease',
@@ -629,10 +621,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
           marginBottom: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{
-              fontFamily: 'var(--display)', fontWeight: 400, fontSize: 26, lineHeight: 1,
-              textTransform: 'uppercase',
-            }}>Race analyst</h2>
+            <h2 className={tstyles.cardTitle} style={{ marginBottom: 0 }}>Race analyst</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <button
@@ -646,7 +635,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
               {isPlaying ? 'Pause' : 'Play'}
             </button>
             <div style={{
-              fontFamily: 'var(--display)', fontSize: 22, color: 'var(--text)',
+              fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 22, color: 'var(--text)',
               minWidth: 80, textAlign: 'right',
             }}>
               <span>L{currentLap}</span>
@@ -657,12 +646,11 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
 
         {/* Slider track */}
         <div style={{ position: 'relative', height: 20, display: 'flex', alignItems: 'center' }}>
-          <div style={{
-            position: 'absolute', top: 8, left: 0, right: 0, height: 4,
-            background: 'var(--bg-elevated)', borderRadius: 2,
+          <div className="tick-scale" style={{
+            position: 'absolute', top: 4, left: 0, right: 0, height: 12, '--ticks': totalLaps,
           }} />
           <div style={{
-            position: 'absolute', top: 8, left: 0, height: 4,
+            position: 'absolute', top: 14, left: 0, height: 2,
             width: `${progress}%`, background: 'var(--text)',
             borderRadius: 2, transition: 'width 0.15s ease',
           }} />
@@ -711,7 +699,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
           {/* Key Battles */}
           <div style={{
             background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '10px 14px',
+            borderRadius: 4, padding: '10px 14px',
           }}>
             <div style={{
               fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-dim)',
@@ -731,7 +719,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
           {/* Strategy Watch */}
           <div style={{
             background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '10px 14px',
+            borderRadius: 4, padding: '10px 14px',
           }}>
             <div style={{
               fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-dim)',
@@ -752,7 +740,7 @@ function RaceAnalystPanel({ insights, totalLaps, isMobile }) {
         {/* Lap Mover */}
         <div style={{
           background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: 8, padding: '8px 14px',
+          borderRadius: 4, padding: '8px 14px',
           display: 'flex', alignItems: 'flex-start', gap: 8,
         }}>
           <span style={{
@@ -824,7 +812,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       lapTime: l.lapTime,
       lapTimeStr: l.lapTimeStr,
       compound: l.compound,
-      color: COMPOUND_COLORS[l.compound] ?? '#888',
+      color: COMPOUND_COLORS[l.compound] ?? 'var(--text-dim)',
       isPitLap: l.isPitLap,
       position: l.position,
       gapToLeader: l.gapToLeader,
@@ -838,7 +826,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       <SectionHeading title="Driver deep dive" />
 
       {/* Driver Header Card */}
-      <div className={tstyles.diveHead} style={{ '--team': driver.teamColor, '--ink': inkOn(driver.teamColor) }}>
+      <div className={tstyles.diveHead} style={{ '--team': driver.teamColor }}>
         <div style={{ flex: 1, minWidth: 150 }}>
           <div className={tstyles.diveName}>{driver.fullName}</div>
           <div className={tstyles.diveTeam}>{driver.team}</div>
@@ -846,16 +834,16 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 12, fontWeight: 700 }}>Grid</div>
-            <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>P{driver.gridPosition ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 30, lineHeight: 1 }}>P{driver.gridPosition ?? '—'}</div>
           </div>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 12, fontWeight: 700 }}>Finish</div>
-            <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>P{driver.finishPosition ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 30, lineHeight: 1 }}>P{driver.finishPosition ?? '—'}</div>
           </div>
           {driver.positionsGained != null && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 12, fontWeight: 700 }}>Places</div>
-              <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 30, lineHeight: 1 }}>
                 {driver.positionsGained > 0 ? `+${driver.positionsGained}` : driver.positionsGained < 0 ? driver.positionsGained : '0'}
               </div>
             </div>
@@ -876,18 +864,15 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       <div style={{
         background: 'var(--bg-card)',
         border: `1px solid ${isRaceFL ? 'var(--text-muted)' : 'var(--border)'}`,
-        borderRadius: 16, padding: '14px 18px', marginBottom: 20,
+        borderRadius: 6, padding: '14px 18px', marginBottom: 20,
       }}>
-        <div style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-          marginBottom: 12,
-        }}>
+        <h3 className={tstyles.cardTitle}>
           Fastest Lap Analysis
-        </div>
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr 1fr', gap: 12 }}>
           <div>
             <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>LAP</div>
-            <div style={{ fontFamily: 'var(--display)', fontSize: 20, color: 'var(--text)' }}>L{driver.fastestLap ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 20, color: 'var(--text)' }}>L{driver.fastestLap ?? '—'}</div>
           </div>
           <div>
             <div style={{ fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>Time</div>
@@ -900,7 +885,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
               <span style={{
                 display: 'inline-block', width: 12, height: 12, borderRadius: '50%',
-                background: COMPOUND_COLORS[driver.fastestLapCompound] ?? '#888',
+                background: COMPOUND_COLORS[driver.fastestLapCompound] ?? 'var(--text-dim)',
               }} />
               <span style={{ fontFamily: 'var(--body)', fontSize: 14 }}>{driver.fastestLapCompound ?? 'N/A'}</span>
             </div>
@@ -925,25 +910,22 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Tyre Strategy Band */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '14px 16px', marginBottom: 20,
+        borderRadius: 6, padding: '14px 16px', marginBottom: 20,
       }}>
-        <div style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-          marginBottom: 10,
-        }}>
+        <h3 className={tstyles.cardTitle}>
           Tyre Strategy
-        </div>
+        </h3>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
           {driver.stints.map((s, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              background: `${COMPOUND_COLORS[s.compound] ?? '#888'}15`,
-              border: `1px solid ${COMPOUND_COLORS[s.compound] ?? '#888'}40`,
+              background: `${COMPOUND_COLORS[s.compound] ?? '#8A8A93'}15`,
+              border: `1px solid ${COMPOUND_COLORS[s.compound] ?? '#8A8A93'}40`,
               borderRadius: 6, padding: '5px 10px', fontSize: 11, fontFamily: 'var(--body)',
             }}>
               <span style={{
                 display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
-                background: COMPOUND_COLORS[s.compound] ?? '#888',
+                background: COMPOUND_COLORS[s.compound] ?? 'var(--text-dim)',
               }} />
               <span style={{ color: 'var(--text)' }}>{s.compound}</span>
               <span style={{ color: 'var(--text-dim)' }}>L{s.startLap}–{s.endLap}</span>
@@ -961,27 +943,25 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Lap Time Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '16px', marginBottom: 20,
+        borderRadius: 6, padding: '16px', marginBottom: 20,
       }}>
-        <div style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
-        }}>
+        <h3 className={tstyles.cardTitle}>
           Lap times, {driver.code}
-        </div>
+        </h3>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={lapChartData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
             <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
-              tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+              tick={tick}
               axisLine={{ stroke: 'var(--border)' }}
               tickLine={false}
               tickFormatter={v => `L${v}`}
               interval={Math.max(1, Math.floor(analysis.totalLaps / 12))}
             />
             <YAxis
-              domain={['auto', 'auto']}
-              tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+              domain={['auto', 'auto']} width={64}
+              tick={tick}
               axisLine={false} tickLine={false}
               tickFormatter={v => fmtSecs(v)}
             />
@@ -992,11 +972,11 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             )}
             {/* Pit stop reference lines */}
             {driver.pitLaps.map(lap => (
-              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#A9A9B0" strokeDasharray="3 3" strokeOpacity={0.6} />
+              <ReferenceLine key={`pit-${lap}`} x={lap} stroke={TICK} strokeDasharray="3 3" strokeOpacity={0.6} />
             ))}
             {/* Fastest lap reference */}
             {driver.fastestLap && (
-              <ReferenceLine x={driver.fastestLap} stroke={'#F3F3F4'} strokeDasharray="4 2" strokeOpacity={0.8} />
+              <ReferenceLine x={driver.fastestLap} stroke={INK} strokeDasharray="4 2" strokeOpacity={0.8} />
             )}
             <Line
               type="monotone" dataKey="lapTime"
@@ -1005,7 +985,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
                 const { cx, cy, payload } = props
                 if (!cx || !cy) return null
                 if (payload.isFastestLap) {
-                  return <circle cx={cx} cy={cy} r={5} fill={'#F3F3F4'} stroke={'#F3F3F4'} strokeWidth={2} />
+                  return <circle cx={cx} cy={cy} r={5} fill={INK} stroke={INK} strokeWidth={2} />
                 }
                 return null
               }}
@@ -1023,10 +1003,10 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <div style={{ width: 16, height: 0, borderTop: `2px dashed ${driver.teamColor}`, opacity: 0.5 }} /> Avg
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>
-            <div style={{ width: 16, height: 0, borderTop: '2px dashed #A9A9B0', opacity: 0.6 }} /> Pit Stop
+            <div style={{ width: 16, height: 0, borderTop: '2px dashed var(--text-muted)', opacity: 0.6 }} /> Pit Stop
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-dim)', fontFamily: 'var(--body)' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#F3F3F4' }} /> Fastest lap
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text)' }} /> Fastest lap
           </div>
         </div>
       </div>
@@ -1034,13 +1014,11 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       {/* Position Progression Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '16px', marginBottom: 20,
+        borderRadius: 6, padding: '16px', marginBottom: 20,
       }}>
-        <div style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)', marginBottom: 12,
-        }}>
+        <h3 className={tstyles.cardTitle}>
           Position by lap, {driver.code}
-        </div>
+        </h3>
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={driver.laps.filter(l => l.lap && l.position)} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
             <defs>
@@ -1052,7 +1030,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
             <XAxis
               dataKey="lap"
-              tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+              tick={tick}
               axisLine={{ stroke: 'var(--border)' }}
               tickLine={false}
               tickFormatter={v => `L${v}`}
@@ -1061,13 +1039,13 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
             <YAxis
               reversed
               domain={[1, analysis.drivers.length]}
-              tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+              tick={tick}
               axisLine={false} tickLine={false}
               tickFormatter={v => `P${v}`}
             />
             <Tooltip content={<PosProgressionTooltip driver={driver} />} />
             {driver.pitLaps.map(lap => (
-              <ReferenceLine key={`pit-${lap}`} x={lap} stroke="#A9A9B0" strokeDasharray="3 3" strokeOpacity={0.5} />
+              <ReferenceLine key={`pit-${lap}`} x={lap} stroke={TICK} strokeDasharray="3 3" strokeOpacity={0.5} />
             ))}
             <Area
               type="stepAfter" dataKey="position"
@@ -1080,12 +1058,9 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
       </div>
 
       {/* Lap-by-Lap Table */}
-      <div style={{
-        fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-        marginBottom: 10,
-      }}>
+      <h3 className={tstyles.cardTitle}>
         Lap-by-Lap Detail · {driver.code}
-      </div>
+      </h3>
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
         borderRadius: 10, overflow: 'auto', maxHeight: 500, marginBottom: 20,
@@ -1108,7 +1083,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
               const isSC = analysis.raceEvents?.some(e => e.lap === l.lap && (e.type === 'SC' || e.type === 'VSC'))
               return (
                 <tr key={l.lap} style={{
-                  borderBottom: '1px solid #1e1e24',
+                  borderBottom: '1px solid var(--border)',
                   background: isFL || l.isPitLap ? 'var(--bg-elevated)' : 'transparent',
                 }}>
                   <td style={{ ...tdStyle, textAlign: 'center', color: 'var(--text-muted)' }}>{l.lap}</td>
@@ -1118,7 +1093,7 @@ function DriverDeepDive({ driver, analysis, isMobile }) {
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
                     <span style={{
                       display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-                      background: COMPOUND_COLORS[l.compound] ?? '#888',
+                      background: COMPOUND_COLORS[l.compound] ?? 'var(--text-dim)',
                       verticalAlign: 'middle',
                     }} title={l.compound} />
                   </td>
@@ -1148,8 +1123,8 @@ function DeepDiveTooltip({ active, payload, label, driver }) {
   if (!d) return null
   return (
     <div style={{
-      background: '#18181cee', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderRadius: 4, padding: '10px 14px',
       fontFamily: 'var(--body)', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>
@@ -1158,7 +1133,7 @@ function DeepDiveTooltip({ active, payload, label, driver }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
         <span style={{
           display: 'inline-block', width: 8, height: 8, borderRadius: '50%',
-          background: COMPOUND_COLORS[d.compound] ?? '#888',
+          background: COMPOUND_COLORS[d.compound] ?? 'var(--text-dim)',
         }} />
         <span style={{ color: 'var(--text)', fontWeight: 600 }}>
           {d.lapTimeStr}
@@ -1176,8 +1151,8 @@ function PosProgressionTooltip({ active, payload, label, driver }) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#18181cee', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '8px 12px',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderRadius: 4, padding: '8px 12px',
       fontFamily: 'var(--body)', fontSize: 11,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 4 }}>Lap {label}</div>
@@ -1194,8 +1169,8 @@ function MetricTooltip({ active, payload, label, unit, driver1, driver2 }) {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#18181cee', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '10px 14px',
+      background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+      borderRadius: 4, padding: '10px 14px',
       fontFamily: 'var(--body)', fontSize: 11, minWidth: 160,
     }}>
       <div style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label} m</div>
@@ -1237,7 +1212,7 @@ function DeltaBar({ tel, metric }) {
         <div key={label} style={{
           display: 'flex', alignItems: 'center', gap: 6,
           background: 'var(--bg-elevated)', border: '1px solid var(--border)',
-          borderRadius: 20, padding: '3px 12px', fontSize: 11,
+          borderRadius: 999, padding: '3px 12px', fontSize: 11,
         }}>
           <TeamDot color={color} size={7} />
           <span style={{ color: 'var(--text-muted)' }}>{label}</span>
@@ -1273,7 +1248,7 @@ function SpeedChart({ data, tel, metric }) {
         <CartesianGrid stroke={GRID} strokeDasharray="3 3" />
         <XAxis
           dataKey="dist"
-          tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+          tick={tick}
           axisLine={{ stroke: 'var(--border)' }}
           tickLine={false}
           tickFormatter={v => `${(v/1000).toFixed(1)}km`}
@@ -1281,7 +1256,7 @@ function SpeedChart({ data, tel, metric }) {
         />
         <YAxis
           domain={yDomain}
-          tick={{ fontSize: 11, fill: 'var(--text-muted)', fontFamily: 'var(--body)' }}
+          tick={tick}
           axisLine={false} tickLine={false}
           tickFormatter={v => `${v}${unit}`}
         />
@@ -1321,11 +1296,11 @@ function FastestLapView({ tel, isMobile }) {
       {/* Race banner */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '12px 18px', marginBottom: 20,
+        borderRadius: 6, padding: '12px 18px', marginBottom: 20,
         display: 'flex', alignItems: 'center', gap: 12,
       }}>
         <div>
-          <div style={{ fontFamily: 'var(--display)', fontSize: 20 }}>{tel.raceName}</div>
+          <div style={{ fontFamily: 'var(--display)', textTransform: 'uppercase', fontSize: 20 }}>{tel.raceName}</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--body)' }}>
             {tel.year} · Round {tel.round} · {SESSION_OPTS.find(s => s.value === tel.session)?.label ?? tel.session} · Fastest Lap Comparison
           </div>
@@ -1360,7 +1335,7 @@ function FastestLapView({ tel, isMobile }) {
       {/* Chart */}
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: '16px',
+        borderRadius: 6, padding: '16px',
       }}>
         <div style={{
           fontFamily: 'var(--body)', fontSize: 12,
@@ -1386,19 +1361,16 @@ function FastestLapView({ tel, isMobile }) {
 
       {/* All charts mini-grid */}
       <div style={{ marginTop: 20 }}>
-        <div style={{
-          fontFamily: 'var(--body)', fontSize: 12, color: 'var(--text-muted)',
-          marginBottom: 12,
-        }}>
+        <h3 className={tstyles.cardTitle}>
           All Channels
-        </div>
+        </h3>
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           {METRIC_TABS.map(t => (
             <div
               key={t.id}
               style={{
                 background: 'var(--bg-card)', border: '1px solid var(--border)',
-                borderRadius: 16, padding: '12px',
+                borderRadius: 6, padding: '12px',
                 cursor: 'pointer',
                 outline: metric === t.id ? '2px solid var(--text-muted)' : 'none',
                 transition: 'outline 0.15s',
@@ -1429,10 +1401,12 @@ export default function TelemetryPage({ season }) {
   // `?round=N` (e.g. Home's "Open race analysis") opens that race's analysis directly
   const [searchParams] = useSearchParams()
   const linkedRound = searchParams.get('round')
-  const [year,     setYear]     = useState(season)
   const years = telemetryYears(season)
+  // A season without timing data opens on the newest one that has it
+  const seasonHasData = years.includes(season)
+  const [year,     setYear]     = useState(seasonHasData ? season : years[0])
   // null = not picked by hand: follow the latest race (set below once the schedule loads)
-  const [roundPick, setRound]   = useState(linkedRound)
+  const [roundPick, setRound]   = useState(seasonHasData ? linkedRound : null)
   const [viewTab,  setViewTab]  = useState('analysis')
   const [selectedDriver, setSelectedDriver] = useState('')
 
@@ -1444,7 +1418,7 @@ export default function TelemetryPage({ season }) {
 
   // Race analysis query key
   const [analysisQueryKey, setAnalysisQueryKey] = useState(
-    linkedRound ? ['race-analysis', season, linkedRound] : null
+    linkedRound && seasonHasData ? ['race-analysis', season, linkedRound] : null
   )
 
   // Schedule for round list

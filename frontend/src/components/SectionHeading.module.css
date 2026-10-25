@@ -9,24 +9,23 @@
 
 .title {
   font-family: var(--display);
-  font-weight: 400;
-  font-size: 30px;
+  font-weight: 500;
+  font-size: 26px;
   line-height: 1;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-/* Red bar, inline so it stays with the first line when the title wraps */
+/* Instrument marker, inline so it stays with the first line when the title wraps */
 .title::before {
   content: '';
   display: inline-block;
-  width: 0.13em;
-  height: 0.8em;
-  margin-right: 0.3em;
-  vertical-align: -0.04em;
-  background: var(--red);
-  border-radius: 1px;
+  width: 0.22em;
+  height: 0.22em;
+  margin-right: 0.4em;
+  vertical-align: 0.24em;
+  background: var(--text);
 }
-.page { font-size: clamp(40px, 6vw, 64px); letter-spacing: 0.01em; }
+.page { font-size: clamp(36px, 4.6vw, 52px); font-weight: 400; letter-spacing: 0.02em; }
 
 .badge {
   font-size: 12px;

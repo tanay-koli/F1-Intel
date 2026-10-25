@@ -5,19 +5,22 @@ primary_target: "frontend/src/App.jsx"
 related_targets: []
 ---
 
-Scope: the whole Pit Wall frontend (Home = bold; Results, H2H, Telemetry, standings, calendar, progression = Operate, dense tools).
-Audience/job: F1 fans around race weekends; reviewers judging data honesty. Constraints: 44px targets, ≥4.5:1 text, amber focus ring, reduced motion, no h-scroll at 390px, calm 503s, team colours only from the API, no official F1 marks, no driver photos.
+Scope: the whole Pit Wall frontend (Home = landing, its hero a chronograph; Results, H2H, Telemetry, standings, calendar, progression = Operate, dense tools).
+Audience/job: F1 fans around race weekends; reviewers judging data honesty. Constraints: 44px targets, ≥4.5:1 text, signal-orange focus ring, reduced motion, no h-scroll at 390px, calm 503s, team colours only from the API, no official F1 marks, no driver photos.
+User answers (2026-10-25): monochrome + one signal orange; chronograph dial hero; whole site. Inspiration pinned: theme.jpg (black HUD, condensed caps, one orange signal) for the analysis pages, base.jpg (quiet charcoal, white type) for the base.
 
 ## Direction contract
 
-THESIS: A race-programme wall: red is the frame, black is the data ground. Refuses the grey-card dashboard where every panel is the same tile; standings read as livery bands and outlined giant numbers, not avatar lists.
+THESIS: A chronometer on a black pit wall: precision, not volume. Monochrome instrument faces where fine ticks, thin condensed type and one orange signal carry the weight. Refuses the poster-loud race programme it replaces (maroon bands, red edges, giant outlined numerals, scrolling marquee).
 
-OWN-WORLD: Near-black ground (#0A0A0B) and dark-grey data cards; deep maroon-to-red bands for header, footer and page-title frames; Bebas Neue condensed caps at poster scale; oversized outlined position numerals; pill filter chips; dark tables inside rounded cards; team colour as full bands only on the top three, as 3px edges elsewhere. Amber only for next + focus.
+OWN-WORLD: Black ground (#09090A) and charcoal data cards (#111113 / #18181B) with hairlines; no red anywhere in the chrome. Barlow Condensed (300–500, uppercase) as the instrument voice for names, headings and figures; Archivo for text. One signal orange (#FF6B1A) only for "next", live, focus and the seconds hand. Small radii (6px cards). Team colour stays as data: bands on the top three, chips, bars and dots elsewhere.
 
-STORY: The fan sees what's next and how long until lights out, who leads and by how much, then digs into a race in tools that scan like timing sheets.
+STORY: The fan reads one instrument: how long until the next session, ticking; then what's next on the weekend, who leads, and digs into races in tools that scan like timing screens.
 
-FIRST VIEWPORT: Maroon header band with PIT WALL wordmark and pill nav; Home hero: next GP name huge in condensed caps, countdown digits at poster scale beside the circuit outline (or the outlined round number when no outline exists), weekend schedule as a dark table at right; a marquee band of the GP name below; stat tiles (title math, gap, races left) under it.
+FIRST VIEWPORT: Black header with the PIT WALL wordmark and nav. Hero: left, the GP name in light condensed caps, round and circuit, and the weekend schedule as a quiet table; right, a large chronograph dial (≈440px): 60 ticks where the seconds still left in the minute stay lit, a sweeping orange seconds hand, a minute-register arc draining through the hour, days/hours/minutes as thin digits in the face. Stat tiles below.
 
-FORM: brief-pinned (user inspiration set: overall/constructors/analytics/home), position 1 of 1. seed:8796a915edc75396 (brief-pinned direction overrides the roll)
+SIGNATURE: the dial's tick ring, unrolled into tick-scale rules under figures on the analysis pages (title gap track, race analyst lap scale). Motion: on load the ticks draw in around the ring and the hand extends; then a continuous smooth sweep (stepped once a second under reduced motion).
+
+FORM: brief-pinned (user inspiration: theme.jpg + base.jpg), position 1 of 1. seed: none (unavailable)
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
