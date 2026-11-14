@@ -3,13 +3,12 @@
   command = "npm run build"
   publish = "dist"
 
-# The FastAPI backend isn't hosted on Netlify. Once it runs somewhere public,
-# uncomment this so /api calls reach it (must stay above the SPA rule).
-# [[redirects]]
-#   from = "/api/*"
-#   to = "https://YOUR-BACKEND-HOST/api/:splat"
-#   status = 200
-#   force = true
+# Forward /api calls to the FastAPI backend on Render (must stay above the SPA rule).
+[[redirects]]
+  from = "/api/*"
+  to = "https://f1-intel.onrender.com/api/:splat"
+  status = 200
+  force = true
 
 # React Router: serve index.html for every client-side route (/results, /h2h, ...).
 [[redirects]]
